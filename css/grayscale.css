@@ -171,6 +171,15 @@
   margin-bottom: 5rem;
 }
 
+.intro-section {
+  padding-top: 10rem;
+  background: linear-gradient(to bottom, #161616 0%, rgba(22, 22, 22, 0.9) 75%, rgba(22, 22, 22, 0.8) 100%);
+}
+
+.intro-section p {
+  margin-bottom: 5rem;
+}
+
 .projects-section {
   padding: 10rem 0;
 }
