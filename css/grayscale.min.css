@@ -170,6 +170,25 @@
 .about-section p {
     margin-bottom: 5rem
 }
+.chip {
+    display: inline-block;
+    padding: 0 25px;
+    height: 50px;
+    font-size: 16px;
+    line-height: 50px;
+    border-radius: 25px;
+    background-color: rgb(80, 80, 80);
+    color: white;
+    margin: 3px;
+  }
+  
+  .chip img {
+    float: left;
+    margin: 0 10px 0 -25px;
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+  }
 
 .intro-section {
     padding-top: 10rem;
