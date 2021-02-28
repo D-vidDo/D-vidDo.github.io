@@ -199,6 +199,15 @@
   margin-bottom: 5rem;
 }
 
+.grey-section p {
+  margin-bottom: 5rem;
+}
+
+.grey-section {
+  padding-top: 1rem;
+  background:  rgba(22, 22, 22, 0.8) 100%;
+}
+
 .projects-section {
   padding: 10rem 0;
 }
