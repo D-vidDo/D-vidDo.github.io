@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Trophy, TrendingUp, Users, Edit } from "lucide-react";
 import PlayerCard from "@/components/PlayerCard";
-import { mockTeams, getPlayersByTeam } from "@/data/mockData";
+import { mockTeams, getPlayersByTeam, mockTrades } from "@/data/mockData";
 
 const TeamDetail = () => {
   const { teamId } = useParams();
@@ -31,6 +31,12 @@ const TeamDetail = () => {
   const teamPlusMinus = players.reduce((sum, player) => sum + player.plusMinus, 0);
   const teamGames = players.reduce((sum, player) => sum + player.gamesPlayed, 0);
   const teamAverage = teamGames > 0 ? (teamPlusMinus / teamGames) : 0;
+
+  const teamTrades = mockTrades.filter(trade =>
+    trade.playersTraded.some(
+      pt => pt.fromTeam === team.name || pt.toTeam === team.name
+    )
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,6 +175,47 @@ const TeamDetail = () => {
                 />
               ))}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Roster History Section */}
+        <Card className="bg-gradient-card shadow-card">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Roster History
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {teamTrades.length === 0 ? (
+              <div className="text-muted-foreground text-center py-4">
+                No roster changes or trades for this team yet.
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {teamTrades.map(trade => (
+                  <div key={trade.id} className="border-b pb-4">
+                    <div className="font-semibold text-primary mb-1">
+                      {trade.date} &mdash; {trade.description}
+                    </div>
+                    <ul className="ml-2">
+                      {trade.playersTraded
+                        .filter(pt => pt.fromTeam === team.name || pt.toTeam === team.name)
+                        .map((pt, idx) => (
+                          <li key={idx} className="text-sm flex items-center gap-2 py-1">
+                            <span className="font-bold">{pt.player.name}</span>
+                            <span>
+                              {pt.fromTeam === team.name
+                                ? `traded to ${pt.toTeam}`
+                                : `acquired from ${pt.fromTeam}`}
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
