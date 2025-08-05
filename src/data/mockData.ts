@@ -117,53 +117,97 @@ export const mockTrades: Trade[] = [
   {
     id: "1",
     date: "2025-09-01",
-    description: "Fall Season Draft - Cuck Luu",
+    description: "NCL Draft Fall 2025",
     playersTraded: [
       {
-        player: allPlayers.find(p => p.id === "6")!,
+        player: allPlayers.find(p => p.id === "4")!,
         fromTeam: "Free Agency",
         toTeam: "Cuck Luu"
       },
       {
-        player: allPlayers.find(p => p.id === "1")!,
-        fromTeam: "Free Agency",
-        toTeam: "Bull Luu"
-      },
-      {
-        player: allPlayers.find(p => p.id === "18")!,
-        fromTeam: "Free Agency",
-        toTeam: "Bull Luu"
-      },
-      {
-        player: allPlayers.find(p => p.id === "4")!,
-        fromTeam: "Free Agency",
-        toTeam: "Brawl Luu"
-      }
-    ]
-  },{
-    id: "1",
-    date: "2025-12-01",
-    description: "Schedule 1 Redraft - Brawl Luu",
-    playersTraded: [
-      {
         player: allPlayers.find(p => p.id === "6")!,
-        fromTeam: "Cuck Luu",
+        fromTeam: "Free Agency",
+        toTeam: "Bull Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "8")!,
+        fromTeam: "Free Agency",
         toTeam: "Brawl Luu"
       },
       {
         player: allPlayers.find(p => p.id === "1")!,
-        fromTeam: "Cuck Luu",
+        fromTeam: "Free Agency",
+        toTeam: "Brawl Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "5")!,
+        fromTeam: "Free Agency",
+        toTeam: "Bull Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "2")!,
+        fromTeam: "Free Agency",
+        toTeam: "Cuck Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "7")!,
+        fromTeam: "Free Agency",
+        toTeam: "Cuck Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "3")!,
+        fromTeam: "Free Agency",
+        toTeam: "Bull Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "9")!,
+        fromTeam: "Free Agency",
+        toTeam: "Brawl Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "10")!,
+        fromTeam: "Free Agency",
+        toTeam: "Brawl Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "11")!,
+        fromTeam: "Free Agency",
+        toTeam: "Bull Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "12")!,
+        fromTeam: "Free Agency",
+        toTeam: "Brawl Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "13")!,
+        fromTeam: "Free Agency",
+        toTeam: "Cuck Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "14")!,
+        fromTeam: "Free Agency",
+        toTeam: "Bull Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "15")!,
+        fromTeam: "Free Agency",
+        toTeam: "Cuck Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "16")!,
+        fromTeam: "Free Agency",
+        toTeam: "Bull Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "17")!,
+        fromTeam: "Free Agency",
         toTeam: "Brawl Luu"
       },
       {
         player: allPlayers.find(p => p.id === "18")!,
-        fromTeam: "Bull Luu",
-        toTeam: "Brawl Luu"
-      },
-      {
-        player: allPlayers.find(p => p.id === "4")!,
-        fromTeam: "Cuck Luu",
-        toTeam: "Brawl Luu"
+        fromTeam: "Free Agency",
+        toTeam: "Cuck Luu"
       }
     ]
   },
@@ -220,3 +264,34 @@ export const getTopPerformers = () => {
     topAverage: sortedByAverage.slice(0, 18)
   };
 };
+
+export const applyTradesToRosters = () => {
+  // Reset all team rosters
+  mockTeams.forEach(team => {
+    team.playerIds = [];
+  });
+
+  // Reset all player teamIds
+  allPlayers.forEach(player => {
+    player.teamId = undefined;
+  });
+
+  // Apply trades
+  mockTrades.forEach(trade => {
+    trade.playersTraded.forEach(({ player, toTeam }) => {
+      // Find the team object
+      const team = mockTeams.find(t => t.name === toTeam);
+      if (team) {
+        // Update player's teamId
+        player.teamId = team.id;
+        // Add player to team's playerIds if not already present
+        if (!team.playerIds.includes(player.id)) {
+          team.playerIds.push(player.id);
+        }
+      }
+    });
+  });
+};
+
+// Call this function after defining mockTrades to sync rosters
+applyTradesToRosters();
