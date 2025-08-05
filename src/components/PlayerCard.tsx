@@ -49,9 +49,10 @@ const PlayerCard = ({ player }: PlayerCardProps) => {
             <p className="text-sm text-muted-foreground">{player.position}</p>
           </div>
           {/* Overall Rating Badge */}
-          <div className="absolute top-0 right-0">
-            <Badge variant="secondary" className="text-xs px-2 py-1">
-              {overallRating}/100
+          <div className="absolute top-0 right-0 flex flex-col items-center">
+            <span className="text-[10px] font-semibold text-muted-foreground mb-0.5">OVR</span>
+            <Badge variant="secondary" className="text-base px-2 py-1 font-bold">
+              {overallRating}
             </Badge>
           </div>
         </div>
