@@ -15,7 +15,7 @@ const Home = () => {
     })
     .slice(0, 3);
 
-  const { topKillers, topAces } = getTopPerformers();
+  const { topPlusMinus, topAverage } = getTopPerformers();
   const totalGames = mockTeams.reduce((sum, team) => sum + team.wins + team.losses, 0) / 2;
 
   return (
@@ -60,7 +60,7 @@ const Home = () => {
             <CardContent className="p-6 text-center">
               <Users className="h-8 w-8 text-secondary mx-auto mb-2" />
               <div className="text-2xl font-bold text-card-foreground">
-                {mockTeams.reduce((sum, team) => sum + team.playerCount, 0)}
+                {mockTeams.reduce((sum, team) => sum + team.playerIds.length, 0)}
               </div>
               <div className="text-sm text-muted-foreground">Players</div>
             </CardContent>
@@ -111,12 +111,12 @@ const Home = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" />
-                Top Killers
+                Top Plus/Minus
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {topKillers.slice(0, 3).map((player, index) => (
+                {topPlusMinus.slice(0, 3).map((player, index) => (
                   <div key={player.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                     <div className="flex items-center gap-3">
                       <Badge variant={index === 0 ? "default" : "secondary"}>
@@ -128,8 +128,10 @@ const Home = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold text-primary">{player.kills}</div>
-                      <div className="text-xs text-muted-foreground">kills</div>
+                      <div className={`text-lg font-bold ${player.plusMinus > 0 ? 'text-green-600' : player.plusMinus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                        {player.plusMinus > 0 ? '+' : ''}{player.plusMinus}
+                      </div>
+                      <div className="text-xs text-muted-foreground">+/-</div>
                     </div>
                   </div>
                 ))}
@@ -141,28 +143,33 @@ const Home = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-secondary" />
-                Top Aces
+                Best Average
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {topAces.slice(0, 3).map((player, index) => (
-                  <div key={player.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Badge variant={index === 0 ? "default" : "secondary"}>
-                        #{index + 1}
-                      </Badge>
-                      <div>
-                        <div className="font-semibold">{player.name}</div>
-                        <div className="text-sm text-muted-foreground">{player.position}</div>
+                {topAverage.slice(0, 3).map((player, index) => {
+                  const average = player.gamesPlayed > 0 ? (player.plusMinus / player.gamesPlayed) : 0;
+                  return (
+                    <div key={player.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Badge variant={index === 0 ? "default" : "secondary"}>
+                          #{index + 1}
+                        </Badge>
+                        <div>
+                          <div className="font-semibold">{player.name}</div>
+                          <div className="text-sm text-muted-foreground">{player.position}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-lg font-bold ${average > 0 ? 'text-green-600' : average < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                          {average > 0 ? '+' : ''}{average.toFixed(1)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">avg</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-secondary">{player.aces}</div>
-                      <div className="text-xs text-muted-foreground">aces</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>

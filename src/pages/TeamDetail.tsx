@@ -2,9 +2,9 @@ import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, Target, Users, Award } from "lucide-react";
+import { ArrowLeft, Trophy, TrendingUp, Users, Edit } from "lucide-react";
 import PlayerCard from "@/components/PlayerCard";
-import { mockTeams } from "@/data/mockData";
+import { mockTeams, getPlayersByTeam } from "@/data/mockData";
 
 const TeamDetail = () => {
   const { teamId } = useParams();
@@ -23,13 +23,14 @@ const TeamDetail = () => {
     );
   }
 
+  const players = getPlayersByTeam(team.id);
   const winPercentage = ((team.wins / (team.wins + team.losses)) * 100).toFixed(1);
   const pointDifferential = team.pointsFor - team.pointsAgainst;
   
   // Team stats
-  const teamKills = team.players.reduce((sum, player) => sum + player.kills, 0);
-  const teamAces = team.players.reduce((sum, player) => sum + player.aces, 0);
-  const teamBlocks = team.players.reduce((sum, player) => sum + player.blocks, 0);
+  const teamPlusMinus = players.reduce((sum, player) => sum + player.plusMinus, 0);
+  const teamGames = players.reduce((sum, player) => sum + player.gamesPlayed, 0);
+  const teamAverage = teamGames > 0 ? (teamPlusMinus / teamGames) : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,34 +42,49 @@ const TeamDetail = () => {
             Back to Teams
           </Link>
           
-          <div className="flex items-center space-x-6">
-            <div 
-              className="w-24 h-24 rounded-xl flex items-center justify-center text-white font-bold text-3xl shadow-primary"
-              style={{ backgroundColor: team.color }}
-            >
-              {team.name.substring(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-2">
-                {team.name}
-              </h1>
-              <p className="text-lg text-primary-foreground/90 mb-4">
-                Captain: {team.captain}
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Badge variant="secondary" className="text-lg px-4 py-2">
-                  {team.wins}W - {team.losses}L
-                </Badge>
-                <Badge variant="outline" className="text-lg px-4 py-2 bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground">
-                  {winPercentage}% Win Rate
-                </Badge>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <div 
+                className="w-24 h-24 rounded-xl flex items-center justify-center text-white font-bold text-3xl shadow-primary"
+                style={{ backgroundColor: team.color }}
+              >
+                {team.name.substring(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-2">
+                  {team.name}
+                </h1>
+                <p className="text-lg text-primary-foreground/90 mb-4">
+                  Captain: {team.captain}
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Badge variant="secondary" className="text-lg px-4 py-2">
+                    {team.wins}W - {team.losses}L
+                  </Badge>
+                  <Badge variant="outline" className="text-lg px-4 py-2 bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground">
+                    {winPercentage}% Win Rate
+                  </Badge>
+                </div>
               </div>
             </div>
+            
+            <Button variant="secondary" size="lg" className="hidden md:flex">
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Roster
+            </Button>
           </div>
         </div>
       </section>
 
       <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
+        {/* Edit Roster Button for Mobile */}
+        <div className="md:hidden">
+          <Button variant="secondary" className="w-full">
+            <Edit className="h-4 w-4 mr-2" />
+            Edit Roster
+          </Button>
+        </div>
+
         {/* Team Statistics */}
         <div className="grid md:grid-cols-4 gap-6">
           <Card className="bg-gradient-stats shadow-card">
@@ -81,25 +97,29 @@ const TeamDetail = () => {
           
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
-              <Target className="h-8 w-8 text-secondary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-card-foreground">{teamKills}</div>
-              <div className="text-sm text-muted-foreground">Team Kills</div>
+              <TrendingUp className="h-8 w-8 text-secondary mx-auto mb-2" />
+              <div className={`text-2xl font-bold ${teamPlusMinus > 0 ? 'text-green-600' : teamPlusMinus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                {teamPlusMinus > 0 ? '+' : ''}{teamPlusMinus}
+              </div>
+              <div className="text-sm text-muted-foreground">Team +/-</div>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
-              <Award className="h-8 w-8 text-accent mx-auto mb-2" />
-              <div className="text-2xl font-bold text-card-foreground">{teamAces}</div>
-              <div className="text-sm text-muted-foreground">Team Aces</div>
+              <Users className="h-8 w-8 text-accent mx-auto mb-2" />
+              <div className="text-2xl font-bold text-card-foreground">{teamGames}</div>
+              <div className="text-sm text-muted-foreground">Total Games</div>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
-              <Users className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-card-foreground">{teamBlocks}</div>
-              <div className="text-sm text-muted-foreground">Team Blocks</div>
+              <Trophy className="h-8 w-8 text-primary mx-auto mb-2" />
+              <div className={`text-2xl font-bold ${teamAverage > 0 ? 'text-green-600' : teamAverage < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                {teamAverage > 0 ? '+' : ''}{teamAverage.toFixed(1)}
+              </div>
+              <div className="text-sm text-muted-foreground">Team Average</div>
             </CardContent>
           </Card>
         </div>
@@ -134,13 +154,19 @@ const TeamDetail = () => {
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
-              Team Roster ({team.players.length} players)
+              Team Roster ({players.length} players)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {team.players.map((player) => (
-                <PlayerCard key={player.id} player={player} />
+              {players.map((player) => (
+                <PlayerCard 
+                  key={player.id} 
+                  player={{
+                    ...player,
+                    isCaptain: player.name === team.captain
+                  }} 
+                />
               ))}
             </div>
           </CardContent>

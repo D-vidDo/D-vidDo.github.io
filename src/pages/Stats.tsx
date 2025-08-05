@@ -2,28 +2,26 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Target, Award, Shield, Users } from "lucide-react";
+import { TrendingUp, Trophy, Users } from "lucide-react";
 import PlayerCard from "@/components/PlayerCard";
-import { getTopPerformers, getAllPlayers } from "@/data/mockData";
+import { getTopPerformers, allPlayers } from "@/data/mockData";
 
 const Stats = () => {
-  const [activeTab, setActiveTab] = useState("killers");
-  const { topKillers, topAces, topBlockers } = getTopPerformers();
-  const allPlayers = getAllPlayers();
+  const [activeTab, setActiveTab] = useState("plusMinus");
+  const { topPlusMinus, topAverage } = getTopPerformers();
 
   const tabs = [
-    { id: "killers", label: "Top Killers", icon: Target, data: topKillers, stat: "kills" },
-    { id: "aces", label: "Top Aces", icon: Award, data: topAces, stat: "aces" },
-    { id: "blockers", label: "Top Blockers", icon: Shield, data: topBlockers, stat: "blocks" },
+    { id: "plusMinus", label: "Top +/-", icon: TrendingUp, data: topPlusMinus, stat: "plusMinus" },
+    { id: "average", label: "Best Average", icon: Trophy, data: topAverage, stat: "average" },
   ];
 
   const currentTab = tabs.find(tab => tab.id === activeTab);
-  const Icon = currentTab?.icon || Target;
+  const Icon = currentTab?.icon || TrendingUp;
 
   // Calculate league totals
-  const totalKills = allPlayers.reduce((sum, player) => sum + player.kills, 0);
-  const totalAces = allPlayers.reduce((sum, player) => sum + player.aces, 0);
-  const totalBlocks = allPlayers.reduce((sum, player) => sum + player.blocks, 0);
+  const totalPlusMinus = allPlayers.reduce((sum, player) => sum + player.plusMinus, 0);
+  const totalGames = allPlayers.reduce((sum, player) => sum + player.gamesPlayed, 0);
+  const averagePerGame = totalGames > 0 ? (totalPlusMinus / totalGames) : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,25 +46,29 @@ const Stats = () => {
         <div className="grid md:grid-cols-3 gap-6">
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
-              <Target className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-3xl font-bold text-card-foreground">{totalKills.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Total Kills</div>
+              <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2" />
+              <div className={`text-3xl font-bold ${totalPlusMinus > 0 ? 'text-green-600' : totalPlusMinus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                {totalPlusMinus > 0 ? '+' : ''}{totalPlusMinus}
+              </div>
+              <div className="text-sm text-muted-foreground">Total +/-</div>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
-              <Award className="h-8 w-8 text-secondary mx-auto mb-2" />
-              <div className="text-3xl font-bold text-card-foreground">{totalAces.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Total Aces</div>
+              <Trophy className="h-8 w-8 text-secondary mx-auto mb-2" />
+              <div className="text-3xl font-bold text-card-foreground">{totalGames}</div>
+              <div className="text-sm text-muted-foreground">Total Games</div>
             </CardContent>
           </Card>
           
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
-              <Shield className="h-8 w-8 text-accent mx-auto mb-2" />
-              <div className="text-3xl font-bold text-card-foreground">{totalBlocks.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Total Blocks</div>
+              <Users className="h-8 w-8 text-accent mx-auto mb-2" />
+              <div className={`text-3xl font-bold ${averagePerGame > 0 ? 'text-green-600' : averagePerGame < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                {averagePerGame > 0 ? '+' : ''}{averagePerGame.toFixed(1)}
+              </div>
+              <div className="text-sm text-muted-foreground">League Avg</div>
             </CardContent>
           </Card>
         </div>
@@ -119,25 +121,33 @@ const Stats = () => {
                 </h3>
                 
                 <div className="space-y-2">
-                  {currentTab?.data.map((player, index) => (
-                    <div key={player.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <Badge variant={index < 3 ? "default" : "secondary"} className="w-8 h-8 rounded-full p-0 flex items-center justify-center">
-                          {index + 1}
-                        </Badge>
-                        <div>
-                          <div className="font-semibold text-card-foreground">{player.name}</div>
-                          <div className="text-sm text-muted-foreground">{player.position}</div>
+                  {currentTab?.data.map((player, index) => {
+                    const statValue = activeTab === "average" 
+                      ? (player.gamesPlayed > 0 ? (player.plusMinus / player.gamesPlayed) : 0)
+                      : player.plusMinus;
+                    
+                    return (
+                      <div key={player.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <Badge variant={index < 3 ? "default" : "secondary"} className="w-8 h-8 rounded-full p-0 flex items-center justify-center">
+                            {index + 1}
+                          </Badge>
+                          <div>
+                            <div className="font-semibold text-card-foreground">{player.name}</div>
+                            <div className="text-sm text-muted-foreground">{player.position}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`text-xl font-bold ${statValue > 0 ? 'text-green-600' : statValue < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                            {statValue > 0 ? '+' : ''}{activeTab === "average" ? statValue.toFixed(1) : statValue}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {activeTab === "average" ? "avg" : "+/-"}
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-xl font-bold text-primary">
-                          {player[currentTab?.stat as keyof typeof player]}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{currentTab?.stat}</div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

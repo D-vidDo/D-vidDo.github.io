@@ -10,9 +10,9 @@ interface TeamCardProps {
     name: string;
     wins: number;
     losses: number;
-    playerCount: number;
     captain: string;
     color: string;
+    playerIds: string[];
   };
 }
 
@@ -54,7 +54,7 @@ const TeamCard = ({ team }: TeamCardProps) => {
             <div className="text-xs text-muted-foreground">Losses</div>
           </div>
           <div className="space-y-1">
-            <div className="text-2xl font-bold text-primary">{team.playerCount}</div>
+            <div className="text-2xl font-bold text-primary">{team.playerIds.length}</div>
             <div className="text-xs text-muted-foreground">Players</div>
           </div>
         </div>
@@ -63,7 +63,7 @@ const TeamCard = ({ team }: TeamCardProps) => {
           <div className="flex space-x-2">
             <div className="flex items-center text-xs text-muted-foreground">
               <Users className="h-3 w-3 mr-1" />
-              {team.playerCount} players
+              {team.playerIds.length} players
             </div>
           </div>
           

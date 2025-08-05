@@ -43,7 +43,7 @@ const Teams = () => {
           </p>
           <Badge variant="secondary" className="text-lg px-4 py-2">
             <Users className="mr-2 h-4 w-4" />
-            {mockTeams.length} Teams • {mockTeams.reduce((sum, team) => sum + team.playerCount, 0)} Players
+            {mockTeams.length} Teams • {mockTeams.reduce((sum, team) => sum + team.playerIds.length, 0)} Players
           </Badge>
         </div>
       </section>

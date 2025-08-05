@@ -1,16 +1,15 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User, Award, Target } from "lucide-react";
+import { User, Award, TrendingUp } from "lucide-react";
 
 interface PlayerCardProps {
   player: {
     id: string;
     name: string;
     position: string;
-    kills: number;
-    aces: number;
-    blocks: number;
+    plusMinus: number;
+    gamesPlayed: number;
     isCaptain?: boolean;
   };
 }
@@ -47,20 +46,26 @@ const PlayerCard = ({ player }: PlayerCardProps) => {
       </CardHeader>
       
       <CardContent>
-        <div className="grid grid-cols-3 gap-3 text-center">
+        <div className="grid grid-cols-2 gap-4 text-center">
           <div className="space-y-1">
-            <div className="text-lg font-bold text-primary">{player.kills}</div>
-            <div className="text-xs text-muted-foreground">Kills</div>
+            <div className={`text-lg font-bold ${player.plusMinus > 0 ? 'text-green-600' : player.plusMinus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+              {player.plusMinus > 0 ? '+' : ''}{player.plusMinus}
+            </div>
+            <div className="text-xs text-muted-foreground">Plus/Minus</div>
           </div>
           <div className="space-y-1">
-            <div className="text-lg font-bold text-secondary">{player.aces}</div>
-            <div className="text-xs text-muted-foreground">Aces</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-lg font-bold text-accent">{player.blocks}</div>
-            <div className="text-xs text-muted-foreground">Blocks</div>
+            <div className="text-lg font-bold text-primary">{player.gamesPlayed}</div>
+            <div className="text-xs text-muted-foreground">Games</div>
           </div>
         </div>
+        {player.gamesPlayed > 0 && (
+          <div className="mt-3 pt-3 border-t text-center">
+            <div className="text-sm text-muted-foreground">Average per game:</div>
+            <div className={`text-lg font-semibold ${(player.plusMinus / player.gamesPlayed) > 0 ? 'text-green-600' : (player.plusMinus / player.gamesPlayed) < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+              {((player.plusMinus / player.gamesPlayed) > 0 ? '+' : '')}{(player.plusMinus / player.gamesPlayed).toFixed(1)}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
