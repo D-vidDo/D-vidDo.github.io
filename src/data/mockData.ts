@@ -149,24 +149,24 @@ export const mockTrades: Trade[] = [
 ];
 
 // Scramble stats for all players (for testing)
-const statKeys = [
-  "Serving",
-  "Receiving",
-  "Defensive Positioning",
-  "Setting",
-  "Blocking",
-  "Hitting",
-  "Hustle",
-  "Stamina",
-  "Vertical Jump",
-  "Communication"
-];
+// const statKeys = [
+//   "Serving",
+//   "Receiving",
+//   "Defensive Positioning",
+//   "Setting",
+//   "Blocking",
+//   "Hitting",
+//   "Hustle",
+//   "Stamina",
+//   "Vertical Jump",
+//   "Communication"
+// ];
 
-allPlayers.forEach(player => {
-  statKeys.forEach(key => {
-    player.stats[key] = Math.floor(Math.random() * 5) + 1;
-  });
-});
+// allPlayers.forEach(player => {
+//   statKeys.forEach(key => {
+//     player.stats[key] = Math.floor(Math.random() * 5) + 1;
+//   });
+// });
 
 // Helper functions
 export const getPlayersByTeam = (teamId: string): Player[] => {
