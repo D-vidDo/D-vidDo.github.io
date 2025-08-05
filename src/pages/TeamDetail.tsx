@@ -33,9 +33,7 @@ const TeamDetail = () => {
   const teamAverage = teamGames > 0 ? (teamPlusMinus / teamGames) : 0;
 
   const teamTrades = mockTrades.filter(trade =>
-    trade.playersTraded.some(
-      pt => pt.fromTeam === team.name || pt.toTeam === team.name
-    )
+    trade.playersTraded.some(pt => pt.toTeam === team.name)
   );
 
   return (
@@ -200,14 +198,12 @@ const TeamDetail = () => {
                     </div>
                     <ul className="ml-2">
                       {trade.playersTraded
-                        .filter(pt => pt.fromTeam === team.name || pt.toTeam === team.name)
+                        .filter(pt => pt.toTeam === team.name)
                         .map((pt, idx) => (
                           <li key={idx} className="text-sm flex items-center gap-2 py-1">
                             <span className="font-bold">{pt.player.name}</span>
                             <span>
-                              {pt.fromTeam === team.name
-                                ? `traded to ${pt.toTeam}`
-                                : `acquired from ${pt.fromTeam}`}
+                              {`acquired from ${pt.fromTeam}`}
                             </span>
                           </li>
                         ))}
