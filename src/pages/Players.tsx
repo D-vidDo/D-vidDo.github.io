@@ -48,20 +48,23 @@ const Players = () => {
           <Badge variant="secondary" className="text-lg px-4 py-2">
             {allPlayers.length} Players
           </Badge>
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
-            {statKeys.map((key) => (
-              <Button
-                key={key}
-                variant={sortKey === key ? "secondary" : "ghost"}
-                className="text-xs px-3 py-1"
-                onClick={() => setSortKey(key)}
-              >
-                {key}
-              </Button>
-            ))}
-          </div>
         </div>
       </section>
+
+      {/* Sort buttons in white space */}
+      <div className="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center gap-2 bg-background">
+        <span className="font-medium text-primary mr-2">Sort By:</span>
+        {statKeys.map((key) => (
+          <Button
+            key={key}
+            variant={sortKey === key ? "secondary" : "ghost"}
+            className="text-xs px-3 py-1"
+            onClick={() => setSortKey(key)}
+          >
+            {key}
+          </Button>
+        ))}
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid md:grid-cols-3 gap-6">
