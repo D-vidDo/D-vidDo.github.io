@@ -28,7 +28,7 @@ const Navigation = () => {
               <Trophy className="h-6 w-6 text-primary" />
             </div>
             <span className="text-xl font-bold text-primary-foreground">
-              NCL - Northeast Community League
+              NCL
             </span>
           </Link>
 
