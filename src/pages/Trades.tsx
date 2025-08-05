@@ -12,14 +12,14 @@ const Trades = () => {
       <section className="bg-gradient-hero py-16 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
-            Trade History
+            Draft History
           </h1>
           <p className="text-lg text-primary-foreground/90 mb-6">
             Complete record of all player movements and trades
           </p>
           <Badge variant="secondary" className="text-lg px-4 py-2">
             <FileText className="mr-2 h-4 w-4" />
-            {trades.length} Total Trades
+            {trades.length} Redrafts
           </Badge>
         </div>
       </section>
