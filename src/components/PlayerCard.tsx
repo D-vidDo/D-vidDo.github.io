@@ -22,10 +22,15 @@ const PlayerCard = ({ player }: PlayerCardProps) => {
     .join('')
     .toUpperCase();
 
+  const overallRating = Math.min(
+    Object.values(player.stats).reduce((sum, val) => sum + val, 0) * 2,
+    100
+  );
+
   return (
     <Card className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105">
       <CardHeader className="pb-3">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 relative">
           <Avatar className="h-12 w-12">
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
               {initials}
@@ -42,6 +47,12 @@ const PlayerCard = ({ player }: PlayerCardProps) => {
               )}
             </div>
             <p className="text-sm text-muted-foreground">{player.position}</p>
+          </div>
+          {/* Overall Rating Badge */}
+          <div className="absolute top-0 right-0">
+            <Badge variant="secondary" className="text-xs px-2 py-1">
+              {overallRating}/100
+            </Badge>
           </div>
         </div>
       </CardHeader>
