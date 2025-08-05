@@ -65,7 +65,7 @@ const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
             <div className={`text-lg font-bold ${player.plusMinus > 0 ? 'text-green-600' : player.plusMinus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
               {player.plusMinus > 0 ? '+' : ''}{player.plusMinus}
             </div>
-            <div className="text-xs text-muted-foreground">Plus/Minus</div>
+            <div className="text-xs text-muted-foreground">+/-</div>
           </div>
           <div className="space-y-1">
             <div className="text-lg font-bold text-primary">{player.gamesPlayed}</div>
