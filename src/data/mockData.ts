@@ -33,58 +33,58 @@ export interface Trade {
 // 18 players total for the league
 export const allPlayers: Player[] = [
   // Free agents initially, will be assigned to teams
-  { id: "1", name: "Sarah Johnson", position: "Hitter", plusMinus: 24, gamesPlayed: 10 },
-  { id: "2", name: "Mike Chen", position: "Setter", plusMinus: 18, gamesPlayed: 10 },
-  { id: "3", name: "Emma Davis", position: "Blocker", plusMinus: 15, gamesPlayed: 9 },
-  { id: "4", name: "Alex Rodriguez", position: "Defensive", plusMinus: 12, gamesPlayed: 10 },
-  { id: "5", name: "Jordan Kim", position: "Hitter", plusMinus: 21, gamesPlayed: 10 },
-  { id: "6", name: "Taylor Brown", position: "All-Around", plusMinus: 8, gamesPlayed: 8 },
-  { id: "7", name: "David Lee", position: "Blocker", plusMinus: 19, gamesPlayed: 10 },
-  { id: "8", name: "Lisa Wang", position: "Setter", plusMinus: 16, gamesPlayed: 9 },
-  { id: "9", name: "Carlos Martinez", position: "Hitter", plusMinus: 22, gamesPlayed: 10 },
-  { id: "10", name: "Jessica Brown", position: "Defensive", plusMinus: 9, gamesPlayed: 10 },
-  { id: "11", name: "Ryan O'Connor", position: "All-Around", plusMinus: 14, gamesPlayed: 9 },
-  { id: "12", name: "Zoe Anderson", position: "Hitter", plusMinus: 17, gamesPlayed: 10 },
-  { id: "13", name: "Rachel Green", position: "Setter", plusMinus: 13, gamesPlayed: 8 },
-  { id: "14", name: "Kevin Zhang", position: "Blocker", plusMinus: 11, gamesPlayed: 9 },
-  { id: "15", name: "Maya Patel", position: "Hitter", plusMinus: 20, gamesPlayed: 10 },
-  { id: "16", name: "Chris Johnson", position: "Defensive", plusMinus: 6, gamesPlayed: 7 },
-  { id: "17", name: "Samantha Wu", position: "All-Around", plusMinus: 25, gamesPlayed: 10 },
-  { id: "18", name: "Tom Wilson", position: "Hitter", plusMinus: 10, gamesPlayed: 8 }
+  { id: "1", name: "David Do", position: "Opposite", plusMinus: 24, gamesPlayed: 10 },
+  { id: "2", name: "Brian Nguyen", position: "Setter", plusMinus: 18, gamesPlayed: 10 },
+  { id: "3", name: "Vivian Tran", position: "Middle", plusMinus: 15, gamesPlayed: 9 },
+  { id: "4", name: "Justin Huynh", position: "Power", plusMinus: 12, gamesPlayed: 10 },
+  { id: "5", name: "Nikka Stephens", position: "Setter", plusMinus: 21, gamesPlayed: 10 },
+  { id: "6", name: "Vince Echano ", position: "Power", plusMinus: 8, gamesPlayed: 8 },
+  { id: "7", name: "Tim Anderson", position: "Middle", plusMinus: 19, gamesPlayed: 10 },
+  { id: "8", name: "Jaydon Fernandes", position: "Middle", plusMinus: 16, gamesPlayed: 9 },
+  { id: "9", name: "Kevin Nguyen", position: "Power", plusMinus: 22, gamesPlayed: 10 },
+  { id: "10", name: "Jeosh Domingo", position: "Middle", plusMinus: 9, gamesPlayed: 10 },
+  { id: "11", name: "Justine Telan", position: "Opposite", plusMinus: 14, gamesPlayed: 9 },
+  { id: "12", name: "Bill Luu", position: "Power", plusMinus: 17, gamesPlayed: 10 },
+  { id: "13", name: "Pauline ", position: "Power", plusMinus: 13, gamesPlayed: 8 },
+  { id: "14", name: "Lucy Huang", position: "Middle", plusMinus: 11, gamesPlayed: 9 },
+  { id: "15", name: "Brandon Sangalang", position: "Opposite", plusMinus: 20, gamesPlayed: 10 },
+  { id: "16", name: "Duy Huynh", position: "Setter", plusMinus: 6, gamesPlayed: 7 },
+  { id: "17", name: "Tristan Idolor", position: "Middle", plusMinus: 25, gamesPlayed: 10 },
+  { id: "18", name: "Alyssa Echano", position: "Opposite", plusMinus: 10, gamesPlayed: 8 }
 ];
 
 // 3 teams with 6 players each
 export const mockTeams: Team[] = [
   {
     id: "1",
-    name: "Thunder Spikes",
+    name: "Brawl Luu",
     wins: 8,
     losses: 2,
     pointsFor: 245,
     pointsAgainst: 221,
-    captain: "Sarah Johnson",
+    captain: "Justin Huynh",
     color: "#FF6B35",
     playerIds: ["1", "2", "3", "4", "5", "6"] // Sarah, Mike, Emma, Alex, Jordan, Taylor
   },
   {
     id: "2", 
-    name: "Net Ninjas",
+    name: "Bull Luu",
     wins: 7,
     losses: 3,
     pointsFor: 238,
     pointsAgainst: 225,
-    captain: "David Lee",
+    captain: "Jaydon Fernandes",
     color: "#4ECDC4",
     playerIds: ["7", "8", "9", "10", "11", "12"] // David, Lisa, Carlos, Jessica, Ryan, Zoe
   },
   {
     id: "3",
-    name: "Ace Avengers", 
+    name: "Cuck Luu", 
     wins: 5,
     losses: 5,
     pointsFor: 220,
     pointsAgainst: 232,
-    captain: "Rachel Green",
+    captain: "Jaydon Fernandes",
     color: "#45B7D1",
     playerIds: ["13", "14", "15", "16", "17", "18"] // Rachel, Kevin, Maya, Chris, Samantha, Tom
   }
@@ -108,6 +108,11 @@ export const mockTrades: Trade[] = [
         player: allPlayers.find(p => p.id === "6")!,
         fromTeam: "Free Agency",
         toTeam: "Thunder Spikes"
+      },
+      {
+        player: allPlayers.find(p => p.id === "1")!,
+        fromTeam: "Free Agency",
+        toTeam: "Bull Luu"
       }
     ]
   }
