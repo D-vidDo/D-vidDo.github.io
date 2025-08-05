@@ -7,16 +7,16 @@ export interface Player {
   teamId?: string;
   // Add 10 stat attributes
   stats: {
-    attack: number;
-    block: number;
-    serve: number;
-    receive: number;
-    defense: number;
-    setting: number;
-    speed: number;
-    stamina: number;
-    teamwork: number;
-    leadership: number;
+    Serving: number;
+    Receiving: number;
+    "Defensive Positioning": number;
+    Setting: number;
+    Blocking: number;
+    Hitting: number;
+    Hustle: number;
+    Stamina: number;
+    "Vertical Jump": number;
+    Communication: number;
   };
 }
 
@@ -46,24 +46,24 @@ export interface Trade {
 // 18 players total for the league
 export const allPlayers: Player[] = [
   // Free agents initially, will be assigned to teams
-  { id: "1", name: "David Do", position: "Opposite", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "2", name: "Brian Nguyen", position: "Setter", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "3", name: "Vivian Tran", position: "Middle", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "4", name: "Justin Huynh", position: "Power", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "5", name: "Nikka Stephens", position: "Setter", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "6", name: "Vince Echano ", position: "Power", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "7", name: "Tim Anderson", position: "Middle", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "8", name: "Jaydon Fernandes", position: "Middle", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "9", name: "Kevin Nguyen", position: "Power", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "10", name: "Jeosh Domingo", position: "Middle", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "11", name: "Justine Telan", position: "Opposite", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "12", name: "Bill Luu", position: "Power", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "13", name: "Pauline ", position: "Power", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "14", name: "Lucy Huang", position: "Middle", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "15", name: "Brandon Sangalang", position: "Opposite", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "16", name: "Duy Huynh", position: "Setter", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "17", name: "Tristan Idolor", position: "Middle", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } },
-  { id: "18", name: "Alyssa Echano", position: "Opposite", plusMinus: 0, gamesPlayed: 0, stats: { attack: 0, block: 0, serve: 0, receive: 0, defense: 0, setting: 0, speed: 0, stamina: 0, teamwork: 0, leadership: 0 } }
+  { id: "1", name: "David Do", position: "Opposite", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "2", name: "Brian Nguyen", position: "Setter", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "3", name: "Vivian Tran", position: "Middle", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "4", name: "Justin Huynh", position: "Power", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "5", name: "Nikka Stephens", position: "Setter", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "6", name: "Vince Echano ", position: "Power", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "7", name: "Tim Anderson", position: "Middle", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "8", name: "Jaydon Fernandes", position: "Middle", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "9", name: "Kevin Nguyen", position: "Power", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "10", name: "Jeosh Domingo", position: "Middle", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "11", name: "Justine Telan", position: "Opposite", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "12", name: "Bill Luu", position: "Power", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "13", name: "Pauline ", position: "Power", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "14", name: "Lucy Huang", position: "Middle", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "15", name: "Brandon Sangalang", position: "Opposite", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "16", name: "Duy Huynh", position: "Setter", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "17", name: "Tristan Idolor", position: "Middle", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } },
+  { id: "18", name: "Alyssa Echano", position: "Opposite", plusMinus: 0, gamesPlayed: 0, stats: { Serving: 4, Receiving: 3, "Defensive Positioning": 5, Setting: 2, Blocking: 3, Hitting: 4, Hustle: 5, Stamina: 4, "Vertical Jump": 3, Communication: 5 } }
 ];
 
 // 3 teams with 6 players each
