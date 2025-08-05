@@ -24,10 +24,10 @@ const Home = () => {
       <section className="bg-gradient-hero py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-primary-foreground mb-6">
-            Volleyball League Central
+            Northeast Community League
           </h1>
           <p className="text-xl text-primary-foreground/90 mb-8 max-w-3xl mx-auto">
-            Welcome to your competitive volleyball league hub. Track teams, players, standings, and statistics all in one place.
+            Welcome to the NCL hub. Track teams, players, standings, and statistics all in one place.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/teams">
@@ -111,7 +111,7 @@ const Home = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" />
-                Top Plus/Minus
+                Top +/-
               </CardTitle>
             </CardHeader>
             <CardContent>
