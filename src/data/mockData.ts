@@ -33,24 +33,24 @@ export interface Trade {
 // 18 players total for the league
 export const allPlayers: Player[] = [
   // Free agents initially, will be assigned to teams
-  { id: "1", name: "David Do", position: "Opposite", plusMinus: 24, gamesPlayed: 10 },
-  { id: "2", name: "Brian Nguyen", position: "Setter", plusMinus: 18, gamesPlayed: 10 },
-  { id: "3", name: "Vivian Tran", position: "Middle", plusMinus: 15, gamesPlayed: 9 },
-  { id: "4", name: "Justin Huynh", position: "Power", plusMinus: 12, gamesPlayed: 10 },
-  { id: "5", name: "Nikka Stephens", position: "Setter", plusMinus: 21, gamesPlayed: 10 },
-  { id: "6", name: "Vince Echano ", position: "Power", plusMinus: 8, gamesPlayed: 8 },
-  { id: "7", name: "Tim Anderson", position: "Middle", plusMinus: 19, gamesPlayed: 10 },
-  { id: "8", name: "Jaydon Fernandes", position: "Middle", plusMinus: 16, gamesPlayed: 9 },
-  { id: "9", name: "Kevin Nguyen", position: "Power", plusMinus: 22, gamesPlayed: 10 },
-  { id: "10", name: "Jeosh Domingo", position: "Middle", plusMinus: 9, gamesPlayed: 10 },
-  { id: "11", name: "Justine Telan", position: "Opposite", plusMinus: 14, gamesPlayed: 9 },
-  { id: "12", name: "Bill Luu", position: "Power", plusMinus: 17, gamesPlayed: 10 },
-  { id: "13", name: "Pauline ", position: "Power", plusMinus: 13, gamesPlayed: 8 },
-  { id: "14", name: "Lucy Huang", position: "Middle", plusMinus: 11, gamesPlayed: 9 },
-  { id: "15", name: "Brandon Sangalang", position: "Opposite", plusMinus: 20, gamesPlayed: 10 },
-  { id: "16", name: "Duy Huynh", position: "Setter", plusMinus: 6, gamesPlayed: 7 },
-  { id: "17", name: "Tristan Idolor", position: "Middle", plusMinus: 25, gamesPlayed: 10 },
-  { id: "18", name: "Alyssa Echano", position: "Opposite", plusMinus: 10, gamesPlayed: 8 }
+  { id: "1", name: "David Do", position: "Opposite", plusMinus: 0, gamesPlayed: 0 },
+  { id: "2", name: "Brian Nguyen", position: "Setter", plusMinus: 0, gamesPlayed: 0 },
+  { id: "3", name: "Vivian Tran", position: "Middle", plusMinus: 0, gamesPlayed: 0 },
+  { id: "4", name: "Justin Huynh", position: "Power", plusMinus: 0, gamesPlayed: 0 },
+  { id: "5", name: "Nikka Stephens", position: "Setter", plusMinus: 0, gamesPlayed: 0 },
+  { id: "6", name: "Vince Echano ", position: "Power", plusMinus: 0, gamesPlayed: 0 },
+  { id: "7", name: "Tim Anderson", position: "Middle", plusMinus: 0, gamesPlayed: 0 },
+  { id: "8", name: "Jaydon Fernandes", position: "Middle", plusMinus: 0, gamesPlayed: 0 },
+  { id: "9", name: "Kevin Nguyen", position: "Power", plusMinus: 0, gamesPlayed: 0 },
+  { id: "10", name: "Jeosh Domingo", position: "Middle", plusMinus: 0, gamesPlayed: 0 },
+  { id: "11", name: "Justine Telan", position: "Opposite", plusMinus: 0, gamesPlayed: 0 },
+  { id: "12", name: "Bill Luu", position: "Power", plusMinus: 0, gamesPlayed: 0 },
+  { id: "13", name: "Pauline ", position: "Power", plusMinus: 0, gamesPlayed: 0 },
+  { id: "14", name: "Lucy Huang", position: "Middle", plusMinus: 0, gamesPlayed: 0 },
+  { id: "15", name: "Brandon Sangalang", position: "Opposite", plusMinus: 0, gamesPlayed: 0 },
+  { id: "16", name: "Duy Huynh", position: "Setter", plusMinus: 0, gamesPlayed: 0 },
+  { id: "17", name: "Tristan Idolor", position: "Middle", plusMinus: 0, gamesPlayed: 0 },
+  { id: "18", name: "Alyssa Echano", position: "Opposite", plusMinus: 0, gamesPlayed: 0 }
 ];
 
 // 3 teams with 6 players each
@@ -58,10 +58,10 @@ export const mockTeams: Team[] = [
   {
     id: "1",
     name: "Brawl Luu",
-    wins: 8,
-    losses: 2,
-    pointsFor: 245,
-    pointsAgainst: 221,
+    wins: 0,
+    losses: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
     captain: "Justin Huynh",
     color: "#FF6B35",
     playerIds: ["1", "2", "3", "4", "5", "6"] // Sarah, Mike, Emma, Alex, Jordan, Taylor
@@ -69,10 +69,10 @@ export const mockTeams: Team[] = [
   {
     id: "2", 
     name: "Bull Luu",
-    wins: 7,
-    losses: 3,
-    pointsFor: 238,
-    pointsAgainst: 225,
+    wins: 0,
+    losses: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
     captain: "Jaydon Fernandes",
     color: "#4ECDC4",
     playerIds: ["7", "8", "9", "10", "11", "12"] // David, Lisa, Carlos, Jessica, Ryan, Zoe
@@ -80,10 +80,10 @@ export const mockTeams: Team[] = [
   {
     id: "3",
     name: "Cuck Luu", 
-    wins: 5,
-    losses: 5,
-    pointsFor: 220,
-    pointsAgainst: 232,
+    wins: 0,
+    losses: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
     captain: "Vince Echano",
     color: "#45B7D1",
     playerIds: ["13", "14", "15", "16", "17", "18"] // Rachel, Kevin, Maya, Chris, Samantha, Tom
@@ -113,6 +113,23 @@ export const mockTrades: Trade[] = [
         player: allPlayers.find(p => p.id === "1")!,
         fromTeam: "Free Agency",
         toTeam: "Bull Luu"
+      }
+    ]
+  },
+  {
+    id: "2",
+    date: "2025-08-01",
+    description: "Week 1 Trades",
+    playersTraded: [
+      {
+        player: allPlayers.find(p => p.id === "6")!,
+        fromTeam: "Free Agency",
+        toTeam: "Thunder Spikes"
+      },
+      {
+        player: allPlayers.find(p => p.id === "1")!,
+        fromTeam: "Bull Luu",
+        toTeam: "Cuck Luu"
       }
     ]
   }
