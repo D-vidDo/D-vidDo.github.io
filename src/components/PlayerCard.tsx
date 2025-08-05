@@ -11,6 +11,7 @@ interface PlayerCardProps {
     plusMinus: number;
     gamesPlayed: number;
     isCaptain?: boolean;
+    stats: Record<string, number>;
   };
 }
 
@@ -66,6 +67,15 @@ const PlayerCard = ({ player }: PlayerCardProps) => {
             </div>
           </div>
         )}
+        {/* Stats Grid */}
+        <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+          {Object.entries(player.stats).map(([stat, value]) => (
+            <div key={stat} className="flex justify-between items-center bg-muted/30 rounded px-2 py-1">
+              <span className="font-medium capitalize">{stat}</span>
+              <span className="font-bold text-primary">{value}</span>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
