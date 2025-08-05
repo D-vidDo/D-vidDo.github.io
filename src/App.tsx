@@ -12,6 +12,7 @@ import Standings from "./pages/Standings";
 import Stats from "./pages/Stats";
 import Trades from "./pages/Trades";
 import NotFound from "./pages/NotFound";
+import Players from "./pages/Players";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/teams" element={<Teams />} />
             <Route path="/teams/:teamId" element={<TeamDetail />} />
             <Route path="/standings" element={<Standings />} />
+            <Route path="/players" element={<Players />} />
             <Route path="/stats" element={<Stats />} />
             <Route path="/trades" element={<Trades />} />
             <Route path="*" element={<NotFound />} />
