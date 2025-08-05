@@ -116,38 +116,58 @@ allPlayers.forEach(player => {
 export const mockTrades: Trade[] = [
   {
     id: "1",
-    date: "2024-08-01",
-    description: "Pre-season roster adjustment",
+    date: "2025-09-01",
+    description: "Fall Season Draft - Cuck Luu",
     playersTraded: [
       {
         player: allPlayers.find(p => p.id === "6")!,
         fromTeam: "Free Agency",
-        toTeam: "Thunder Spikes"
+        toTeam: "Cuck Luu"
       },
       {
         player: allPlayers.find(p => p.id === "1")!,
         fromTeam: "Free Agency",
         toTeam: "Bull Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "18")!,
+        fromTeam: "Free Agency",
+        toTeam: "Bull Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "4")!,
+        fromTeam: "Free Agency",
+        toTeam: "Brawl Luu"
       }
     ]
-  },
-  {
-    id: "2",
-    date: "2025-08-01",
-    description: "Week 1 Trades",
+  },{
+    id: "1",
+    date: "2025-12-01",
+    description: "Schedule 1 Redraft - Brawl Luu",
     playersTraded: [
       {
         player: allPlayers.find(p => p.id === "6")!,
-        fromTeam: "Free Agency",
-        toTeam: "Thunder Spikes"
+        fromTeam: "Cuck Luu",
+        toTeam: "Brawl Luu"
       },
       {
         player: allPlayers.find(p => p.id === "1")!,
+        fromTeam: "Cuck Luu",
+        toTeam: "Brawl Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "18")!,
         fromTeam: "Bull Luu",
-        toTeam: "Cuck Luu"
+        toTeam: "Brawl Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "4")!,
+        fromTeam: "Cuck Luu",
+        toTeam: "Brawl Luu"
       }
     ]
-  }
+  },
+  
 ];
 
 // Scramble stats for all players (for testing)
