@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import PlayerCard from "@/components/PlayerCard";
 import { allPlayers } from "@/data/mockData";
 
@@ -27,8 +28,13 @@ const getOverallRating = (player) =>
 
 const Players = () => {
   const [sortKey, setSortKey] = useState("Overall Rating");
+  const [search, setSearch] = useState("");
 
-  const sortedPlayers = [...allPlayers].sort((a, b) => {
+  const filteredPlayers = allPlayers.filter((player) =>
+    player.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const sortedPlayers = [...filteredPlayers].sort((a, b) => {
     if (sortKey === "Overall Rating") {
       return getOverallRating(b) - getOverallRating(a);
     }
@@ -50,6 +56,17 @@ const Players = () => {
           </Badge>
         </div>
       </section>
+
+      {/* Search bar */}
+      <div className="max-w-7xl mx-auto px-4 py-4 flex justify-center">
+        <Input
+          type="text"
+          placeholder="Search for a player..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-md"
+        />
+      </div>
 
       {/* Sort buttons in white space */}
       <div className="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center gap-2 justify-center bg-background">
