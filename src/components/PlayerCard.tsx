@@ -47,7 +47,14 @@ const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">{player.position}</p>
+            <p className="text-sm text-muted-foreground">
+              {player.primaryPosition}
+              {player.secondaryPosition ? (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  / {player.secondaryPosition}
+                </span>
+              ) : null}
+            </p>
           </div>
           {/* Overall Rating Badge */}
           <div className="absolute top-0 right-0 flex flex-col items-center">
