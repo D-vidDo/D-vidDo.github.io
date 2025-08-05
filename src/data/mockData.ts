@@ -84,7 +84,7 @@ export const mockTeams: Team[] = [
     losses: 5,
     pointsFor: 220,
     pointsAgainst: 232,
-    captain: "Jaydon Fernandes",
+    captain: "Vince Echano",
     color: "#45B7D1",
     playerIds: ["13", "14", "15", "16", "17", "18"] // Rachel, Kevin, Maya, Chris, Samantha, Tom
   }
