@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import PlayerCard from "@/components/PlayerCard";
 import { allPlayers } from "@/data/mockData";
 
@@ -47,21 +48,17 @@ const Players = () => {
           <Badge variant="secondary" className="text-lg px-4 py-2">
             {allPlayers.length} Players
           </Badge>
-          <div className="mt-6 flex justify-center">
-            <label className="mr-2 font-medium text-primary-foreground">
-              Sort by:
-            </label>
-            <select
-              value={sortKey}
-              onChange={(e) => setSortKey(e.target.value)}
-              className="px-2 py-1 rounded border bg-background text-primary"
-            >
-              {statKeys.map((key) => (
-                <option key={key} value={key}>
-                  {key}
-                </option>
-              ))}
-            </select>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            {statKeys.map((key) => (
+              <Button
+                key={key}
+                variant={sortKey === key ? "secondary" : "ghost"}
+                className="text-xs px-3 py-1"
+                onClick={() => setSortKey(key)}
+              >
+                {key}
+              </Button>
+            ))}
           </div>
         </div>
       </section>
