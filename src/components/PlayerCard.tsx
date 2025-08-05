@@ -13,9 +13,10 @@ interface PlayerCardProps {
     isCaptain?: boolean;
     stats: Record<string, number>;
   };
+  sortKey?: string;
 }
 
-const PlayerCard = ({ player }: PlayerCardProps) => {
+const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
   const initials = player.name
     .split(' ')
     .map(n => n[0])
@@ -81,10 +82,24 @@ const PlayerCard = ({ player }: PlayerCardProps) => {
         )}
         {/* Stats Grid */}
         <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+          {/* Highlight overall rating if selected */}
+          {sortKey === "Overall Rating" && (
+            <div className="col-span-2 flex justify-between items-center bg-yellow-100 rounded px-2 py-1 font-bold">
+              <span className="font-medium">Overall Rating</span>
+              <span className="text-primary">{overallRating}</span>
+            </div>
+          )}
           {Object.entries(player.stats).map(([stat, value]) => (
-            <div key={stat} className="flex justify-between items-center bg-muted/30 rounded px-2 py-1">
+            <div
+              key={stat}
+              className={`flex justify-between items-center rounded px-2 py-1 ${
+                sortKey === stat
+                  ? "bg-yellow-100 font-bold"
+                  : "bg-muted/30"
+              }`}
+            >
               <span className="font-medium capitalize">{stat}</span>
-              <span className="font-bold text-primary">{value}</span>
+              <span className="text-primary">{value}</span>
             </div>
           ))}
         </div>

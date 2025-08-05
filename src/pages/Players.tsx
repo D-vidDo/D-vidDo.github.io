@@ -6,6 +6,7 @@ import PlayerCard from "@/components/PlayerCard";
 import { allPlayers } from "@/data/mockData";
 
 const statKeys = [
+  "Overall Rating",
   "Serving",
   "Receiving",
   "Defensive Positioning",
@@ -16,7 +17,6 @@ const statKeys = [
   "Stamina",
   "Vertical Jump",
   "Communication",
-  "Overall Rating",
 ];
 
 const getOverallRating = (player) =>
@@ -52,7 +52,7 @@ const Players = () => {
       </section>
 
       {/* Sort buttons in white space */}
-      <div className="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center gap-2 bg-background">
+      <div className="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center gap-2 justify-center bg-background">
         <span className="font-medium text-primary mr-2">Sort By:</span>
         {statKeys.map((key) => (
           <Button
@@ -69,7 +69,7 @@ const Players = () => {
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid md:grid-cols-3 gap-6">
           {sortedPlayers.map((player) => (
-            <PlayerCard key={player.id} player={player} />
+            <PlayerCard key={player.id} player={player} sortKey={sortKey} />
           ))}
         </div>
       </div>
