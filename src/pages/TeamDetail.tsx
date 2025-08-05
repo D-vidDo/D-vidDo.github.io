@@ -68,22 +68,22 @@ const TeamDetail = () => {
               </div>
             </div>
             
-            <Button variant="secondary" size="lg" className="hidden md:flex">
+            {/* <Button variant="secondary" size="lg" className="hidden md:flex">
               <Edit className="h-4 w-4 mr-2" />
               Edit Roster
-            </Button>
+            </Button> */}
           </div>
         </div>
       </section>
 
       <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
         {/* Edit Roster Button for Mobile */}
-        <div className="md:hidden">
+        {/* <div className="md:hidden">
           <Button variant="secondary" className="w-full">
             <Edit className="h-4 w-4 mr-2" />
             Edit Roster
           </Button>
-        </div>
+        </div> */}
 
         {/* Team Statistics */}
         <div className="grid md:grid-cols-4 gap-6">
