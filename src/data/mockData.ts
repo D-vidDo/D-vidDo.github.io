@@ -161,7 +161,7 @@ export const getTopPerformers = () => {
     .sort((a, b) => (b.plusMinus / b.gamesPlayed) - (a.plusMinus / a.gamesPlayed));
     
   return {
-    topPlusMinus: sortedByPlusMinus.slice(0, 10),
-    topAverage: sortedByAverage.slice(0, 10)
+    topPlusMinus: sortedByPlusMinus.slice(0, 18),
+    topAverage: sortedByAverage.slice(0, 18)
   };
 };
