@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { mockTeams, addGameResult, recalculateTeamStats, saveLeagueData } from "@/data/mockData";
+import { mockTeams, allPlayers, addGameResult, recalculateTeamStats } from "@/data/mockData";
+import { saveTeamsToFirebase, savePlayersToFirebase } from "@/data/firebaseLeague";
 
 const AdminGameEntry = () => {
   const [teamId, setTeamId] = useState(mockTeams[0]?.id || "");
@@ -10,7 +11,7 @@ const AdminGameEntry = () => {
   const [result, setResult] = useState<"W" | "L">("W");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!teamId || !date || !opponent || !pointsFor || !pointsAgainst || !result) {
       setMessage("Please fill out all fields.");
@@ -26,8 +27,9 @@ const AdminGameEntry = () => {
     };
     addGameResult(teamId, game);
     recalculateTeamStats();
-    saveLeagueData();
-    setMessage("Game added and stats synced!");
+    await saveTeamsToFirebase();
+    await savePlayersToFirebase();
+    setMessage("Game and player stats synced!");
     setDate("");
     setOpponent("");
     setPointsFor("");
