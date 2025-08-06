@@ -1,36 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { getTeams, addGame, updateTeamStats } from "@/services/supabaseLeague";
-import type { Database } from "@/integrations/supabase/types";
-
-type Team = Database['public']['Tables']['teams']['Row'];
+import React, { useState } from "react";
+import { mockTeams, allPlayers, addGameResult, recalculateTeamStats } from "@/data/mockData";
+import { saveTeamsToFirebase, savePlayersToFirebase } from "@/data/firebaseLeague";
 
 const AdminGameEntry = () => {
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [teamId, setTeamId] = useState("");
+  const [teamId, setTeamId] = useState(mockTeams[0]?.id || "");
   const [date, setDate] = useState("");
   const [opponent, setOpponent] = useState("");
   const [pointsFor, setPointsFor] = useState("");
   const [pointsAgainst, setPointsAgainst] = useState("");
   const [result, setResult] = useState<"W" | "L">("W");
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    loadTeams();
-  }, []);
-
-  const loadTeams = async () => {
-    try {
-      const teamsData = await getTeams();
-      setTeams(teamsData);
-      if (teamsData.length > 0 && !teamId) {
-        setTeamId(teamsData[0].id);
-      }
-    } catch (error) {
-      console.error('Error loading teams:', error);
-      setMessage('Error loading teams');
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,41 +17,24 @@ const AdminGameEntry = () => {
       setMessage("Please fill out all fields.");
       return;
     }
-    
-    setLoading(true);
-    try {
-      // Add the game record
-      await addGame({
-        teamId,
-        date,
-        opponent,
-        pointsFor: Number(pointsFor),
-        pointsAgainst: Number(pointsAgainst),
-        result,
-      });
-
-      // Update team stats
-      await updateTeamStats(teamId, {
-        pointsFor: Number(pointsFor),
-        pointsAgainst: Number(pointsAgainst),
-        result,
-      });
-
-      setMessage("Game and stats saved successfully!");
-      setDate("");
-      setOpponent("");
-      setPointsFor("");
-      setPointsAgainst("");
-      setResult("W");
-      
-      // Reload teams to show updated stats
-      await loadTeams();
-    } catch (error) {
-      console.error('Error saving game:', error);
-      setMessage("Error saving game. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    const game = {
+      id: "g" + Date.now(),
+      date,
+      opponent,
+      pointsFor: Number(pointsFor),
+      pointsAgainst: Number(pointsAgainst),
+      result,
+    };
+    addGameResult(teamId, game);
+    recalculateTeamStats();
+    await saveTeamsToFirebase();
+    await savePlayersToFirebase();
+    setMessage("Game and player stats synced!");
+    setDate("");
+    setOpponent("");
+    setPointsFor("");
+    setPointsAgainst("");
+    setResult("W");
   };
 
   return (
@@ -86,7 +48,7 @@ const AdminGameEntry = () => {
             onChange={e => setTeamId(e.target.value)}
             className="w-full border rounded px-2 py-1"
           >
-            {teams.map(team => (
+            {mockTeams.map(team => (
               <option key={team.id} value={team.id}>
                 {team.name}
               </option>
@@ -147,10 +109,9 @@ const AdminGameEntry = () => {
         </div>
         <button
           type="submit"
-          disabled={loading}
-          className="w-full bg-primary text-primary-foreground py-2 rounded font-bold mt-2 disabled:opacity-50"
+          className="w-full bg-primary text-primary-foreground py-2 rounded font-bold mt-2"
         >
-          {loading ? "Saving..." : "Submit & Sync Stats"}
+          Submit & Sync Stats
         </button>
         {message && (
           <div className="mt-2 text-center text-green-600 font-semibold">{message}</div>
