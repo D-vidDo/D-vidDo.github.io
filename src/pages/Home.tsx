@@ -124,7 +124,7 @@ const Home = () => {
                       </Badge>
                       <div>
                         <div className="font-semibold">{player.name}</div>
-                        <div className="text-sm text-muted-foreground">{player.primaryPosition}</div>
+                        <div className="text-sm text-muted-foreground">{player.position}</div>
                       </div>
                     </div>
                     <div className="text-right">
@@ -158,7 +158,7 @@ const Home = () => {
                         </Badge>
                         <div>
                           <div className="font-semibold">{player.name}</div>
-                          <div className="text-sm text-muted-foreground">{player.primaryPosition}</div>
+                          <div className="text-sm text-muted-foreground">{player.position}</div>
                         </div>
                       </div>
                       <div className="text-right">

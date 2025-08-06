@@ -134,7 +134,7 @@ const Stats = () => {
                           </Badge>
                           <div>
                             <div className="font-semibold text-card-foreground">{player.name}</div>
-                            <div className="text-sm text-muted-foreground">{player.primaryPosition}</div>
+                            <div className="text-sm text-muted-foreground">{player.position}</div>
                           </div>
                         </div>
                         <div className="text-right">

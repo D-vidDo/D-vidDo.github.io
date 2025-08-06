@@ -11,15 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, ChevronDown, ChevronUp } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 
-interface GameStats {
-  id: string;
-  date: string;
-  opponent: string;
-  pointsFor: number;
-  pointsAgainst: number;
-  result: "W" | "L";
-}
-
 interface Team {
   id: string;
   name: string;
@@ -28,7 +19,6 @@ interface Team {
   pointsFor: number;
   pointsAgainst: number;
   color: string;
-  games?: GameStats[];
 }
 
 interface StandingsTableProps {

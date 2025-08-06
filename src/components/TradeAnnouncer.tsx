@@ -124,7 +124,7 @@ const TradeAnnouncer = ({ trigger }: TradeAnnouncerProps) => {
                 <SelectContent>
                   {playersInFromTeam.map(player => (
                     <SelectItem key={player.id} value={player.id}>
-                      {player.name} - {player.primaryPosition}
+                      {player.name} - {player.position}
                     </SelectItem>
                   ))}
                 </SelectContent>
