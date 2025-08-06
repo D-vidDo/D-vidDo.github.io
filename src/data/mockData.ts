@@ -246,6 +246,22 @@ export const mockTrades: Trade[] = [
         toTeam: "Brawl Luu"
       }
     ]
+  },{
+    id: "3",
+    date: "2025-09-05",
+    description: "David Do and Pauline swapped teams",
+    playersTraded: [
+      {
+        player: allPlayers.find(p => p.id === "7")!, // David Do
+        fromTeam: "Brawl Luu",
+        toTeam: "Cuck Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "13")!, // Pauline
+        fromTeam: "Cuck Luu",
+        toTeam: "Brawl Luu"
+      }
+    ]
   }
 ];
 
