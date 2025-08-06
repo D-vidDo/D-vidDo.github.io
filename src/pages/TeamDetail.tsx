@@ -152,6 +152,56 @@ const TeamDetail = () => {
             </div>
           </CardContent>
         </Card>
+        {/* Match History Section */}
+        <Card className="bg-gradient-card shadow-card">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Match History
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {team.games && team.games.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-xs rounded-lg overflow-hidden shadow">
+                  <thead>
+                    <tr className="bg-primary text-primary-foreground">
+                      <th className="py-2 px-3 text-left rounded-tl-lg">Date</th>
+                      <th className="py-2 px-3 text-left">Opponent</th>
+                      <th className="py-2 px-3 text-center">PF</th>
+                      <th className="py-2 px-3 text-center">PA</th>
+                      <th className="py-2 px-3 text-center rounded-tr-lg">Result</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {team.games.map((game, idx) => (
+                      <tr
+                        key={game.id}
+                        className={
+                          idx % 2 === 0
+                            ? "bg-muted/30"
+                            : "bg-background"
+                        }
+                      >
+                        <td className="py-2 px-3">{game.date}</td>
+                        <td className="py-2 px-3 font-semibold">{game.opponent}</td>
+                        <td className="py-2 px-3 text-center font-bold text-green-700">{game.pointsFor}</td>
+                        <td className="py-2 px-3 text-center font-bold text-red-600">{game.pointsAgainst}</td>
+                        <td className="py-2 px-3 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-bold ${game.result === "W" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                            {game.result}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-muted-foreground">No games recorded yet.</div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Team Roster */}
         <Card className="bg-gradient-card shadow-card">
@@ -216,56 +266,7 @@ const TeamDetail = () => {
         </Card>
 
 
-        {/* Match History Section */}
-        <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Match History
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {team.games && team.games.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-xs rounded-lg overflow-hidden shadow">
-                  <thead>
-                    <tr className="bg-primary text-primary-foreground">
-                      <th className="py-2 px-3 text-left rounded-tl-lg">Date</th>
-                      <th className="py-2 px-3 text-left">Opponent</th>
-                      <th className="py-2 px-3 text-center">PF</th>
-                      <th className="py-2 px-3 text-center">PA</th>
-                      <th className="py-2 px-3 text-center rounded-tr-lg">Result</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {team.games.map((game, idx) => (
-                      <tr
-                        key={game.id}
-                        className={
-                          idx % 2 === 0
-                            ? "bg-muted/30"
-                            : "bg-background"
-                        }
-                      >
-                        <td className="py-2 px-3">{game.date}</td>
-                        <td className="py-2 px-3 font-semibold">{game.opponent}</td>
-                        <td className="py-2 px-3 text-center font-bold text-green-700">{game.pointsFor}</td>
-                        <td className="py-2 px-3 text-center font-bold text-red-600">{game.pointsAgainst}</td>
-                        <td className="py-2 px-3 text-center">
-                          <span className={`px-2 py-1 rounded-full text-xs font-bold ${game.result === "W" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                            {game.result}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-muted-foreground">No games recorded yet.</div>
-            )}
-          </CardContent>
-        </Card>
+        
       </div>
     </div>
   );
