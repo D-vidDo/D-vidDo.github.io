@@ -336,7 +336,8 @@ export const getTeamColorByName = (teamName: string): string => {
 applyTradesToRosters();
 
 /**
- * Add a game result to a team and automatically update team stats.
+ * Add a game result to a team and automatically update team stats and player stats.
+ * Each player currently on the team gains gamesPlayed and plusMinus for that game.
  * Usage: addGameResult(teamId, { ...gameStats })
  */
 export const addGameResult = (
@@ -350,16 +351,28 @@ export const addGameResult = (
   if (!team.games) team.games = [];
   team.games.push(game);
 
-  // Update points for/against
+  // Update team points for/against
   team.pointsFor += game.pointsFor;
   team.pointsAgainst += game.pointsAgainst;
 
-  // Update wins/losses
+  // Update team wins/losses
   if (game.result === "W") {
     team.wins += 1;
   } else if (game.result === "L") {
     team.losses += 1;
   }
+
+  // Calculate plusMinus for this game
+  const plusMinus = game.pointsFor - game.pointsAgainst;
+
+  // Update each player's stats who are currently on the team
+  team.playerIds.forEach(playerId => {
+    const player = allPlayers.find(p => p.id === playerId);
+    if (player) {
+      player.gamesPlayed += 1;
+      player.plusMinus += plusMinus;
+    }
+  });
 };
 
 /**
