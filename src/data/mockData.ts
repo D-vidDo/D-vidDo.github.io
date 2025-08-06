@@ -211,7 +211,23 @@ export const mockTrades: Trade[] = [
       }
     ]
   },
-  
+  {
+    id: "2",
+    date: "2025-08-05",
+    description: "David Do and Pauline swapped teams",
+    playersTraded: [
+      {
+        player: allPlayers.find(p => p.id === "1")!, // David Do
+        fromTeam: "Brawl Luu",
+        toTeam: "Cuck Luu"
+      },
+      {
+        player: allPlayers.find(p => p.id === "13")!, // Pauline
+        fromTeam: "Cuck Luu",
+        toTeam: "Brawl Luu"
+      }
+    ]
+  }
 ];
 
 // Scramble stats for all players (for testing)
