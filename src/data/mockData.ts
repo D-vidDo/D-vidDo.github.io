@@ -334,3 +334,55 @@ export const getTeamColorByName = (teamName: string): string => {
 
 // Call this function after defining mockTrades to sync rosters
 applyTradesToRosters();
+
+/**
+ * Add a game result to a team and automatically update team stats.
+ * Usage: addGameResult(teamId, { ...gameStats })
+ */
+export const addGameResult = (
+  teamId: string,
+  game: GameStats
+) => {
+  const team = mockTeams.find(t => t.id === teamId);
+  if (!team) return;
+
+  // Add game to team's games array
+  if (!team.games) team.games = [];
+  team.games.push(game);
+
+  // Update points for/against
+  team.pointsFor += game.pointsFor;
+  team.pointsAgainst += game.pointsAgainst;
+
+  // Update wins/losses
+  if (game.result === "W") {
+    team.wins += 1;
+  } else if (game.result === "L") {
+    team.losses += 1;
+  }
+};
+
+/**
+ * Recalculate all teams' stats from their games arrays.
+ * Usage: recalculateTeamStats();
+ */
+export const recalculateTeamStats = () => {
+  mockTeams.forEach(team => {
+    team.wins = 0;
+    team.losses = 0;
+    team.pointsFor = 0;
+    team.pointsAgainst = 0;
+    if (team.games) {
+      team.games.forEach(game => {
+        team.pointsFor += game.pointsFor;
+        team.pointsAgainst += game.pointsAgainst;
+        if (game.result === "W") team.wins += 1;
+        if (game.result === "L") team.losses += 1;
+      });
+    }
+  });
+};
+
+// Example usage:
+// addGameResult("1", { id: "g3", date: "2025-08-10", opponent: "Bull Luu", pointsFor: 22, pointsAgainst: 25, result: "L" });
+// recalculateTeamStats();
