@@ -399,27 +399,30 @@ export const recalculateTeamStats = () => {
 };
 
 export const recalculatePlayerStats = () => {
-  // Reset all player stats first (optional, but recommended)
+  // Reset all player stats
   allPlayers.forEach(player => {
     player.plusMinus = 0;
     player.gamesPlayed = 0;
   });
 
+  // Recalculate stats per player
   mockTeams.forEach(team => {
     if (!team.games || !team.playerIds) return;
 
     team.games.forEach(game => {
-      team.playerIds.forEach(id => {
-        const player = allPlayers[id];
-        if (!player) return; // Skip if player not found
+      const gamePlusMinus = game.pointsFor - game.pointsAgainst;
 
-        player.plusMinus += game.pointsFor- game.pointsAgainst;
+      team.playerIds.forEach(playerID => {
+        const player = allPlayers.find(p => p.id === playerID);
+        if (!player) return;
+
+        player.plusMinus += gamePlusMinus;
         player.gamesPlayed += 1;
-        // Update player stats based on game performance
       });
     });
   });
 };
+
 
 
 
