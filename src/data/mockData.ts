@@ -398,9 +398,35 @@ export const recalculateTeamStats = () => {
   });
 };
 
+export const recalculatePlayerStats = () => {
+  // Reset all player stats first (optional, but recommended)
+  allPlayers.forEach(player => {
+    player.plusMinus = 0;
+    player.gamesPlayed = 0;
+  });
+
+  mockTeams.forEach(team => {
+    if (!team.games || !team.playerIds) return;
+
+    team.games.forEach(game => {
+      team.playerIds.forEach(id => {
+        const player = allPlayers[id];
+        if (!player) return; // Skip if player not found
+
+        player.plusMinus += game.pointsFor- game.pointsAgainst;
+        player.gamesPlayed += 1;
+        // Update player stats based on game performance
+      });
+    });
+  });
+};
+
+
+
 // Example usage:
 // addGameResult("1", { id: "g3", date: "2025-08-10", opponent: "Bull Luu", pointsFor: 22, pointsAgainst: 25, result: "L" });
  recalculateTeamStats();
+ recalculatePlayerStats();
 
 export const saveLeagueData = () => {
   localStorage.setItem("teams", JSON.stringify(mockTeams));
