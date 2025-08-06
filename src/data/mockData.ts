@@ -294,15 +294,18 @@ export const applyTradesToRosters = () => {
 
   // Apply trades
   mockTrades.forEach(trade => {
-    trade.playersTraded.forEach(({ player, toTeam }) => {
-      // Find the team object
-      const team = mockTeams.find(t => t.name === toTeam);
-      if (team) {
-        // Update player's teamId
-        player.teamId = team.id;
-        // Add player to team's playerIds if not already present
-        if (!team.playerIds.includes(player.id)) {
-          team.playerIds.push(player.id);
+    trade.playersTraded.forEach(({ player, fromTeam, toTeam }) => {
+      // Remove player from old team
+      const oldTeam = mockTeams.find(t => t.name === fromTeam);
+      if (oldTeam) {
+        oldTeam.playerIds = oldTeam.playerIds.filter(id => id !== player.id);
+      }
+      // Add player to new team
+      const newTeam = mockTeams.find(t => t.name === toTeam);
+      if (newTeam) {
+        player.teamId = newTeam.id;
+        if (!newTeam.playerIds.includes(player.id)) {
+          newTeam.playerIds.push(player.id);
         }
       }
     });
