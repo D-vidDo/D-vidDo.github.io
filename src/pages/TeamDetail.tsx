@@ -215,40 +215,6 @@ const TeamDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Game Results Section */}
-        <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
-            <CardTitle className="text-xl">Game Results</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {team.games && team.games.length > 0 ? (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Opponent</th>
-                    <th>PF</th>
-                    <th>PA</th>
-                    <th>Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {team.games.map(game => (
-                    <tr key={game.id}>
-                      <td>{game.date}</td>
-                      <td>{game.opponent}</td>
-                      <td>{game.pointsFor}</td>
-                      <td>{game.pointsAgainst}</td>
-                      <td className={game.result === "W" ? "text-green-600" : "text-red-500"}>{game.result}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="text-muted-foreground">No games recorded yet.</div>
-            )}
-          </CardContent>
-        </Card>
 
         {/* Match History Section */}
         <Card className="bg-gradient-card shadow-card">
