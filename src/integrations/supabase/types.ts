@@ -14,7 +14,142 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      games: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          opponent: string
+          points_against: number
+          points_for: number
+          result: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          opponent: string
+          points_against: number
+          points_for: number
+          result: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          opponent?: string
+          points_against?: number
+          points_for?: number
+          result?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "games_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          assists: number
+          created_at: string
+          games_played: number
+          id: string
+          name: string
+          plus_minus: number
+          points: number
+          primary_position: string
+          rebounds: number
+          skill_level: number
+          steals: number
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assists?: number
+          created_at?: string
+          games_played?: number
+          id?: string
+          name: string
+          plus_minus?: number
+          points?: number
+          primary_position: string
+          rebounds?: number
+          skill_level?: number
+          steals?: number
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assists?: number
+          created_at?: string
+          games_played?: number
+          id?: string
+          name?: string
+          plus_minus?: number
+          points?: number
+          primary_position?: string
+          rebounds?: number
+          skill_level?: number
+          steals?: number
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          captain: string
+          color: string
+          created_at: string
+          id: string
+          losses: number
+          name: string
+          points_against: number
+          points_for: number
+          updated_at: string
+          wins: number
+        }
+        Insert: {
+          captain: string
+          color: string
+          created_at?: string
+          id?: string
+          losses?: number
+          name: string
+          points_against?: number
+          points_for?: number
+          updated_at?: string
+          wins?: number
+        }
+        Update: {
+          captain?: string
+          color?: string
+          created_at?: string
+          id?: string
+          losses?: number
+          name?: string
+          points_against?: number
+          points_for?: number
+          updated_at?: string
+          wins?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
