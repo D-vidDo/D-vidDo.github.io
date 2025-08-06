@@ -385,4 +385,4 @@ export const recalculateTeamStats = () => {
 
 // Example usage:
 // addGameResult("1", { id: "g3", date: "2025-08-10", opponent: "Bull Luu", pointsFor: 22, pointsAgainst: 25, result: "L" });
-// recalculateTeamStats();
+ recalculateTeamStats();
