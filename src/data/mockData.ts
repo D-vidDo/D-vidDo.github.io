@@ -22,6 +22,15 @@ export interface Player {
   };
 }
 
+export interface GameStats {
+  id: string;
+  date: string;
+  opponent: string; // team name or id
+  pointsFor: number;
+  pointsAgainst: number;
+  result: "W" | "L";
+}
+
 export interface Team {
   id: string;
   name: string;
@@ -31,7 +40,8 @@ export interface Team {
   pointsAgainst: number;
   captain: string;
   color: string;
-  playerIds: string[]; // References to player IDs
+  playerIds: string[];
+  games?: GameStats[]; // Add this line
 }
 
 export interface Trade {
@@ -79,7 +89,11 @@ export const mockTeams: Team[] = [
     pointsAgainst: 0,
     captain: "Justin Huynh",
     color: "#FF6B35",
-    playerIds: [] // <-- leave empty!
+    playerIds: [],
+    games: [
+      { id: "g1", date: "2025-08-01", opponent: "Bull Luu", pointsFor: 25, pointsAgainst: 20, result: "W" },
+      { id: "g2", date: "2025-08-03", opponent: "Cuck Luu", pointsFor: 18, pointsAgainst: 25, result: "L" }
+    ]
   },
   {
     id: "2", 

@@ -121,6 +121,42 @@ const Standings = () => {
 
         {/* Standings Table */}
         <StandingsTable teams={mockTeams} />
+
+        {/* Example: Show total points for/against and recent results */}
+        <div className="overflow-x-auto rounded-lg border border-primary/10">
+          <table className="min-w-full divide-y divide-muted">
+            <thead className="bg-muted/10">
+              <tr>
+                <th className="px-4 py-2 text-left text-sm font-semibold text-muted-foreground">Team</th>
+                <th className="px-4 py-2 text-left text-sm font-semibold text-muted-foreground">Wins</th>
+                <th className="px-4 py-2 text-left text-sm font-semibold text-muted-foreground">Losses</th>
+                <th className="px-4 py-2 text-left text-sm font-semibold text-muted-foreground">Points For</th>
+                <th className="px-4 py-2 text-left text-sm font-semibold text-muted-foreground">Points Against</th>
+                <th className="px-4 py-2 text-left text-sm font-semibold text-muted-foreground">Recent Results</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-muted">
+              {mockTeams.map(team => (
+                <tr key={team.id}>
+                  <td className="px-4 py-2 text-sm">{team.name}</td>
+                  <td className="px-4 py-2 text-sm">{team.wins}</td>
+                  <td className="px-4 py-2 text-sm">{team.losses}</td>
+                  <td className="px-4 py-2 text-sm">{team.pointsFor}</td>
+                  <td className="px-4 py-2 text-sm">{team.pointsAgainst}</td>
+                  <td className="px-4 py-2 text-sm">
+                    {team.games && team.games.length > 0
+                      ? team.games.slice(-3).map(game => (
+                          <span key={game.id} className={game.result === "W" ? "text-green-600" : "text-red-500"}>
+                            {game.result}
+                          </span>
+                        ))
+                      : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
