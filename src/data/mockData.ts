@@ -105,7 +105,10 @@ export const mockTeams: Team[] = [
     captain: "Jaydon Fernandes",
     color: "#4ECDC4",
     playerIds: [], // <-- leave empty!
-    games: []
+    games: [
+      { id: "g1", date: "2025-08-01", opponent: "Bull Luu", pointsFor: 25, pointsAgainst: 0, result: "W" },
+      { id: "g2", date: "2025-08-03", opponent: "Cuck Luu", pointsFor: 24, pointsAgainst: 25, result: "L" }
+    ]
   },
   {
     id: "3",
