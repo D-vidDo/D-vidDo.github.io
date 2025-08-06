@@ -312,5 +312,11 @@ export const applyTradesToRosters = () => {
   });
 };
 
+// Helper function
+export const getTeamColorByName = (teamName: string): string => {
+  const team = mockTeams.find(t => t.name === teamName);
+  return team ? team.color : "#888";
+};
+
 // Call this function after defining mockTrades to sync rosters
 applyTradesToRosters();

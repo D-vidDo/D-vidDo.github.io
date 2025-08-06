@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, ArrowLeftRight, FileText } from "lucide-react";
 import { useLeague } from "@/context/LeagueContext";
+import { getTeamColorByName } from "@/data/mockData";
 
 const Trades = () => {
   const { trades } = useLeague();
@@ -66,9 +67,23 @@ const Trades = () => {
                         </div>
                         
                         <div className="flex items-center gap-2 text-sm">
-                          <Badge variant="outline">{playerTrade.fromTeam}</Badge>
-                          <ArrowLeftRight className="h-3 w-3 text-primary" />
-                          <Badge variant="outline">{playerTrade.toTeam}</Badge>
+                          <span
+                            style={{
+                              color: getTeamColorByName(playerTrade.fromTeam),
+                              fontWeight: "bold"
+                            }}
+                          >
+                            {playerTrade.fromTeam}
+                          </span>
+                          <span className="mx-1">→</span>
+                          <span
+                            style={{
+                              color: getTeamColorByName(playerTrade.toTeam),
+                              fontWeight: "bold"
+                            }}
+                          >
+                            {playerTrade.toTeam}
+                          </span>
                         </div>
                       </div>
                     ))}
