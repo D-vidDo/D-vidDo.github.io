@@ -104,7 +104,8 @@ export const mockTeams: Team[] = [
     pointsAgainst: 0,
     captain: "Jaydon Fernandes",
     color: "#4ECDC4",
-    playerIds: [] // <-- leave empty!
+    playerIds: [], // <-- leave empty!
+    games: []
   },
   {
     id: "3",
@@ -115,7 +116,8 @@ export const mockTeams: Team[] = [
     pointsAgainst: 0,
     captain: "Vince Echano",
     color: "#45B7D1",
-    playerIds: [] // <-- leave empty!
+    playerIds: [], // <-- leave empty!
+    games: []
   }
 ];
 
