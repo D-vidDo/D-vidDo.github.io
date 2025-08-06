@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, ChevronDown, ChevronUp } from "lucide-react";
 import React, { useState } from "react";
 
 interface Team {
@@ -72,7 +72,12 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
           <TableBody>
             {sortedTeams.map((team) => (
               <React.Fragment key={team.id}>
-                <TableRow key={team.id} className="hover:bg-muted/50 transition-colors" onClick={() => handleRowClick(team.id)} style={{ backgroundColor: expandedTeamId === team.id ? "#f7fafc" : undefined }}>
+                <TableRow
+                  key={team.id}
+                  className="hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => handleRowClick(team.id)}
+                  style={{ backgroundColor: expandedTeamId === team.id ? "#f7fafc" : undefined }}
+                >
                   <TableCell className="font-medium">
                     <Badge variant={team.rank <= 3 ? "default" : "secondary"} className="w-8 h-8 rounded-full p-0 flex items-center justify-center">
                       {team.rank}
@@ -80,13 +85,20 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-3">
-                      <div 
+                      <div
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
                         style={{ backgroundColor: team.color }}
                       >
                         {team.name.substring(0, 2).toUpperCase()}
                       </div>
                       <span className="font-semibold">{team.name}</span>
+                      <span className="ml-2">
+                        {expandedTeamId === team.id ? (
+                          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell className="text-center font-semibold text-green-600">
@@ -108,32 +120,48 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                 </TableRow>
                 {expandedTeamId === team.id && (
                   <TableRow>
-                    <TableCell colSpan={6} className="bg-background border-t">
+                    <TableCell colSpan={8} className="bg-background border-t">
                       <div className="p-4">
-                        <div className="font-semibold mb-2">Match History</div>
+                        <div className="font-semibold mb-4 text-lg flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-primary" />
+                          Match History
+                        </div>
                         {team.games && team.games.length > 0 ? (
-                          <table className="w-full text-xs">
-                            <thead>
-                              <tr>
-                                <th>Date</th>
-                                <th>Opponent</th>
-                                <th>PF</th>
-                                <th>PA</th>
-                                <th>Result</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {team.games.map(game => (
-                                <tr key={game.id}>
-                                  <td>{game.date}</td>
-                                  <td>{game.opponent}</td>
-                                  <td>{game.pointsFor}</td>
-                                  <td>{game.pointsAgainst}</td>
-                                  <td className={game.result === "W" ? "text-green-600" : "text-red-500"}>{game.result}</td>
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full text-xs rounded-lg overflow-hidden shadow">
+                              <thead>
+                                <tr className="bg-primary text-primary-foreground">
+                                  <th className="py-2 px-3 text-left rounded-tl-lg">Date</th>
+                                  <th className="py-2 px-3 text-left">Opponent</th>
+                                  <th className="py-2 px-3 text-center">PF</th>
+                                  <th className="py-2 px-3 text-center">PA</th>
+                                  <th className="py-2 px-3 text-center rounded-tr-lg">Result</th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                              </thead>
+                              <tbody>
+                                {team.games.map((game, idx) => (
+                                  <tr
+                                    key={game.id}
+                                    className={
+                                      idx % 2 === 0
+                                        ? "bg-muted/30"
+                                        : "bg-background"
+                                    }
+                                  >
+                                    <td className="py-2 px-3">{game.date}</td>
+                                    <td className="py-2 px-3 font-semibold">{game.opponent}</td>
+                                    <td className="py-2 px-3 text-center font-bold text-green-700">{game.pointsFor}</td>
+                                    <td className="py-2 px-3 text-center font-bold text-red-600">{game.pointsAgainst}</td>
+                                    <td className="py-2 px-3 text-center">
+                                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${game.result === "W" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                                        {game.result}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         ) : (
                           <div className="text-muted-foreground">No games recorded yet.</div>
                         )}
