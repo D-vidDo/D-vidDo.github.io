@@ -20,9 +20,9 @@ const statKeys = [
   "Communication",
 ];
 
-const getOverallRating = (player) =>
+const getOverallRating = (player: any) =>
   Math.min(
-    Object.values(player.stats).reduce((sum, val) => sum + val, 0) * 2,
+    (Object.values(player.stats) as number[]).reduce((sum: number, val: number) => sum + val, 0) * 2,
     100
   );
 

@@ -7,7 +7,8 @@ interface PlayerCardProps {
   player: {
     id: string;
     name: string;
-    position: string;
+    primaryPosition: string;
+    secondaryPosition?: string;
     plusMinus: number;
     gamesPlayed: number;
     isCaptain?: boolean;

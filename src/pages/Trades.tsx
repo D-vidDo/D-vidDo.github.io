@@ -61,7 +61,7 @@ const Trades = () => {
                               {playerTrade.player.name}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {playerTrade.player.position}
+                              {playerTrade.player.primaryPosition}
                             </div>
                           </div>
                         </div>
