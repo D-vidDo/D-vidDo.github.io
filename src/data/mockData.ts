@@ -253,13 +253,13 @@ export const mockTrades: Trade[] = [
     playersTraded: [
       {
         player: allPlayers.find(p => p.id === "7")!, // David Do
-        fromTeam: "Brawl Luu",
-        toTeam: "Cuck Luu"
+        fromTeam: "Cuck Luu",
+        toTeam: "Brawl Luu"
       },
       {
         player: allPlayers.find(p => p.id === "13")!, // Pauline
-        fromTeam: "Cuck Luu",
-        toTeam: "Brawl Luu"
+        fromTeam: "Brawl Luu",
+        toTeam: "Cuck Luu"
       }
     ]
   }
