@@ -121,92 +121,92 @@ export const mockTrades: Trade[] = [
     playersTraded: [
       {
         player: allPlayers.find(p => p.id === "4")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Cuck Luu"
       },
       {
         player: allPlayers.find(p => p.id === "6")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Bull Luu"
       },
       {
         player: allPlayers.find(p => p.id === "8")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Brawl Luu"
       },
       {
         player: allPlayers.find(p => p.id === "1")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Brawl Luu"
       },
       {
         player: allPlayers.find(p => p.id === "5")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Bull Luu"
       },
       {
         player: allPlayers.find(p => p.id === "2")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Cuck Luu"
       },
       {
         player: allPlayers.find(p => p.id === "7")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Cuck Luu"
       },
       {
         player: allPlayers.find(p => p.id === "3")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Bull Luu"
       },
       {
         player: allPlayers.find(p => p.id === "9")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Brawl Luu"
       },
       {
         player: allPlayers.find(p => p.id === "10")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Brawl Luu"
       },
       {
         player: allPlayers.find(p => p.id === "11")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Bull Luu"
       },
       {
         player: allPlayers.find(p => p.id === "12")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Brawl Luu"
       },
       {
         player: allPlayers.find(p => p.id === "13")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Cuck Luu"
       },
       {
         player: allPlayers.find(p => p.id === "14")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Bull Luu"
       },
       {
         player: allPlayers.find(p => p.id === "15")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Cuck Luu"
       },
       {
         player: allPlayers.find(p => p.id === "16")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Bull Luu"
       },
       {
         player: allPlayers.find(p => p.id === "17")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Brawl Luu"
       },
       {
         player: allPlayers.find(p => p.id === "18")!,
-        fromTeam: "Free Agency",
+        fromTeam: "Drafted",
         toTeam: "Cuck Luu"
       }
     ]
