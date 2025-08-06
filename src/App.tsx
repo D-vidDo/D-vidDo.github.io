@@ -1,3 +1,4 @@
+import { loadLeagueData } from "@/data/mockData";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,8 @@ import Players from "./pages/Players";
 import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
+
+loadLeagueData();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

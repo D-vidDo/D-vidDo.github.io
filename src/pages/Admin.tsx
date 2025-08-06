@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { mockTeams, addGameResult, recalculateTeamStats } from "@/data/mockData";
+import { mockTeams, addGameResult, recalculateTeamStats, saveLeagueData } from "@/data/mockData";
 
 const AdminGameEntry = () => {
   const [teamId, setTeamId] = useState(mockTeams[0]?.id || "");
@@ -26,6 +26,7 @@ const AdminGameEntry = () => {
     };
     addGameResult(teamId, game);
     recalculateTeamStats();
+    saveLeagueData();
     setMessage("Game added and stats synced!");
     setDate("");
     setOpponent("");

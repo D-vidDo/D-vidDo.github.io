@@ -399,3 +399,23 @@ export const recalculateTeamStats = () => {
 // Example usage:
 // addGameResult("1", { id: "g3", date: "2025-08-10", opponent: "Bull Luu", pointsFor: 22, pointsAgainst: 25, result: "L" });
  recalculateTeamStats();
+
+export const saveLeagueData = () => {
+  localStorage.setItem("teams", JSON.stringify(mockTeams));
+  localStorage.setItem("players", JSON.stringify(allPlayers));
+};
+
+export const loadLeagueData = () => {
+  const teams = localStorage.getItem("teams");
+  const players = localStorage.getItem("players");
+  if (teams) {
+    const parsedTeams = JSON.parse(teams);
+    mockTeams.length = 0;
+    mockTeams.push(...parsedTeams);
+  }
+  if (players) {
+    const parsedPlayers = JSON.parse(players);
+    allPlayers.length = 0;
+    allPlayers.push(...parsedPlayers);
+  }
+};
