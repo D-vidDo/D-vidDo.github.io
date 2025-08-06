@@ -79,7 +79,7 @@ export const mockTeams: Team[] = [
     pointsAgainst: 0,
     captain: "Justin Huynh",
     color: "#FF6B35",
-    playerIds: ["1", "2", "3", "4", "5", "6"] // Sarah, Mike, Emma, Alex, Jordan, Taylor
+    playerIds: [] // <-- leave empty!
   },
   {
     id: "2", 
@@ -90,7 +90,7 @@ export const mockTeams: Team[] = [
     pointsAgainst: 0,
     captain: "Jaydon Fernandes",
     color: "#4ECDC4",
-    playerIds: ["7", "8", "9", "10", "11", "12"] // David, Lisa, Carlos, Jessica, Ryan, Zoe
+    playerIds: [] // <-- leave empty!
   },
   {
     id: "3",
@@ -101,7 +101,7 @@ export const mockTeams: Team[] = [
     pointsAgainst: 0,
     captain: "Vince Echano",
     color: "#45B7D1",
-    playerIds: ["13", "14", "15", "16", "17", "18"] // Rachel, Kevin, Maya, Chris, Samantha, Tom
+    playerIds: [] // <-- leave empty!
   }
 ];
 
