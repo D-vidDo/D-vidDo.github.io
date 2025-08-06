@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getTeams, addGame, updateTeamStats, migrateMockDataToSupabase } from "@/services/supabaseLeague";
+import { getTeams, addGame, updateTeamStats } from "@/services/supabaseLeague";
 import type { Database } from "@/integrations/supabase/types";
 
 type Team = Database['public']['Tables']['teams']['Row'];
@@ -14,7 +14,6 @@ const AdminGameEntry = () => {
   const [result, setResult] = useState<"W" | "L">("W");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [migrating, setMigrating] = useState(false);
 
   useEffect(() => {
     loadTeams();
@@ -76,41 +75,9 @@ const AdminGameEntry = () => {
     }
   };
 
-  const handleMigration = async () => {
-    setMigrating(true);
-    setMessage("");
-    try {
-      const result = await migrateMockDataToSupabase();
-      setMessage(result.message);
-      if (result.success) {
-        await loadTeams(); // Reload teams after migration
-      }
-    } catch (error) {
-      setMessage("Migration failed: " + (error as Error).message);
-    } finally {
-      setMigrating(false);
-    }
-  };
-
   return (
     <div className="max-w-md mx-auto mt-12 p-6 bg-card rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-4">Secret Admin: League Management</h2>
-      
-      <div className="mb-6 p-4 border rounded-lg">
-        <h3 className="font-semibold mb-2">Migrate Mock Data</h3>
-        <p className="text-sm text-muted-foreground mb-3">
-          This will import all teams, players, and existing game data from mockData.ts into the database.
-        </p>
-        <button
-          onClick={handleMigration}
-          disabled={migrating}
-          className="w-full bg-secondary text-secondary-foreground py-2 rounded font-bold disabled:opacity-50"
-        >
-          {migrating ? "Migrating..." : "Import Mock Data to Database"}
-        </button>
-      </div>
-
-      <h3 className="text-lg font-bold mb-4">Add Game Result</h3>
+      <h2 className="text-2xl font-bold mb-4">Secret Admin: Add Game Result</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block mb-1 font-semibold">Team</label>

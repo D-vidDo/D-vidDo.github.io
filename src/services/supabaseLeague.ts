@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { mockTeams, allPlayers } from "@/data/mockData";
 
 type Team = Database['public']['Tables']['teams']['Row'];
 type Player = Database['public']['Tables']['players']['Row'];
@@ -109,70 +108,4 @@ export async function updatePlayerStats(playerId: string, updates: {
     .eq('id', playerId);
 
   if (error) throw error;
-}
-
-// Migrate mock data to Supabase
-export async function migrateMockDataToSupabase() {
-  try {
-    // First, clear existing data
-    await supabase.from('games').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    await supabase.from('players').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    await supabase.from('teams').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
-    // Insert teams
-    const { error: teamsError } = await supabase.from('teams').insert(
-      mockTeams.map(team => ({
-        id: team.id,
-        name: team.name,
-        wins: team.wins,
-        losses: team.losses,
-        points_for: team.pointsFor,
-        points_against: team.pointsAgainst,
-        captain: team.captain,
-        color: team.color
-      }))
-    );
-    if (teamsError) throw teamsError;
-
-    // Insert players
-    const { error: playersError } = await supabase.from('players').insert(
-      allPlayers.map(player => ({
-        id: player.id,
-        name: player.name,
-        primary_position: player.primaryPosition,
-        team_id: player.teamId || null,
-        plus_minus: player.plusMinus,
-        games_played: player.gamesPlayed,
-        points: player.stats.Hitting || 0,
-        rebounds: player.stats.Blocking || 0,
-        assists: player.stats.Setting || 0,
-        steals: player.stats['Defensive Positioning'] || 0,
-        skill_level: Math.round(Object.values(player.stats).reduce((a, b) => a + b, 0) / 10)
-      }))
-    );
-    if (playersError) throw playersError;
-
-    // Insert games
-    const allGames = mockTeams.flatMap(team => 
-      (team.games || []).map(game => ({
-        id: game.id,
-        team_id: team.id,
-        date: game.date,
-        opponent: game.opponent,
-        points_for: game.pointsFor,
-        points_against: game.pointsAgainst,
-        result: game.result
-      }))
-    );
-
-    if (allGames.length > 0) {
-      const { error: gamesError } = await supabase.from('games').insert(allGames);
-      if (gamesError) throw gamesError;
-    }
-
-    return { success: true, message: 'Mock data migrated successfully!' };
-  } catch (error) {
-    console.error('Migration error:', error);
-    return { success: false, message: 'Migration failed: ' + (error as Error).message };
-  }
 }
