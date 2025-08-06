@@ -106,12 +106,12 @@ export const mockTeams: Team[] = [
 ];
 
 // Assign team IDs to players
-allPlayers.forEach(player => {
-  const team = mockTeams.find(t => t.playerIds.includes(player.id));
-  if (team) {
-    player.teamId = team.id;
-  }
-});
+// allPlayers.forEach(player => {
+//   const team = mockTeams.find(t => t.playerIds.includes(player.id));
+//   if (team) {
+//     player.teamId = team.id;
+//   }
+// });
 
 export const mockTrades: Trade[] = [
   {
