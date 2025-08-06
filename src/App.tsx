@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-import { loadTeamsFromFirebase } from "@/data/firebaseLeague";
 import { loadLeagueData } from "@/data/mockData";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -22,36 +20,29 @@ const queryClient = new QueryClient();
 
 loadLeagueData();
 
-const App = () => {
-  useEffect(() => {
-    // Load teams from Firebase when app starts
-    loadTeamsFromFirebase();
-  }, []);
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <LeagueProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Navigation />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/teams" element={<Teams />} />
-              <Route path="/teams/:teamId" element={<TeamDetail />} />
-              <Route path="/standings" element={<Standings />} />
-              <Route path="/players" element={<Players />} />
-              <Route path="/stats" element={<Stats />} />
-              <Route path="/trades" element={<Trades />} />
-              <Route path="/Admin" element={<Admin />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </LeagueProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-};
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <LeagueProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Navigation />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/teams" element={<Teams />} />
+            <Route path="/teams/:teamId" element={<TeamDetail />} />
+            <Route path="/standings" element={<Standings />} />
+            <Route path="/players" element={<Players />} />
+            <Route path="/stats" element={<Stats />} />
+            <Route path="/trades" element={<Trades />} />
+            <Route path="/Admin" element={<Admin />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </LeagueProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;
