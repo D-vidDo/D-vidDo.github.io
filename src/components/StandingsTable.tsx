@@ -9,6 +9,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown } from "lucide-react";
+import React, { useState } from "react";
 
 interface Team {
   id: string;
@@ -25,6 +26,12 @@ interface StandingsTableProps {
 }
 
 const StandingsTable = ({ teams }: StandingsTableProps) => {
+  const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
+
+  const handleRowClick = (teamId: string) => {
+    setExpandedTeamId(expandedTeamId === teamId ? null : teamId);
+  };
+
   const sortedTeams = teams
     .map((team, index) => ({
       ...team,
@@ -64,40 +71,77 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
           </TableHeader>
           <TableBody>
             {sortedTeams.map((team) => (
-              <TableRow key={team.id} className="hover:bg-muted/50 transition-colors">
-                <TableCell className="font-medium">
-                  <Badge variant={team.rank <= 3 ? "default" : "secondary"} className="w-8 h-8 rounded-full p-0 flex items-center justify-center">
-                    {team.rank}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-3">
-                    <div 
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-                      style={{ backgroundColor: team.color }}
-                    >
-                      {team.name.substring(0, 2).toUpperCase()}
+              <React.Fragment key={team.id}>
+                <TableRow key={team.id} className="hover:bg-muted/50 transition-colors" onClick={() => handleRowClick(team.id)} style={{ backgroundColor: expandedTeamId === team.id ? "#f7fafc" : undefined }}>
+                  <TableCell className="font-medium">
+                    <Badge variant={team.rank <= 3 ? "default" : "secondary"} className="w-8 h-8 rounded-full p-0 flex items-center justify-center">
+                      {team.rank}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-3">
+                      <div 
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                        style={{ backgroundColor: team.color }}
+                      >
+                        {team.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <span className="font-semibold">{team.name}</span>
                     </div>
-                    <span className="font-semibold">{team.name}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-center font-semibold text-green-600">
-                  {team.wins}
-                </TableCell>
-                <TableCell className="text-center font-semibold text-red-500">
-                  {team.losses}
-                </TableCell>
-                <TableCell className="text-center font-semibold">
-                  {(team.winPercentage * 100).toFixed(1)}%
-                </TableCell>
-                <TableCell className="text-center">{team.pointsFor}</TableCell>
-                <TableCell className="text-center">{team.pointsAgainst}</TableCell>
-                <TableCell className={`text-center font-semibold ${
-                  team.pointDifferential > 0 ? 'text-green-600' : 'text-red-500'
-                }`}>
-                  {team.pointDifferential > 0 ? '+' : ''}{team.pointDifferential}
-                </TableCell>
-              </TableRow>
+                  </TableCell>
+                  <TableCell className="text-center font-semibold text-green-600">
+                    {team.wins}
+                  </TableCell>
+                  <TableCell className="text-center font-semibold text-red-500">
+                    {team.losses}
+                  </TableCell>
+                  <TableCell className="text-center font-semibold">
+                    {(team.winPercentage * 100).toFixed(1)}%
+                  </TableCell>
+                  <TableCell className="text-center">{team.pointsFor}</TableCell>
+                  <TableCell className="text-center">{team.pointsAgainst}</TableCell>
+                  <TableCell className={`text-center font-semibold ${
+                    team.pointDifferential > 0 ? 'text-green-600' : 'text-red-500'
+                  }`}>
+                    {team.pointDifferential > 0 ? '+' : ''}{team.pointDifferential}
+                  </TableCell>
+                </TableRow>
+                {expandedTeamId === team.id && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="bg-background border-t">
+                      <div className="p-4">
+                        <div className="font-semibold mb-2">Match History</div>
+                        {team.games && team.games.length > 0 ? (
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr>
+                                <th>Date</th>
+                                <th>Opponent</th>
+                                <th>PF</th>
+                                <th>PA</th>
+                                <th>Result</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {team.games.map(game => (
+                                <tr key={game.id}>
+                                  <td>{game.date}</td>
+                                  <td>{game.opponent}</td>
+                                  <td>{game.pointsFor}</td>
+                                  <td>{game.pointsAgainst}</td>
+                                  <td className={game.result === "W" ? "text-green-600" : "text-red-500"}>{game.result}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        ) : (
+                          <div className="text-muted-foreground">No games recorded yet.</div>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>
