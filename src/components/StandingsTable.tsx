@@ -9,7 +9,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, ChevronDown, ChevronUp } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 interface Team {
   id: string;
@@ -46,6 +46,37 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
       return b.pointDifferential - a.pointDifferential;
     })
     .map((team, index) => ({ ...team, rank: index + 1 }));
+
+  const AccordionRow = ({ expanded, children }: { expanded: boolean; children: React.ReactNode }) => {
+    const ref = useRef<HTMLTableRowElement>(null);
+
+    useEffect(() => {
+      if (ref.current) {
+        if (expanded) {
+          ref.current.style.maxHeight = ref.current.scrollHeight + "px";
+          ref.current.style.opacity = "1";
+        } else {
+          ref.current.style.maxHeight = "0px";
+          ref.current.style.opacity = "0";
+        }
+      }
+    }, [expanded]);
+
+    return (
+      <tr
+        ref={ref}
+        style={{
+          transition: "max-height 0.4s cubic-bezier(.4,0,.2,1), opacity 0.3s",
+          overflow: "hidden",
+          maxHeight: expanded ? "500px" : "0px",
+          opacity: expanded ? 1 : 0,
+          display: "table-row",
+        }}
+      >
+        {children}
+      </tr>
+    );
+  };
 
   return (
     <Card className="bg-gradient-card shadow-card">
@@ -119,7 +150,7 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                   </TableCell>
                 </TableRow>
                 {expandedTeamId === team.id && (
-                  <TableRow>
+                  <AccordionRow expanded={expandedTeamId === team.id}>
                     <TableCell colSpan={8} className="bg-background border-t">
                       <div className="p-4">
                         <div className="font-semibold mb-4 text-lg flex items-center gap-2">
@@ -167,7 +198,7 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                         )}
                       </div>
                     </TableCell>
-                  </TableRow>
+                  </AccordionRow>
                 )}
               </React.Fragment>
             ))}
