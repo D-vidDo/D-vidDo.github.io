@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp } from "lucide-react";
+import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 
 interface Team {
@@ -19,6 +19,14 @@ interface Team {
   pointsFor: number;
   pointsAgainst: number;
   color: string;
+  games?: {
+    id: string;
+    date: string;
+    opponent: string;
+    pointsFor: number;
+    pointsAgainst: number;
+    result: "W" | "L";
+  }[];
 }
 
 interface StandingsTableProps {
@@ -33,11 +41,11 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
   };
 
   const sortedTeams = teams
-    .map((team, index) => ({
+    .map((team) => ({
       ...team,
-      winPercentage: team.wins / (team.wins + team.losses),
+      winPercentage:
+        team.wins + team.losses > 0 ? team.wins / (team.wins + team.losses) : 0,
       pointDifferential: team.pointsFor - team.pointsAgainst,
-      rank: index + 1,
     }))
     .sort((a, b) => {
       if (b.winPercentage !== a.winPercentage) {
@@ -45,9 +53,18 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
       }
       return b.pointDifferential - a.pointDifferential;
     })
-    .map((team, index) => ({ ...team, rank: index + 1 }));
+    .map((team, index) => ({
+      ...team,
+      rank: index + 1,
+    }));
 
-  const AccordionRow = ({ expanded, children }: { expanded: boolean; children: React.ReactNode }) => {
+  const AccordionRow = ({
+    expanded,
+    children,
+  }: {
+    expanded: boolean;
+    children: React.ReactNode;
+  }) => {
     const ref = useRef<HTMLTableRowElement>(null);
 
     useEffect(() => {
@@ -104,13 +121,18 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
             {sortedTeams.map((team) => (
               <React.Fragment key={team.id}>
                 <TableRow
-                  key={team.id}
                   className="hover:bg-muted/50 transition-colors cursor-pointer"
                   onClick={() => handleRowClick(team.id)}
-                  style={{ backgroundColor: expandedTeamId === team.id ? "#f7fafc" : undefined }}
+                  style={{
+                    backgroundColor:
+                      expandedTeamId === team.id ? "#f7fafc" : undefined,
+                  }}
                 >
                   <TableCell className="font-medium">
-                    <Badge variant={team.rank <= 3 ? "default" : "secondary"} className="w-8 h-8 rounded-full p-0 flex items-center justify-center">
+                    <Badge
+                      variant={team.rank <= 3 ? "default" : "secondary"}
+                      className="w-8 h-8 rounded-full p-0 flex items-center justify-center"
+                    >
                       {team.rank}
                     </Badge>
                   </TableCell>
@@ -143,10 +165,21 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                   </TableCell>
                   <TableCell className="text-center">{team.pointsFor}</TableCell>
                   <TableCell className="text-center">{team.pointsAgainst}</TableCell>
-                  <TableCell className={`text-center font-semibold ${
-                    team.pointDifferential > 0 ? 'text-green-600' : 'text-red-500'
-                  }`}>
-                    {team.pointDifferential > 0 ? '+' : ''}{team.pointDifferential}
+                  <TableCell
+                    className={`text-center font-semibold ${
+                      team.pointDifferential > 0
+                        ? "text-green-600"
+                        : team.pointDifferential < 0
+                        ? "text-red-500"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {team.pointDifferential > 0
+                      ? "+"
+                      : team.pointDifferential < 0
+                      ? ""
+                      : ""}
+                    {team.pointDifferential}
                   </TableCell>
                 </TableRow>
                 {expandedTeamId === team.id && (
@@ -162,11 +195,15 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                             <table className="min-w-full text-xs rounded-lg overflow-hidden shadow">
                               <thead>
                                 <tr className="bg-primary text-primary-foreground">
-                                  <th className="py-2 px-3 text-left rounded-tl-lg">Date</th>
+                                  <th className="py-2 px-3 text-left rounded-tl-lg">
+                                    Date
+                                  </th>
                                   <th className="py-2 px-3 text-left">Opponent</th>
                                   <th className="py-2 px-3 text-center">PF</th>
                                   <th className="py-2 px-3 text-center">PA</th>
-                                  <th className="py-2 px-3 text-center rounded-tr-lg">Result</th>
+                                  <th className="py-2 px-3 text-center rounded-tr-lg">
+                                    Result
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -174,17 +211,27 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                                   <tr
                                     key={game.id}
                                     className={
-                                      idx % 2 === 0
-                                        ? "bg-muted/30"
-                                        : "bg-background"
+                                      idx % 2 === 0 ? "bg-muted/30" : "bg-background"
                                     }
                                   >
                                     <td className="py-2 px-3">{game.date}</td>
-                                    <td className="py-2 px-3 font-semibold">{game.opponent}</td>
-                                    <td className="py-2 px-3 text-center font-bold text-green-700">{game.pointsFor}</td>
-                                    <td className="py-2 px-3 text-center font-bold text-red-600">{game.pointsAgainst}</td>
+                                    <td className="py-2 px-3 font-semibold">
+                                      {game.opponent}
+                                    </td>
+                                    <td className="py-2 px-3 text-center font-bold text-green-700">
+                                      {game.pointsFor}
+                                    </td>
+                                    <td className="py-2 px-3 text-center font-bold text-red-600">
+                                      {game.pointsAgainst}
+                                    </td>
                                     <td className="py-2 px-3 text-center">
-                                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${game.result === "W" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                                      <span
+                                        className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                          game.result === "W"
+                                            ? "bg-green-100 text-green-700"
+                                            : "bg-red-100 text-red-700"
+                                        }`}
+                                      >
                                         {game.result}
                                       </span>
                                     </td>
@@ -194,7 +241,9 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                             </table>
                           </div>
                         ) : (
-                          <div className="text-muted-foreground">No games recorded yet.</div>
+                          <div className="text-muted-foreground">
+                            No games recorded yet.
+                          </div>
                         )}
                       </div>
                     </TableCell>
