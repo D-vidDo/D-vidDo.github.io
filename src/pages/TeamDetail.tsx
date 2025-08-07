@@ -90,8 +90,9 @@ const TeamDetail = () => {
 
       // Fetch games
       const { data: gamesData, error: gamesError } = await supabase
-        .from("games")
+        .from("teams")
         .select("*")
+        .in("games",teamData.games)
         .contains("teams", [teamId])
         .order("date", { ascending: false });
 
