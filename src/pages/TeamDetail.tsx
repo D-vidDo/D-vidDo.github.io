@@ -10,8 +10,8 @@ import { supabase } from "@/lib/supabase";
 interface Player {
   id: string;
   name: string;
-  plusMinus: number;
-  gamesPlayed: number;
+  plus_minus: number;
+  games_played: number;
 }
 
 interface Game {
@@ -167,9 +167,9 @@ const TeamDetail = () => {
   }
 
   const winPercentage = ((team.wins / (team.wins + team.losses)) * 100).toFixed(1);
-  const teamPlusMinus = players.reduce((sum, p) => sum + (p.plusMinus || 0), 0);
-  const teamGames = players.reduce((sum, p) => sum + (p.gamesPlayed || 0), 0);
-  const teamAverage = teamGames > 0 ? parseFloat((teamPlusMinus / teamGames).toFixed(1)) : 0;
+  const teamplus_minus = players.reduce((sum, p) => sum + (p.plus_minus || 0), 0);
+  const teamGames = players.reduce((sum, p) => sum + (p.games_played || 0), 0);
+  const teamAverage = teamGames > 0 ? parseFloat((teamplus_minus / teamGames).toFixed(1)) : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -195,9 +195,9 @@ const TeamDetail = () => {
       <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
         <div className="grid md:grid-cols-4 gap-6">
           <StatCard title="Points For" icon={<Trophy />} value={team.points_for} />
-          <StatCard title="Team +/-" icon={<TrendingUp />} value={teamPlusMinus} isPlusMinus />
+          <StatCard title="Team +/-" icon={<TrendingUp />} value={teamplus_minus} isplus_minus />
           <StatCard title="Total Games" icon={<Users />} value={teamGames} />
-          <StatCard title="Team Average" icon={<Trophy />} value={teamAverage.toFixed(1)} isPlusMinus />
+          <StatCard title="Team Average" icon={<Trophy />} value={teamAverage.toFixed(1)} isplus_minus />
         </div>
 
         <Card className="bg-gradient-card shadow-card">
@@ -306,15 +306,15 @@ const TeamDetail = () => {
   );
 };
 
-const StatCard = ({ title, icon, value, isPlusMinus = false }: { title: string; icon: JSX.Element; value: number | string; isPlusMinus?: boolean }) => {
+const StatCard = ({ title, icon, value, isplus_minus = false }: { title: string; icon: JSX.Element; value: number | string; isplus_minus?: boolean }) => {
   const numeric = typeof value === "number" ? value : parseFloat(value);
   const color = numeric > 0 ? "text-green-600" : numeric < 0 ? "text-red-500" : "text-muted-foreground";
   return (
     <Card className="bg-gradient-stats shadow-card">
       <CardContent className="p-6 text-center">
         <div className="h-8 w-8 mx-auto mb-2 text-primary">{icon}</div>
-        <div className={`text-2xl font-bold text-card-foreground ${isPlusMinus ? color : ""}`}>
-          {isPlusMinus && numeric > 0 ? "+" : ""}{value}
+        <div className={`text-2xl font-bold text-card-foreground ${isplus_minus ? color : ""}`}>
+          {isplus_minus && numeric > 0 ? "+" : ""}{value}
         </div>
         <div className="text-sm text-muted-foreground">{title}</div>
       </CardContent>
@@ -338,8 +338,8 @@ export default TeamDetail;
 // interface Player {
 //   id: string;
 //   name: string;
-//   plusMinus: number;
-//   gamesPlayed: number;
+//   plus_minus: number;
+//   games_played: number;
 // }
 
 // interface Game {
@@ -507,9 +507,9 @@ export default TeamDetail;
 
 //   const winPercentage = ((team.wins / (team.wins + team.losses)) * 100).toFixed(1);
 //   const pointDifferential = team.points_for - team.points_against;
-//   const teamPlusMinus = players.reduce((sum, p) => sum + p.plusMinus, 0);
-//   const teamGames = players.reduce((sum, p) => sum + p.gamesPlayed, 0);
-//   const teamAverage = teamGames > 0 ? teamPlusMinus / teamGames : 0;
+//   const teamplus_minus = players.reduce((sum, p) => sum + p.plus_minus, 0);
+//   const teamGames = players.reduce((sum, p) => sum + p.games_played, 0);
+//   const teamAverage = teamGames > 0 ? teamplus_minus / teamGames : 0;
 
 //   return (
 //     <div className="min-h-screen bg-background">
@@ -551,9 +551,9 @@ export default TeamDetail;
 //         {/* Stats Grid */}
 //         <div className="grid md:grid-cols-4 gap-6">
 //           <StatCard title="Points For" icon={<Trophy />} value={team.points_for} />
-//           <StatCard title="Team +/-" icon={<TrendingUp />} value={teamPlusMinus} isPlusMinus />
+//           <StatCard title="Team +/-" icon={<TrendingUp />} value={teamplus_minus} isplus_minus />
 //           <StatCard title="Total Games" icon={<Users />} value={teamGames} />
-//           <StatCard title="Team Average" icon={<Trophy />} value={teamAverage.toFixed(1)} isPlusMinus />
+//           <StatCard title="Team Average" icon={<Trophy />} value={teamAverage.toFixed(1)} isplus_minus />
 //         </div>
 
 //         {/* Player Cards */}
@@ -629,12 +629,12 @@ export default TeamDetail;
 //   title,
 //   icon,
 //   value,
-//   isPlusMinus = false,
+//   isplus_minus = false,
 // }: {
 //   title: string;
 //   icon: JSX.Element;
 //   value: number | string;
-//   isPlusMinus?: boolean;
+//   isplus_minus?: boolean;
 // }) => {
 //   const numeric = typeof value === "number" ? value : parseFloat(value);
 //   const color =
@@ -647,8 +647,8 @@ export default TeamDetail;
 //     <Card className="bg-gradient-stats shadow-card">
 //       <CardContent className="p-6 text-center">
 //         <div className="h-8 w-8 mx-auto mb-2 text-primary">{icon}</div>
-//         <div className={`text-2xl font-bold text-card-foreground ${isPlusMinus ? color : ""}`}>
-//           {isPlusMinus && numeric > 0 ? "+" : ""}
+//         <div className={`text-2xl font-bold text-card-foreground ${isplus_minus ? color : ""}`}>
+//           {isplus_minus && numeric > 0 ? "+" : ""}
 //           {value}
 //         </div>
 //         <div className="text-sm text-muted-foreground">{title}</div>
@@ -693,9 +693,9 @@ export default TeamDetail;
 //   const pointDifferential = team.pointsFor - team.pointsAgainst;
   
 //   // Team stats
-//   const teamPlusMinus = players.reduce((sum, player) => sum + player.plusMinus, 0);
-//   const teamGames = players.reduce((sum, player) => sum + player.gamesPlayed, 0);
-//   const teamAverage = teamGames > 0 ? (teamPlusMinus / teamGames) : 0;
+//   const teamplus_minus = players.reduce((sum, player) => sum + player.plus_minus, 0);
+//   const teamGames = players.reduce((sum, player) => sum + player.games_played, 0);
+//   const teamAverage = teamGames > 0 ? (teamplus_minus / teamGames) : 0;
 
 //   const teamTrades = mockTrades.filter(trade =>
 //     trade.playersTraded.some(pt => pt.toTeam === team.name)
@@ -767,8 +767,8 @@ export default TeamDetail;
 //           <Card className="bg-gradient-stats shadow-card">
 //             <CardContent className="p-6 text-center">
 //               <TrendingUp className="h-8 w-8 text-secondary mx-auto mb-2" />
-//               <div className={`text-2xl font-bold ${teamPlusMinus > 0 ? 'text-green-600' : teamPlusMinus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-//                 {teamPlusMinus > 0 ? '+' : ''}{teamPlusMinus}
+//               <div className={`text-2xl font-bold ${teamplus_minus > 0 ? 'text-green-600' : teamplus_minus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+//                 {teamplus_minus > 0 ? '+' : ''}{teamplus_minus}
 //               </div>
 //               <div className="text-sm text-muted-foreground">Team +/-</div>
 //             </CardContent>
