@@ -8,31 +8,31 @@ import { supabase } from "@/lib/supabase";
 
 interface TeamCardProps {
   team: {
-    id: string;
+    team_id: string;
     name: string;
     wins: number;
     losses: number;
     captain: string;
     color: string;
-    playerIds?: string[]; // Optional array of player IDs
+    player_ids?: string[]; // Optional array of player IDs
   };
 }
 
 const TeamCard = ({ team }: TeamCardProps) => {
   const winPercentage = ((team.wins / (team.wins + team.losses)) * 100).toFixed(1);
   const [playerCount, setPlayerCount] = useState<number>(
-    Array.isArray(team.playerIds) ? team.playerIds.length : 0
+    Array.isArray(team.player_ids) ? team.player_ids.length : 0
   );
 
   // Optional: fetch player count from Supabase if playerIds exists
   useEffect(() => {
     async function fetchPlayerCount() {
-      if (team.playerIds && team.playerIds.length > 0) {
+      if (team.player_ids && team.player_ids.length > 0) {
         // Assuming you have a 'players' table and want to confirm existing players
         const { data, error } = await supabase
           .from("players")
           .select("id")
-          .in("id", team.playerIds);
+          .in("id", team.player_ids);
 
         if (error) {
           console.error("Error fetching players:", error);
@@ -45,7 +45,7 @@ const TeamCard = ({ team }: TeamCardProps) => {
     }
 
     fetchPlayerCount();
-  }, [team.playerIds]);
+  }, [team.player_ids]);
 
   return (
     <Card className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 group">
@@ -95,7 +95,7 @@ const TeamCard = ({ team }: TeamCardProps) => {
             </div>
           </div>
 
-          <Link to={`/teams/${team.id}`}>
+          <Link to={`/teams/${team.team_id}`}>
             <Button
               variant="outline"
               size="sm"
