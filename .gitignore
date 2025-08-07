@@ -24,4 +24,3 @@ dist-ssr
 *.sw?
 run.ts
 src/lib/supabase
-src/lib/supabase.ts
