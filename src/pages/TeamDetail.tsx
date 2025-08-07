@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, TrendingUp, Users } from "lucide-react";
+import { ArrowLeft, Trophy, TrendingUp, Users, CalendarDays } from "lucide-react";
 import PlayerCard from "@/components/PlayerCard";
 import { supabase } from "@/lib/supabase";
 
@@ -64,7 +64,6 @@ const TeamDetail = () => {
       setError(null);
 
       try {
-        // Fetch team
         const { data: teamData, error: teamError } = await supabase
           .from("teams")
           .select("*")
@@ -78,7 +77,6 @@ const TeamDetail = () => {
         }
         setTeam(teamData);
 
-        // Fetch players by player_ids
         const { data: playersData, error: playersError } = await supabase
           .from("players")
           .select("*")
@@ -91,10 +89,8 @@ const TeamDetail = () => {
         }
         setPlayers(playersData ?? []);
 
-        // Set games from teamData directly (assuming stored there)
         setGames(teamData.games ?? []);
 
-        // Fetch trades metadata
         const { data: tradesData, error: tradesError } = await supabase
           .from("trades")
           .select("id, date, description")
@@ -112,7 +108,6 @@ const TeamDetail = () => {
           return;
         }
 
-        // For each trade, fetch players traded and attach them
         const tradesWithPlayers = await Promise.all(
           tradesData.map(async (trade) => {
             const { data: playersTradedData, error: playersTradedError } = await supabase
@@ -135,10 +130,8 @@ const TeamDetail = () => {
           })
         );
 
-        // Filter out any null trades (in case of errors)
         const filteredTrades = (tradesWithPlayers ?? []).filter(Boolean);
 
-        // Filter trades to only those involving this team (either toTeam or fromTeam)
         const teamTrades = filteredTrades.filter((trade) =>
           trade.playersTraded.some(
             (pt) => pt.toTeam === teamData.name || pt.fromTeam === teamData.name
@@ -157,11 +150,7 @@ const TeamDetail = () => {
   }, [teamId]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">
-        Loading team details...
-      </div>
-    );
+    return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Loading team details...</div>;
   }
 
   if (error || !team) {
@@ -185,34 +174,19 @@ const TeamDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <section className="bg-gradient-hero py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <Link
-            to="/teams"
-            className="inline-flex items-center text-primary-foreground hover:text-primary-foreground/80 mb-6"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Teams
+          <Link to="/teams" className="inline-flex items-center text-primary-foreground hover:text-primary-foreground/80 mb-6">
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Teams
           </Link>
-
           <div className="flex items-center space-x-6">
-            <div
-              className="w-24 h-24 rounded-xl flex items-center justify-center text-white font-bold text-3xl shadow-primary"
-              style={{ backgroundColor: team.color }}
-            >
-              {team.name.slice(0, 2).toUpperCase()}
-            </div>
+            <div className="w-24 h-24 rounded-xl flex items-center justify-center text-white font-bold text-3xl shadow-primary" style={{ backgroundColor: team.color }}>{team.name.slice(0, 2).toUpperCase()}</div>
             <div>
               <h1 className="text-5xl font-bold text-primary-foreground mb-2">{team.name}</h1>
               <p className="text-lg text-primary-foreground/90 mb-4">Captain: {team.captain}</p>
               <div className="flex gap-3 flex-wrap">
-                <Badge variant="secondary" className="text-lg px-4 py-2">
-                  {team.wins}W - {team.losses}L
-                </Badge>
-                <Badge variant="outline" className="text-lg px-4 py-2 bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground">
-                  {winPercentage}% Win Rate
-                </Badge>
+                <Badge variant="secondary" className="text-lg px-4 py-2">{team.wins}W - {team.losses}L</Badge>
+                <Badge variant="outline" className="text-lg px-4 py-2 bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground">{winPercentage}% Win Rate</Badge>
               </div>
             </div>
           </div>
@@ -220,7 +194,6 @@ const TeamDetail = () => {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
-        {/* Stats Grid */}
         <div className="grid md:grid-cols-4 gap-6">
           <StatCard title="Points For" icon={<Trophy />} value={team.points_for} />
           <StatCard title="Team +/-" icon={<TrendingUp />} value={teamPlusMinus} isPlusMinus />
@@ -228,46 +201,60 @@ const TeamDetail = () => {
           <StatCard title="Team Average" icon={<Trophy />} value={teamAverage.toFixed(1)} isPlusMinus />
         </div>
 
-        {/* Player Cards */}
         <Card className="bg-gradient-card shadow-card">
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              Team Roster ({players.length} players)
+              <Users className="h-5 w-5 text-primary" /> Team Roster ({players.length} players)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {players.map((player) => (
-                <PlayerCard
-                  key={player.id}
-                  player={{ ...player, isCaptain: player.name === team.captain }}
-                />
+                <PlayerCard key={player.id} player={{ ...player, isCaptain: player.name === team.captain }} />
               ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Roster History */}
         <Card className="bg-gradient-card shadow-card">
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              Roster History
+              <CalendarDays className="h-5 w-5 text-primary" /> Match History
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {games.length === 0 ? (
+              <div className="text-muted-foreground text-center py-4">No games played yet.</div>
+            ) : (
+              <div className="space-y-4">
+                {games.map((game) => (
+                  <div key={game.id} className="flex justify-between border-b pb-2">
+                    <div>
+                      <div className="font-semibold text-primary">{game.date} vs {game.opponent}</div>
+                      <div className="text-sm text-muted-foreground">Result: {game.result} ({game.pointsFor}-{game.pointsAgainst})</div>
+                    </div>
+                    <Badge variant={game.result === "W" ? "secondary" : "outline"} className={game.result === "W" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>{game.result}</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-card shadow-card">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" /> Roster History
             </CardTitle>
           </CardHeader>
           <CardContent>
             {trades.length === 0 ? (
-              <div className="text-muted-foreground text-center py-4">
-                No roster changes or trades for this team yet.
-              </div>
+              <div className="text-muted-foreground text-center py-4">No roster changes or trades for this team yet.</div>
             ) : (
               <div className="space-y-6">
                 {trades.map((trade) => (
                   <div key={trade.id} className="border-b pb-4">
-                    <div className="font-semibold text-primary mb-1">
-                      {trade.date} &mdash; {trade.description}
-                    </div>
+                    <div className="font-semibold text-primary mb-1">{trade.date} — {trade.description}</div>
                     <ul className="ml-2">
                       {trade.playersTraded.map((pt, idx) => {
                         const isIncoming = pt.toTeam === team.name;
@@ -276,11 +263,7 @@ const TeamDetail = () => {
                         return (
                           <li key={idx} className="text-sm flex items-center gap-2 py-1">
                             <span className="font-bold">{pt.player.name}</span>
-                            <span>
-                              {isIncoming
-                                ? `acquired from ${pt.fromTeam}`
-                                : `traded to ${pt.toTeam}`}
-                            </span>
+                            <span>{isIncoming ? `acquired from ${pt.fromTeam}` : `traded to ${pt.toTeam}`}</span>
                           </li>
                         );
                       })}
@@ -296,32 +279,15 @@ const TeamDetail = () => {
   );
 };
 
-// Reusable Stat Card
-const StatCard = ({
-  title,
-  icon,
-  value,
-  isPlusMinus = false,
-}: {
-  title: string;
-  icon: JSX.Element;
-  value: number | string;
-  isPlusMinus?: boolean;
-}) => {
+const StatCard = ({ title, icon, value, isPlusMinus = false }: { title: string; icon: JSX.Element; value: number | string; isPlusMinus?: boolean }) => {
   const numeric = typeof value === "number" ? value : parseFloat(value);
-  const color =
-    numeric > 0
-      ? "text-green-600"
-      : numeric < 0
-      ? "text-red-500"
-      : "text-muted-foreground";
+  const color = numeric > 0 ? "text-green-600" : numeric < 0 ? "text-red-500" : "text-muted-foreground";
   return (
     <Card className="bg-gradient-stats shadow-card">
       <CardContent className="p-6 text-center">
         <div className="h-8 w-8 mx-auto mb-2 text-primary">{icon}</div>
         <div className={`text-2xl font-bold text-card-foreground ${isPlusMinus ? color : ""}`}>
-          {isPlusMinus && numeric > 0 ? "+" : ""}
-          {value}
+          {isPlusMinus && numeric > 0 ? "+" : ""}{value}
         </div>
         <div className="text-sm text-muted-foreground">{title}</div>
       </CardContent>
@@ -330,6 +296,341 @@ const StatCard = ({
 };
 
 export default TeamDetail;
+
+
+
+// import { useState, useEffect } from "react";
+// import { useParams, Link } from "react-router-dom";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Badge } from "@/components/ui/badge";
+// import { ArrowLeft, Trophy, TrendingUp, Users } from "lucide-react";
+// import PlayerCard from "@/components/PlayerCard";
+// import { supabase } from "@/lib/supabase";
+
+// interface Player {
+//   id: string;
+//   name: string;
+//   plusMinus: number;
+//   gamesPlayed: number;
+// }
+
+// interface Game {
+//   id: string;
+//   date: string;
+//   opponent: string;
+//   pointsFor: number;
+//   pointsAgainst: number;
+//   result: "W" | "L";
+// }
+
+// interface TradePlayer {
+//   player: { name: string };
+//   fromTeam: string;
+//   toTeam: string;
+// }
+
+// interface Trade {
+//   id: string;
+//   date: string;
+//   description: string;
+//   playersTraded: TradePlayer[];
+// }
+
+// interface Team {
+//   team_id: string;
+//   name: string;
+//   wins: number;
+//   losses: number;
+//   captain: string;
+//   color: string;
+//   points_for: number;
+//   points_against: number;
+//   player_ids: string[];
+//   games: Game[];
+// }
+
+// const TeamDetail = () => {
+//   const { teamId } = useParams<{ teamId: string }>();
+//   const [team, setTeam] = useState<Team | null>(null);
+//   const [players, setPlayers] = useState<Player[]>([]);
+//   const [games, setGames] = useState<Game[]>([]);
+//   const [trades, setTrades] = useState<Trade[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
+
+//   useEffect(() => {
+//     async function fetchTeamData() {
+//       setLoading(true);
+//       setError(null);
+
+//       try {
+//         // Fetch team
+//         const { data: teamData, error: teamError } = await supabase
+//           .from("teams")
+//           .select("*")
+//           .eq("team_id", teamId)
+//           .single();
+
+//         if (teamError || !teamData) {
+//           setError("Team not found");
+//           setLoading(false);
+//           return;
+//         }
+//         setTeam(teamData);
+
+//         // Fetch players by player_ids
+//         const { data: playersData, error: playersError } = await supabase
+//           .from("players")
+//           .select("*")
+//           .in("id", teamData.player_ids ?? []);
+
+//         if (playersError) {
+//           setError("Failed to load players");
+//           setLoading(false);
+//           return;
+//         }
+//         setPlayers(playersData ?? []);
+
+//         // Set games from teamData directly (assuming stored there)
+//         setGames(teamData.games ?? []);
+
+//         // Fetch trades metadata
+//         const { data: tradesData, error: tradesError } = await supabase
+//           .from("trades")
+//           .select("id, date, description")
+//           .order("date", { ascending: false });
+
+//         if (tradesError) {
+//           setError("Failed to load trades");
+//           setLoading(false);
+//           return;
+//         }
+
+//         if (!tradesData) {
+//           setTrades([]);
+//           setLoading(false);
+//           return;
+//         }
+
+//         // For each trade, fetch players traded and attach them
+//         const tradesWithPlayers = await Promise.all(
+//           tradesData.map(async (trade) => {
+//             const { data: playersTradedData, error: playersTradedError } = await supabase
+//               .from("players_traded")
+//               .select("player, fromTeam, toTeam")
+//               .eq("trade_id", trade.id);
+
+//             if (playersTradedError) {
+//               setError(`Failed to load players traded for trade ${trade.id}: ${playersTradedError.message}`);
+//               setLoading(false);
+//               return null;
+//             }
+
+//             return {
+//               id: trade.id,
+//               date: trade.date,
+//               description: trade.description,
+//               playersTraded: playersTradedData ?? [],
+//             };
+//           })
+//         );
+
+//         // Filter out any null trades (in case of errors)
+//         const filteredTrades = (tradesWithPlayers ?? []).filter(Boolean);
+
+//         // Filter trades to only those involving this team (either toTeam or fromTeam)
+//         const teamTrades = filteredTrades.filter((trade) =>
+//           trade.playersTraded.some(
+//             (pt) => pt.toTeam === teamData.name || pt.fromTeam === teamData.name
+//           )
+//         );
+
+//         setTrades(teamTrades);
+//       } catch (err) {
+//         setError("Unexpected error: " + (err as Error).message);
+//       } finally {
+//         setLoading(false);
+//       }
+//     }
+
+//     fetchTeamData();
+//   }, [teamId]);
+
+//   if (loading) {
+//     return (
+//       <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">
+//         Loading team details...
+//       </div>
+//     );
+//   }
+
+//   if (error || !team) {
+//     return (
+//       <div className="min-h-screen bg-background flex items-center justify-center">
+//         <div className="text-center">
+//           <h1 className="text-2xl font-bold mb-4">{error || "Team not found"}</h1>
+//           <Link to="/teams">
+//             <Button>Back to Teams</Button>
+//           </Link>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   const winPercentage = ((team.wins / (team.wins + team.losses)) * 100).toFixed(1);
+//   const pointDifferential = team.points_for - team.points_against;
+//   const teamPlusMinus = players.reduce((sum, p) => sum + p.plusMinus, 0);
+//   const teamGames = players.reduce((sum, p) => sum + p.gamesPlayed, 0);
+//   const teamAverage = teamGames > 0 ? teamPlusMinus / teamGames : 0;
+
+//   return (
+//     <div className="min-h-screen bg-background">
+//       {/* Header */}
+//       <section className="bg-gradient-hero py-16 px-4">
+//         <div className="max-w-6xl mx-auto">
+//           <Link
+//             to="/teams"
+//             className="inline-flex items-center text-primary-foreground hover:text-primary-foreground/80 mb-6"
+//           >
+//             <ArrowLeft className="h-4 w-4 mr-2" />
+//             Back to Teams
+//           </Link>
+
+//           <div className="flex items-center space-x-6">
+//             <div
+//               className="w-24 h-24 rounded-xl flex items-center justify-center text-white font-bold text-3xl shadow-primary"
+//               style={{ backgroundColor: team.color }}
+//             >
+//               {team.name.slice(0, 2).toUpperCase()}
+//             </div>
+//             <div>
+//               <h1 className="text-5xl font-bold text-primary-foreground mb-2">{team.name}</h1>
+//               <p className="text-lg text-primary-foreground/90 mb-4">Captain: {team.captain}</p>
+//               <div className="flex gap-3 flex-wrap">
+//                 <Badge variant="secondary" className="text-lg px-4 py-2">
+//                   {team.wins}W - {team.losses}L
+//                 </Badge>
+//                 <Badge variant="outline" className="text-lg px-4 py-2 bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground">
+//                   {winPercentage}% Win Rate
+//                 </Badge>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </section>
+
+//       <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
+//         {/* Stats Grid */}
+//         <div className="grid md:grid-cols-4 gap-6">
+//           <StatCard title="Points For" icon={<Trophy />} value={team.points_for} />
+//           <StatCard title="Team +/-" icon={<TrendingUp />} value={teamPlusMinus} isPlusMinus />
+//           <StatCard title="Total Games" icon={<Users />} value={teamGames} />
+//           <StatCard title="Team Average" icon={<Trophy />} value={teamAverage.toFixed(1)} isPlusMinus />
+//         </div>
+
+//         {/* Player Cards */}
+//         <Card className="bg-gradient-card shadow-card">
+//           <CardHeader>
+//             <CardTitle className="text-xl flex items-center gap-2">
+//               <Users className="h-5 w-5 text-primary" />
+//               Team Roster ({players.length} players)
+//             </CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+//               {players.map((player) => (
+//                 <PlayerCard
+//                   key={player.id}
+//                   player={{ ...player, isCaptain: player.name === team.captain }}
+//                 />
+//               ))}
+//             </div>
+//           </CardContent>
+//         </Card>
+
+//         {/* Roster History */}
+//         <Card className="bg-gradient-card shadow-card">
+//           <CardHeader>
+//             <CardTitle className="text-xl flex items-center gap-2">
+//               <Users className="h-5 w-5 text-primary" />
+//               Roster History
+//             </CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             {trades.length === 0 ? (
+//               <div className="text-muted-foreground text-center py-4">
+//                 No roster changes or trades for this team yet.
+//               </div>
+//             ) : (
+//               <div className="space-y-6">
+//                 {trades.map((trade) => (
+//                   <div key={trade.id} className="border-b pb-4">
+//                     <div className="font-semibold text-primary mb-1">
+//                       {trade.date} &mdash; {trade.description}
+//                     </div>
+//                     <ul className="ml-2">
+//                       {trade.playersTraded.map((pt, idx) => {
+//                         const isIncoming = pt.toTeam === team.name;
+//                         const isOutgoing = pt.fromTeam === team.name;
+//                         if (!isIncoming && !isOutgoing) return null;
+//                         return (
+//                           <li key={idx} className="text-sm flex items-center gap-2 py-1">
+//                             <span className="font-bold">{pt.player.name}</span>
+//                             <span>
+//                               {isIncoming
+//                                 ? `acquired from ${pt.fromTeam}`
+//                                 : `traded to ${pt.toTeam}`}
+//                             </span>
+//                           </li>
+//                         );
+//                       })}
+//                     </ul>
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+//           </CardContent>
+//         </Card>
+//       </div>
+//     </div>
+//   );
+// };
+
+// // Reusable Stat Card
+// const StatCard = ({
+//   title,
+//   icon,
+//   value,
+//   isPlusMinus = false,
+// }: {
+//   title: string;
+//   icon: JSX.Element;
+//   value: number | string;
+//   isPlusMinus?: boolean;
+// }) => {
+//   const numeric = typeof value === "number" ? value : parseFloat(value);
+//   const color =
+//     numeric > 0
+//       ? "text-green-600"
+//       : numeric < 0
+//       ? "text-red-500"
+//       : "text-muted-foreground";
+//   return (
+//     <Card className="bg-gradient-stats shadow-card">
+//       <CardContent className="p-6 text-center">
+//         <div className="h-8 w-8 mx-auto mb-2 text-primary">{icon}</div>
+//         <div className={`text-2xl font-bold text-card-foreground ${isPlusMinus ? color : ""}`}>
+//           {isPlusMinus && numeric > 0 ? "+" : ""}
+//           {value}
+//         </div>
+//         <div className="text-sm text-muted-foreground">{title}</div>
+//       </CardContent>
+//     </Card>
+//   );
+// };
+
+// export default TeamDetail;
 
 
 
