@@ -40,12 +40,12 @@ const Stats = () => {
   // Compute top performers
   const topPlusMinus = [...players]
     .sort((a, b) => b.plusMinus - a.plusMinus)
-    .slice(0, 10);
+    .slice(0, 18);
 
   const topAverage = [...players]
     .filter(p => p.gamesPlayed > 0)
     .sort((a, b) => b.plusMinus / b.gamesPlayed - a.plusMinus / a.gamesPlayed)
-    .slice(0, 10);
+    .slice(0, 18);
 
   const tabs = [
     { id: "plusMinus", label: "Top +/-", icon: TrendingUp, data: topPlusMinus },
