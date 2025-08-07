@@ -217,29 +217,57 @@ const TeamDetail = () => {
         </Card>
 
         <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-primary" /> Match History
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {games.length === 0 ? (
-              <div className="text-muted-foreground text-center py-4">No games played yet.</div>
-            ) : (
-              <div className="space-y-4">
-                {games.map((game) => (
-                  <div key={game.id} className="flex justify-between border-b pb-2">
-                    <div>
-                      <div className="font-semibold text-primary">{game.date} vs {game.opponent}</div>
-                      <div className="text-sm text-muted-foreground">Result: {game.result} ({game.pointsFor}-{game.pointsAgainst})</div>
-                    </div>
-                    <Badge variant={game.result === "W" ? "secondary" : "outline"} className={game.result === "W" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>{game.result}</Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+  <CardHeader>
+    <CardTitle className="text-xl flex items-center gap-2">
+      <CalendarDays className="h-5 w-5 text-primary" /> Match History
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    {games.length === 0 ? (
+      <div className="text-muted-foreground text-center py-4">No games played yet.</div>
+    ) : (
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left border-collapse">
+          <thead>
+            <tr className="border-b border-muted">
+              <th className="px-4 py-2 text-muted-foreground font-medium">Date</th>
+              <th className="px-4 py-2 text-muted-foreground font-medium">Opponent</th>
+              <th className="px-4 py-2 text-muted-foreground font-medium">Score</th>
+              <th className="px-4 py-2 text-muted-foreground font-medium">Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            {games.map((game, index) => (
+              <tr
+                key={game.id}
+                className={index % 2 === 0 ? "bg-muted/10" : ""}
+              >
+                <td className="px-4 py-2">{game.date}</td>
+                <td className="px-4 py-2">{game.opponent}</td>
+                <td className="px-4 py-2">
+                  {game.pointsFor} - {game.pointsAgainst}
+                </td>
+                <td className="px-4 py-2">
+                  <Badge
+                    variant={game.result === "W" ? "secondary" : "outline"}
+                    className={
+                      game.result === "W"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }
+                  >
+                    {game.result}
+                  </Badge>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </CardContent>
+</Card>
+
 
         <Card className="bg-gradient-card shadow-card">
           <CardHeader>
