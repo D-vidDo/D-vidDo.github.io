@@ -169,7 +169,7 @@ const TeamDetail = () => {
   const winPercentage = ((team.wins / (team.wins + team.losses)) * 100).toFixed(1);
   const teamPlusMinus = players.reduce((sum, p) => sum + (p.plusMinus || 0), 0);
   const teamGames = players.reduce((sum, p) => sum + (p.gamesPlayed || 0), 0);
-  const teamAverage = teamGames > 0 ? (teamPlusMinus / teamGames).toFixed(1) : "0.0";
+  const teamAverage = teamGames > 0 ? parseFloat((teamPlusMinus / teamGames).toFixed(1)) : 0;
 
   return (
     <div className="min-h-screen bg-background">
