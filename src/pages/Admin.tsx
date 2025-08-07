@@ -8,6 +8,7 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const AdminGameEntry = () => {
+  // --- Game Entry State ---
   const [teams, setTeams] = useState<any[]>([]);
   const [teamId, setTeamId] = useState<string>("");
   const [date, setDate] = useState("");
@@ -17,6 +18,15 @@ const AdminGameEntry = () => {
   const [result, setResult] = useState<"W" | "L">("W");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // --- Trade Admin State ---
+  const [players, setPlayers] = useState<{id: string; name: string}[]>([]);
+  const [selectedPlayerId, setSelectedPlayerId] = useState("");
+  const [fromTeamId, setFromTeamId] = useState("");
+  const [toTeamId, setToTeamId] = useState("");
+  const [tradeDescription, setTradeDescription] = useState("");
+  const [tradeMessage, setTradeMessage] = useState<string | null>(null);
+  const [tradeLoading, setTradeLoading] = useState(false);
 
   useEffect(() => {
     // Load teams on mount
@@ -30,8 +40,22 @@ const AdminGameEntry = () => {
       }
     }
     loadTeams();
+
+    // Load players for trade admin
+    async function loadPlayers() {
+      const { data: playersData, error: playersError } = await supabase
+        .from("players")
+        .select("id, name");
+      if (playersError) {
+        setTradeMessage("Failed to load players");
+      } else {
+        setPlayers(playersData || []);
+      }
+    }
+    loadPlayers();
   }, []);
 
+  // Game Entry Submit Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -101,7 +125,7 @@ const AdminGameEntry = () => {
 
       // Update player stats for all players in this team
       if (teamData.player_ids && teamData.player_ids.length > 0) {
-        const { data: players, error: playersError } = await supabase
+        const { data: playersData, error: playersError } = await supabase
           .from("players")
           .select("*")
           .in("id", teamData.player_ids);
@@ -112,7 +136,7 @@ const AdminGameEntry = () => {
           return;
         }
 
-        for (const player of players) {
+        for (const player of playersData) {
           const updatedPlusMinus = (player.plus_minus ?? 0) + (newGame.pointsFor - newGame.pointsAgainst);
           const updatedGamesPlayed = (player.games_played ?? 0) + 1;
 
@@ -146,106 +170,281 @@ const AdminGameEntry = () => {
     }
   };
 
+  // Trade Admin handlers
+
+  // Find the team the selected player currently belongs to
+  const playerCurrentTeam = teams.find((team) =>
+    team.player_ids?.includes(selectedPlayerId)
+  );
+
+  const handleTrade = async () => {
+    if (!selectedPlayerId || !fromTeamId || !toTeamId || !tradeDescription) {
+      setTradeMessage("Please fill all trade fields.");
+      return;
+    }
+    if (fromTeamId === toTeamId) {
+      setTradeMessage("From and To teams must be different.");
+      return;
+    }
+
+    setTradeLoading(true);
+    setTradeMessage(null);
+
+    const player = players.find((p) => p.id === selectedPlayerId);
+    const fromTeam = teams.find((t) => t.team_id === fromTeamId);
+    const toTeam = teams.find((t) => t.team_id === toTeamId);
+
+    if (!player || !fromTeam || !toTeam) {
+      setTradeMessage("Invalid player or teams selected.");
+      setTradeLoading(false);
+      return;
+    }
+
+    try {
+      // Remove player from fromTeam roster
+      const newFromRoster = (fromTeam.player_ids || []).filter((id) => id !== selectedPlayerId);
+      const { error: fromError } = await supabase
+        .from("teams")
+        .update({ player_ids: newFromRoster })
+        .eq("team_id", fromTeamId);
+      if (fromError) throw fromError;
+
+      // Add player to toTeam roster
+      const newToRoster = Array.from(new Set([...(toTeam.player_ids || []), selectedPlayerId]));
+      const { error: toError } = await supabase
+        .from("teams")
+        .update({ player_ids: newToRoster })
+        .eq("team_id", toTeamId);
+      if (toError) throw toError;
+
+      // Insert trade record
+      const { error: tradeInsertError } = await supabase.from("trades").insert([
+        {
+          date: new Date().toISOString(),
+          description: tradeDescription,
+          players_traded: [
+            {
+              player: { name: player.name },
+              fromTeam: fromTeam.name,
+              toTeam: toTeam.name,
+            },
+          ],
+        },
+      ]);
+      if (tradeInsertError) throw tradeInsertError;
+
+      setTradeMessage(`Trade successful! ${player.name} moved from ${fromTeam.name} to ${toTeam.name}.`);
+      setSelectedPlayerId("");
+      setFromTeamId("");
+      setToTeamId("");
+      setTradeDescription("");
+
+      // Refresh teams (rosters)
+      const { data: refreshedTeams } = await supabase.from("teams").select("*");
+      setTeams(refreshedTeams ?? []);
+    } catch (error: any) {
+      setTradeMessage("Trade failed: " + error.message);
+    } finally {
+      setTradeLoading(false);
+    }
+  };
+
   return (
-    <div className="max-w-md mx-auto mt-12 p-6 bg-card rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-4">Secret Admin: Add Game Result</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block mb-1 font-semibold">Team</label>
-          <select
-            value={teamId}
-            onChange={(e) => setTeamId(e.target.value)}
-            className="w-full border rounded px-2 py-1"
+    <div className="max-w-3xl mx-auto mt-12 p-6 bg-card rounded-lg shadow space-y-12">
+      {/* Game Entry Section */}
+      <section>
+        <h2 className="text-2xl font-bold mb-4">Secret Admin: Add Game Result</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block mb-1 font-semibold">Team</label>
+            <select
+              value={teamId}
+              onChange={(e) => setTeamId(e.target.value)}
+              className="w-full border rounded px-2 py-1"
+              disabled={loading}
+            >
+              {teams.map((team) => (
+                <option key={team.team_id} value={team.team_id}>
+                  {team.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">Date</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full border rounded px-2 py-1"
+              disabled={loading}
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">Opponent</label>
+            <input
+              type="text"
+              value={opponent}
+              onChange={(e) => setOpponent(e.target.value)}
+              className="w-full border rounded px-2 py-1"
+              placeholder="Opponent team name"
+              disabled={loading}
+            />
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="block mb-1 font-semibold">Points For</label>
+              <input
+                type="number"
+                value={pointsFor}
+                onChange={(e) => setPointsFor(e.target.value)}
+                className="w-full border rounded px-2 py-1"
+                min={0}
+                disabled={loading}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block mb-1 font-semibold">Points Against</label>
+              <input
+                type="number"
+                value={pointsAgainst}
+                onChange={(e) => setPointsAgainst(e.target.value)}
+                className="w-full border rounded px-2 py-1"
+                min={0}
+                disabled={loading}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">Result</label>
+            <select
+              value={result}
+              onChange={(e) => setResult(e.target.value as "W" | "L")}
+              className="w-full border rounded px-2 py-1"
+              disabled={loading}
+            >
+              <option value="W">Win</option>
+              <option value="L">Loss</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-primary text-primary-foreground py-2 rounded font-bold mt-2"
             disabled={loading}
           >
-            {teams.map((team) => (
-              <option key={team.team_id} value={team.team_id}>
-                {team.name}
+            {loading ? "Submitting..." : "Submit & Sync Stats"}
+          </button>
+          {message && (
+            <div
+              className={`mt-2 text-center font-semibold ${
+                message.toLowerCase().includes("failed") || message.toLowerCase().includes("error")
+                  ? "text-red-600"
+                  : "text-green-600"
+              }`}
+            >
+              {message}
+            </div>
+          )}
+        </form>
+      </section>
+
+      {/* Trade Admin Section */}
+      <section>
+        <h2 className="text-2xl font-bold mb-4">Execute Player Trade</h2>
+        {tradeMessage && (
+          <div
+            className={`mb-4 p-3 rounded ${
+              tradeMessage.startsWith("Trade successful")
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            }`}
+          >
+            {tradeMessage}
+          </div>
+        )}
+
+        <label className="block mb-2 font-semibold">
+          Select Player to Trade
+          <select
+            className="w-full border rounded p-2 mt-1"
+            value={selectedPlayerId}
+            onChange={(e) => {
+              setSelectedPlayerId(e.target.value);
+              const playerTeam = teams.find((team) =>
+                team.player_ids?.includes(e.target.value)
+              );
+              setFromTeamId(playerTeam ? playerTeam.team_id : "");
+              setToTeamId("");
+              setTradeMessage(null);
+            }}
+            disabled={tradeLoading}
+          >
+            <option value="">-- Select Player --</option>
+            {players.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
               </option>
             ))}
           </select>
-        </div>
-        <div>
-          <label className="block mb-1 font-semibold">Date</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full border rounded px-2 py-1"
-            disabled={loading}
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-semibold">Opponent</label>
+        </label>
+
+        <label className="block mb-2 font-semibold">
+          From Team
+          <select
+            className="w-full border rounded p-2 mt-1 bg-gray-100 cursor-not-allowed"
+            value={fromTeamId}
+            disabled
+            readOnly
+          >
+            <option value="">{playerCurrentTeam?.name || "-- Select Player First --"}</option>
+          </select>
+        </label>
+
+        <label className="block mb-2 font-semibold">
+          To Team
+          <select
+            className="w-full border rounded p-2 mt-1"
+            value={toTeamId}
+            onChange={(e) => setToTeamId(e.target.value)}
+            disabled={tradeLoading}
+          >
+            <option value="">-- Select Team --</option>
+            {teams
+              .filter((t) => t.team_id !== fromTeamId)
+              .map((t) => (
+                <option key={t.team_id} value={t.team_id}>
+                  {t.name}
+                </option>
+              ))}
+          </select>
+        </label>
+
+        <label className="block mb-4 font-semibold">
+          Trade Description
           <input
             type="text"
-            value={opponent}
-            onChange={(e) => setOpponent(e.target.value)}
-            className="w-full border rounded px-2 py-1"
-            placeholder="Opponent team name"
-            disabled={loading}
+            className="w-full border rounded p-2 mt-1"
+            placeholder="e.g., Traded for draft pick"
+            value={tradeDescription}
+            onChange={(e) => setTradeDescription(e.target.value)}
+            disabled={tradeLoading}
           />
-        </div>
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <label className="block mb-1 font-semibold">Points For</label>
-            <input
-              type="number"
-              value={pointsFor}
-              onChange={(e) => setPointsFor(e.target.value)}
-              className="w-full border rounded px-2 py-1"
-              min={0}
-              disabled={loading}
-            />
-          </div>
-          <div className="flex-1">
-            <label className="block mb-1 font-semibold">Points Against</label>
-            <input
-              type="number"
-              value={pointsAgainst}
-              onChange={(e) => setPointsAgainst(e.target.value)}
-              className="w-full border rounded px-2 py-1"
-              min={0}
-              disabled={loading}
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block mb-1 font-semibold">Result</label>
-          <select
-            value={result}
-            onChange={(e) => setResult(e.target.value as "W" | "L")}
-            className="w-full border rounded px-2 py-1"
-            disabled={loading}
-          >
-            <option value="W">Win</option>
-            <option value="L">Loss</option>
-          </select>
-        </div>
+        </label>
+
         <button
-          type="submit"
-          className="w-full bg-primary text-primary-foreground py-2 rounded font-bold mt-2"
-          disabled={loading}
+          className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50"
+          onClick={handleTrade}
+          disabled={tradeLoading}
         >
-          {loading ? "Submitting..." : "Submit & Sync Stats"}
+          {tradeLoading ? "Processing..." : "Execute Trade"}
         </button>
-        {message && (
-          <div
-            className={`mt-2 text-center font-semibold ${
-              message.toLowerCase().includes("failed") || message.toLowerCase().includes("error")
-                ? "text-red-600"
-                : "text-green-600"
-            }`}
-          >
-            {message}
-          </div>
-        )}
-      </form>
+      </section>
     </div>
   );
 };
 
 export default AdminGameEntry;
+
 
 
 
