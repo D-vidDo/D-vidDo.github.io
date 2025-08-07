@@ -85,11 +85,25 @@ const App = () => (
           <Navigation />
           <Routes>
             <Route path="/" element={<Home />} />
-            <
+            <Route path="/teams" element={<Teams />} />
+            <Route path="/teams/:teamId" element={<TeamDetail />} />
+            <Route path="/standings" element={<Standings />} />
+            <Route path="/players" element={<Players />} />
+            <Route path="/stats" element={<Stats />} />
+            <Route path="/trades" element={<Trades />} />
+            <Route path="/Admin" element={<Admin />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </LeagueProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+export default App;
 
 
-
-// import { loadLeagueData } from "@/data/mockData";
+{/* // import { loadLeagueData } from "@/data/mockData";
 // import { Toaster } from "@/components/ui/toaster";
 // import { Toaster as Sonner } from "@/components/ui/sonner";
 // import { TooltipProvider } from "@/components/ui/tooltip";
@@ -136,4 +150,4 @@ const App = () => (
 //   </QueryClientProvider>
 // );
 
-// export default App;
+// export default App; */}
