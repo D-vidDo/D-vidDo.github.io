@@ -79,7 +79,7 @@ const TeamDetail = () => {
 
         const { data: playersData, error: playersError } = await supabase
           .from("players")
-          .select("*")
+          .select("id, name, plusMinus, gamesPlayed")
           .in("id", teamData.player_ids ?? []);
 
         if (playersError) {
@@ -167,10 +167,9 @@ const TeamDetail = () => {
   }
 
   const winPercentage = ((team.wins / (team.wins + team.losses)) * 100).toFixed(1);
-  const pointDifferential = team.points_for - team.points_against;
-  const teamPlusMinus = players.reduce((sum, p) => sum + p.plusMinus, 0);
-  const teamGames = players.reduce((sum, p) => sum + p.gamesPlayed, 0);
-  const teamAverage = teamGames > 0 ? teamPlusMinus / teamGames : 0;
+  const teamPlusMinus = players.reduce((sum, p) => sum + (p.plusMinus || 0), 0);
+  const teamGames = players.reduce((sum, p) => sum + (p.gamesPlayed || 0), 0);
+  const teamAverage = teamGames > 0 ? (teamPlusMinus / teamGames).toFixed(1) : "0.0";
 
   return (
     <div className="min-h-screen bg-background">
