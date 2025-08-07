@@ -11,22 +11,24 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 
+interface Game {
+  id: string;
+  date: string;
+  opponent: string;
+  points_for: number;  // snake_case here too
+  points_against: number;
+  result: "W" | "L";
+}
+
 interface Team {
   id: string;
   name: string;
   wins: number;
   losses: number;
-  pointsFor: number;
-  pointsAgainst: number;
+  points_for: number;      // snake_case keys here
+  points_against: number;
   color: string;
-  games?: {
-    id: string;
-    date: string;
-    opponent: string;
-    pointsFor: number;
-    pointsAgainst: number;
-    result: "W" | "L";
-  }[];
+  games?: Game[];
 }
 
 interface StandingsTableProps {
@@ -44,8 +46,10 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
     .map((team) => ({
       ...team,
       winPercentage:
-        team.wins + team.losses > 0 ? team.wins / (team.wins + team.losses) : 0,
-      pointDifferential: team.pointsFor - team.pointsAgainst,
+        team.wins + team.losses > 0
+          ? team.wins / (team.wins + team.losses)
+          : 0,
+      pointDifferential: (team.points_for ?? 0) - (team.points_against ?? 0),
     }))
     .sort((a, b) => {
       if (b.winPercentage !== a.winPercentage) {
@@ -163,8 +167,8 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                   <TableCell className="text-center font-semibold">
                     {(team.winPercentage * 100).toFixed(1)}%
                   </TableCell>
-                  <TableCell className="text-center">{team.pointsFor}</TableCell>
-                  <TableCell className="text-center">{team.pointsAgainst}</TableCell>
+                  <TableCell className="text-center">{team.points_for}</TableCell>
+                  <TableCell className="text-center">{team.points_against}</TableCell>
                   <TableCell
                     className={`text-center font-semibold ${
                       team.pointDifferential > 0
@@ -174,11 +178,7 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                         : "text-muted-foreground"
                     }`}
                   >
-                    {team.pointDifferential > 0
-                      ? "+"
-                      : team.pointDifferential < 0
-                      ? ""
-                      : ""}
+                    {team.pointDifferential > 0 ? "+" : ""}
                     {team.pointDifferential}
                   </TableCell>
                 </TableRow>
@@ -219,10 +219,10 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                                       {game.opponent}
                                     </td>
                                     <td className="py-2 px-3 text-center font-bold text-green-700">
-                                      {game.pointsFor}
+                                      {game.points_for}
                                     </td>
                                     <td className="py-2 px-3 text-center font-bold text-red-600">
-                                      {game.pointsAgainst}
+                                      {game.points_against}
                                     </td>
                                     <td className="py-2 px-3 text-center">
                                       <span
