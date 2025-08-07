@@ -7,6 +7,55 @@ import { ArrowLeft, Trophy, TrendingUp, Users } from "lucide-react";
 import PlayerCard from "@/components/PlayerCard";
 import { supabase } from "@/lib/supabase";
 
+interface Player {
+  id: string;
+  name: string;
+  plusMinus: number;
+  gamesPlayed: number;
+}
+
+interface Game {
+  id: string;
+  date: string;
+  opponent: string;
+  pointsFor: number;
+  pointsAgainst: number;
+  result: "W" | "L";
+}
+
+interface TradePlayer {
+  player: { name: string };
+  fromTeam: string;
+  toTeam: string;
+}
+
+interface Trade {
+  id: string;
+  date: string;
+  description: string;
+  playersTraded: TradePlayer[];
+}
+
+interface Team {
+  team_id: string;
+  name: string;
+  wins: number;
+  losses: number;
+  captain: string;
+  color: string;
+  points_for: number;
+  points_against: number;
+}
+
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Trophy, TrendingUp, Users } from "lucide-react";
+import PlayerCard from "@/components/PlayerCard";
+import { supabase } from "@/lib/supabase";
+
 // ... interfaces stay the same ...
 
 const TeamDetail = () => {
@@ -181,8 +230,42 @@ const TeamDetail = () => {
 
 // ... StatCard component unchanged ...
 
-export default TeamDetail;
 
+
+// Reusable Stat Card
+const StatCard = ({
+  title,
+  icon,
+  value,
+  isPlusMinus = false,
+}: {
+  title: string;
+  icon: JSX.Element;
+  value: number | string;
+  isPlusMinus?: boolean;
+}) => {
+  const numeric = typeof value === "number" ? value : parseFloat(value);
+  const color =
+    numeric > 0
+      ? "text-green-600"
+      : numeric < 0
+      ? "text-red-500"
+      : "text-muted-foreground";
+  return (
+    <Card className="bg-gradient-stats shadow-card">
+      <CardContent className="p-6 text-center">
+        <div className="h-8 w-8 mx-auto mb-2 text-primary">{icon}</div>
+        <div className={`text-2xl font-bold text-card-foreground ${isPlusMinus ? color : ""}`}>
+          {isPlusMinus && numeric > 0 ? "+" : ""}
+          {value}
+        </div>
+        <div className="text-sm text-muted-foreground">{title}</div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default TeamDetail;
 
 
 
