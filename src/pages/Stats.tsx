@@ -9,13 +9,13 @@ import { supabase } from "@/lib/supabase";
 interface Player {
   id: string;
   name: string;
-  plusMinus: number;
-  gamesPlayed: number;
-  position: string;
+  plus_minus: number;
+  games_played: number;
+  primary_position: string;
 }
 
 const Stats = () => {
-  const [activeTab, setActiveTab] = useState<"plusMinus" | "average">("plusMinus");
+  const [activeTab, setActiveTab] = useState<"plus_minus" | "average">("plus_minus");
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,17 +38,17 @@ const Stats = () => {
   }, []);
 
   // Compute top performers
-  const topPlusMinus = [...players]
-    .sort((a, b) => b.plusMinus - a.plusMinus)
+  const topplus_minus = [...players]
+    .sort((a, b) => b.plus_minus - a.plus_minus)
     .slice(0, 18);
 
   const topAverage = [...players]
-    .filter(p => p.gamesPlayed > 0)
-    .sort((a, b) => b.plusMinus / b.gamesPlayed - a.plusMinus / a.gamesPlayed)
+    .filter(p => p.games_played > 0)
+    .sort((a, b) => b.plus_minus / b.games_played - a.plus_minus / a.games_played)
     .slice(0, 18);
 
   const tabs = [
-    { id: "plusMinus", label: "Top +/-", icon: TrendingUp, data: topPlusMinus },
+    { id: "plus_minus", label: "Top +/-", icon: TrendingUp, data: topplus_minus },
     { id: "average", label: "Best Average", icon: Trophy, data: topAverage },
   ];
 
@@ -56,9 +56,9 @@ const Stats = () => {
   const Icon = currentTab?.icon || TrendingUp;
 
   // Calculate league totals
-  const totalPlusMinus = players.reduce((sum, p) => sum + p.plusMinus, 0);
-  const totalGames = players.reduce((sum, p) => sum + p.gamesPlayed, 0);
-  const averagePerGame = totalGames > 0 ? totalPlusMinus / totalGames : 0;
+  const totalplus_minus = players.reduce((sum, p) => sum + p.plus_minus, 0);
+  const totalGames = players.reduce((sum, p) => sum + p.games_played, 0);
+  const averagePerGame = totalGames > 0 ? totalplus_minus / totalGames : 0;
 
   if (loading) {
     return (
@@ -92,8 +92,8 @@ const Stats = () => {
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
               <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className={`text-3xl font-bold ${totalPlusMinus > 0 ? 'text-green-600' : totalPlusMinus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-                {totalPlusMinus > 0 ? '+' : ''}{totalPlusMinus}
+              <div className={`text-3xl font-bold ${totalplus_minus > 0 ? 'text-green-600' : totalplus_minus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                {totalplus_minus > 0 ? '+' : ''}{totalplus_minus}
               </div>
               <div className="text-sm text-muted-foreground">Total +/-</div>
             </CardContent>
@@ -128,7 +128,7 @@ const Stats = () => {
                   <Button
                     key={tab.id}
                     variant={activeTab === tab.id ? "default" : "outline"}
-                    onClick={() => setActiveTab(tab.id as "plusMinus" | "average")}
+                    onClick={() => setActiveTab(tab.id as "plus_minus" | "average")}
                     className="flex items-center gap-2"
                   >
                     <TabIcon className="h-4 w-4" />
@@ -168,8 +168,8 @@ const Stats = () => {
                 <div className="space-y-2">
                   {currentTab?.data.map((player, index) => {
                     const statValue = activeTab === "average"
-                      ? (player.gamesPlayed > 0 ? player.plusMinus / player.gamesPlayed : 0)
-                      : player.plusMinus;
+                      ? (player.games_played > 0 ? player.plus_minus / player.games_played : 0)
+                      : player.plus_minus;
 
                     return (
                       <div
@@ -185,7 +185,7 @@ const Stats = () => {
                           </Badge>
                           <div>
                             <div className="font-semibold text-card-foreground">{player.name}</div>
-                            <div className="text-sm text-muted-foreground">{player.position}</div>
+                            <div className="text-sm text-muted-foreground">{player.primary_position}</div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -222,11 +222,11 @@ export default Stats;
 // import { getTopPerformers, allPlayers } from "@/data/mockData";
 
 // const Stats = () => {
-//   const [activeTab, setActiveTab] = useState("plusMinus");
-//   const { topPlusMinus, topAverage } = getTopPerformers();
+//   const [activeTab, setActiveTab] = useState("plus_minus");
+//   const { topplus_minus, topAverage } = getTopPerformers();
 
 //   const tabs = [
-//     { id: "plusMinus", label: "Top +/-", icon: TrendingUp, data: topPlusMinus, stat: "plusMinus" },
+//     { id: "plus_minus", label: "Top +/-", icon: TrendingUp, data: topplus_minus, stat: "plus_minus" },
 //     { id: "average", label: "Best Average", icon: Trophy, data: topAverage, stat: "average" },
 //   ];
 
@@ -234,9 +234,9 @@ export default Stats;
 //   const Icon = currentTab?.icon || TrendingUp;
 
 //   // Calculate league totals
-//   const totalPlusMinus = allPlayers.reduce((sum, player) => sum + player.plusMinus, 0);
-//   const totalGames = allPlayers.reduce((sum, player) => sum + player.gamesPlayed, 0);
-//   const averagePerGame = totalGames > 0 ? (totalPlusMinus / totalGames) : 0;
+//   const totalplus_minus = allPlayers.reduce((sum, player) => sum + player.plus_minus, 0);
+//   const totalGames = allPlayers.reduce((sum, player) => sum + player.games_played, 0);
+//   const averagePerGame = totalGames > 0 ? (totalplus_minus / totalGames) : 0;
 
 //   return (
 //     <div className="min-h-screen bg-background">
@@ -262,8 +262,8 @@ export default Stats;
 //           <Card className="bg-gradient-stats shadow-card">
 //             <CardContent className="p-6 text-center">
 //               <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2" />
-//               <div className={`text-3xl font-bold ${totalPlusMinus > 0 ? 'text-green-600' : totalPlusMinus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-//                 {totalPlusMinus > 0 ? '+' : ''}{totalPlusMinus}
+//               <div className={`text-3xl font-bold ${totalplus_minus > 0 ? 'text-green-600' : totalplus_minus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+//                 {totalplus_minus > 0 ? '+' : ''}{totalplus_minus}
 //               </div>
 //               <div className="text-sm text-muted-foreground">Total +/-</div>
 //             </CardContent>
@@ -338,8 +338,8 @@ export default Stats;
 //                 <div className="space-y-2">
 //                   {currentTab?.data.map((player, index) => {
 //                     const statValue = activeTab === "average" 
-//                       ? (player.gamesPlayed > 0 ? (player.plusMinus / player.gamesPlayed) : 0)
-//                       : player.plusMinus;
+//                       ? (player.games_played > 0 ? (player.plus_minus / player.games_played) : 0)
+//                       : player.plus_minus;
                     
 //                     return (
 //                       <div key={player.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
