@@ -79,7 +79,7 @@ const TeamDetail = () => {
 
         const { data: playersData, error: playersError } = await supabase
           .from("players")
-          .select("id, name, plusMinus, gamesPlayed")
+          .select("*")
           .in("id", teamData.player_ids ?? []);
 
         if (playersError) {
@@ -215,7 +215,7 @@ const TeamDetail = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-card shadow-card">
+ <Card className="bg-gradient-card shadow-card">
   <CardHeader>
     <CardTitle className="text-xl flex items-center gap-2">
       <CalendarDays className="h-5 w-5 text-primary" /> Match History
