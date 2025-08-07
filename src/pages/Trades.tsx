@@ -71,7 +71,7 @@ const Trades = () => {
             player: {
               id: pt.player.id,
               name: pt.player.name,
-              position: pt.player.primary_position,
+              primary_position: pt.player.primary_position,
             },
           })),
         }));
