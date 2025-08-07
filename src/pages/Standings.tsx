@@ -10,8 +10,8 @@ interface Team {
   name: string;
   wins: number;
   losses: number;
-  pointsFor: number;
-  pointsAgainst: number;
+  points_for: number;
+  points_against: number;
   captain: string;
   color: string;
   player_ids: string[]; // match your DB schema
@@ -45,7 +45,7 @@ const Standings = () => {
     .map((team) => ({
       ...team,
       winPercentage: team.wins + team.losses > 0 ? team.wins / (team.wins + team.losses) : 0,
-      pointDifferential: team.pointsFor - team.pointsAgainst,
+      pointDifferential: team.points_for - team.points_against,
     }))
     .sort((a, b) => {
       if (b.winPercentage !== a.winPercentage) {
@@ -140,12 +140,12 @@ const Standings = () => {
             <CardContent className="p-6 text-center">
               <Target className="h-8 w-8 text-secondary mx-auto mb-2" />
               <div className="text-2xl font-bold text-card-foreground">
-                {Math.max(...sortedTeams.map((t) => t.pointsFor))}
+                {Math.max(...sortedTeams.map((t) => t.points_for))}
               </div>
               <div className="text-sm text-muted-foreground">Highest Scoring</div>
               <div className="text-xs text-muted-foreground mt-1">
                 {sortedTeams.find(
-                  (t) => t.pointsFor === Math.max(...sortedTeams.map((team) => team.pointsFor))
+                  (t) => t.points_for === Math.max(...sortedTeams.map((team) => team.points_for))
                 )?.name || "-"}
               </div>
             </CardContent>
@@ -190,7 +190,7 @@ export default Standings;
 //     .map(team => ({
 //       ...team,
 //       winPercentage: team.wins / (team.wins + team.losses),
-//       pointDifferential: team.pointsFor - team.pointsAgainst,
+//       pointDifferential: team.points_for - team.points_against,
 //     }))
 //     .sort((a, b) => {
 //       if (b.winPercentage !== a.winPercentage) {
@@ -277,11 +277,11 @@ export default Standings;
 //             <CardContent className="p-6 text-center">
 //               <Target className="h-8 w-8 text-secondary mx-auto mb-2" />
 //               <div className="text-2xl font-bold text-card-foreground">
-//                 {Math.max(...sortedTeams.map(t => t.pointsFor))}
+//                 {Math.max(...sortedTeams.map(t => t.points_for))}
 //               </div>
 //               <div className="text-sm text-muted-foreground">Highest Scoring</div>
 //               <div className="text-xs text-muted-foreground mt-1">
-//                 {sortedTeams.find(t => t.pointsFor === Math.max(...sortedTeams.map(team => team.pointsFor)))?.name}
+//                 {sortedTeams.find(t => t.points_for === Math.max(...sortedTeams.map(team => team.points_for)))?.name}
 //               </div>
 //             </CardContent>
 //           </Card>
