@@ -475,8 +475,8 @@ export const loadLeagueData = () => {
 import { createClient } from "@supabase/supabase-js";
 
 // Replace these with your actual Supabase project info
-const supabaseUrl = 'https://your-project.supabase.co';
-const supabaseKey = 'your-anon-or-service-role-key';
+const supabaseUrl = 'https://bqqotvjpvaznkjfldcgm.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcW90dmpwdmF6bmtqZmxkY2dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0NDE4NjEsImV4cCI6MjA3MDAxNzg2MX0.VPClABOucYEo-bVPg_brc6WvSx17zR4LADC2FEWdI5Q';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
