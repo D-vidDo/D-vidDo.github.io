@@ -94,33 +94,59 @@ setPlayers(playersData ?? []);
 setGames(teamData.games ?? []);
 
 
-      // Fetch all trades and filter in JS
-      const { data: tradesData, error: tradesError } = await supabase
-        .from("trades")
-        .select("id, date, description, players_traded")
-        .order("date", { ascending: false });
+// Fetch trades metadata
+const { data: tradesData, error: tradesError } = await supabase
+  .from("trades")
+  .select("id, date, description")
+  .order("date", { ascending: false });
 
-      if (tradesError) {
-        setError("Failed to load trades");
-        setLoading(false);
-        return;
-      }
+if (tradesError) {
+  setError(`Failed to load trades: ${tradesError.message}`);
+  setLoading(false);
+  return;
+}
 
-      const filteredTrades = (tradesData ?? []).filter((trade) =>
-        trade.players_traded?.some(
-          (pt: TradePlayer) =>
-            pt.toTeam === teamData.name || pt.fromTeam === teamData.name
-        )
-      );
+if (!tradesData) {
+  setTrades([]);
+  setLoading(false);
+  return;
+}
 
-      const normalizedTrades: Trade[] = filteredTrades.map((trade) => ({
-        id: trade.id,
-        date: trade.date,
-        description: trade.description,
-        playersTraded: trade.players_traded,
-      }));
+// For each trade, fetch players traded
+const tradesWithPlayers = await Promise.all(
+  tradesData.map(async (trade) => {
+    const { data: playersData, error: playersError } = await supabase
+      .from("players_traded")
+      .select("player, fromTeam, toTeam")
+      .eq("trade_id", trade.id);  // Assuming players_traded has trade_id FK
 
-      setTrades(normalizedTrades);
+    if (playersError) {
+      setError(`Failed to load players traded for trade ${trade.id}: ${playersError.message}`);
+      setLoading(false);
+      return null;
+    }
+
+    return {
+      id: trade.id,
+      date: trade.date,
+      description: trade.description,
+      playersTraded: playersData ?? [],
+    };
+  })
+);
+
+// Filter out any null trades due to errors
+const filteredTrades = (tradesWithPlayers ?? []).filter(Boolean);
+
+// Now filter to only those related to this team
+const teamTrades = filteredTrades.filter((trade) =>
+  trade.playersTraded.some(
+    (pt) => pt.toTeam === team.name || pt.fromTeam === team.name
+  )
+);
+
+setTrades(teamTrades);
+
       setLoading(false);
     }
 
