@@ -72,36 +72,36 @@ const TeamDetail = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch team
-      const { data: teamData, error: teamError } = await supabase
-        .from("teams")
-        .select("*")
-        .eq("team_id", teamId)
-        .single();
+     // Fetch team
+const { data: teamData, error: teamError } = await supabase
+  .from("teams")
+  .select("*")
+  .eq("team_id", teamId)
+  .single();
 
-      if (teamError || !teamData) {
-        setError("Team not found");
-        setLoading(false);
-        return;
-      }
-      setTeam(teamData);
+if (teamError || !teamData) {
+  setError("Team not found");
+  setLoading(false);
+  return;
+}
+setTeam(teamData);
 
-      // Fetch players
-      const { data: playersData, error: playersError } = await supabase
-        .from("players")
-        .select("*")
-        .in("id", teamData.player_ids);
+// Fetch players
+const { data: playersData, error: playersError } = await supabase
+  .from("players")
+  .select("*")
+  .in("id", teamData.player_ids);
 
-      if (playersError) {
-        setError("Failed to load players");
-        setLoading(false);
-        return;
-      }
-      setPlayers(playersData ?? []);
+if (playersError) {
+  setError("Failed to load players");
+  setLoading(false);
+  return;
+}
+setPlayers(playersData ?? []);
 
-      // --- Fetch games from the team's games array ---
-      // teamData.games is presumably an array of game objects already, so:
-      setGames(teamData.games ?? []);
+// Use the games array from the team directly
+setGames(teamData.games ?? []);
+
 
       // Fetch all trades and filter in JS
       const { data: tradesData, error: tradesError } = await supabase
