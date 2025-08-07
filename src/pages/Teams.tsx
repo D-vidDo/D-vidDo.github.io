@@ -7,13 +7,13 @@ import TeamCard from "@/components/TeamCard";
 import { supabase } from "@/lib/supabase";
 
 interface Team {
-  id: string;
+  team_id: string;
   name: string;
   wins: number;
   losses: number;
   captain: string;
   color: string;
-  playerIds?: string[];
+  player_ids?: string[];
 }
 
 const Teams = () => {
@@ -28,7 +28,7 @@ const Teams = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("teams")
-        .select("id, name, wins, losses, captain, color, playerIds");
+        .select("team_id, name, wins, losses, captain, color, player_ids");
 
       if (error) {
         console.error("Error fetching teams:", error);
@@ -42,7 +42,7 @@ const Teams = () => {
 
   // Total players count
   const totalPlayers = teams.reduce(
-    (sum, team) => sum + (Array.isArray(team.playerIds) ? team.playerIds.length : 0),
+    (sum, team) => sum + (Array.isArray(team.player_ids) ? team.player_ids.length : 0),
     0
   );
 
@@ -136,7 +136,7 @@ const Teams = () => {
         ) : filteredAndSortedTeams.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAndSortedTeams.map((team) => (
-              <TeamCard key={team.id} team={team} />
+              <TeamCard key={team.team_id} team={team} />
             ))}
           </div>
         ) : (
