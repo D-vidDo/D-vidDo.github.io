@@ -1,8 +1,10 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
 interface TeamCardProps {
   team: {
@@ -12,13 +14,38 @@ interface TeamCardProps {
     losses: number;
     captain: string;
     color: string;
-    playerIds?: string[]; // now optional
+    playerIds?: string[]; // Optional array of player IDs
   };
 }
 
 const TeamCard = ({ team }: TeamCardProps) => {
   const winPercentage = ((team.wins / (team.wins + team.losses)) * 100).toFixed(1);
-  const playerCount = Array.isArray(team.playerIds) ? team.playerIds.length : 0;
+  const [playerCount, setPlayerCount] = useState<number>(
+    Array.isArray(team.playerIds) ? team.playerIds.length : 0
+  );
+
+  // Optional: fetch player count from Supabase if playerIds exists
+  useEffect(() => {
+    async function fetchPlayerCount() {
+      if (team.playerIds && team.playerIds.length > 0) {
+        // Assuming you have a 'players' table and want to confirm existing players
+        const { data, error } = await supabase
+          .from("players")
+          .select("id")
+          .in("id", team.playerIds);
+
+        if (error) {
+          console.error("Error fetching players:", error);
+        } else {
+          setPlayerCount(data?.length || 0);
+        }
+      } else {
+        setPlayerCount(0);
+      }
+    }
+
+    fetchPlayerCount();
+  }, [team.playerIds]);
 
   return (
     <Card className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 group">
@@ -84,6 +111,7 @@ const TeamCard = ({ team }: TeamCardProps) => {
 };
 
 export default TeamCard;
+
 
 
 
