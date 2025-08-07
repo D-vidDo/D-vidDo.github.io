@@ -42,17 +42,24 @@ const Standings = () => {
 
   // Calculate winPercentage and pointDifferential for sorting
   const sortedTeams = teams
-    .map((team) => ({
-      ...team,
-      winPercentage: team.wins + team.losses > 0 ? team.wins / (team.wins + team.losses) : 0,
-      pointDifferential: team.points_for - team.points_against,
-    }))
-    .sort((a, b) => {
-      if (b.winPercentage !== a.winPercentage) {
-        return b.winPercentage - a.winPercentage;
-      }
-      return b.pointDifferential - a.pointDifferential;
-    });
+  .map((team) => ({
+    ...team,
+    winPercentage: team.wins + team.losses > 0 ? team.wins / (team.wins + team.losses) : 0,
+    pointDifferential: team.points_for - team.points_against,
+  }))
+  .sort((a, b) => {
+    if (b.wins !== a.wins) {
+      return b.wins - a.wins; // Sort first by wins descending
+    }
+    if (b.points_for !== a.points_for) {
+      return b.points_for - a.points_for; // Then by points_for descending
+    }
+    if (b.winPercentage !== a.winPercentage) {
+      return b.winPercentage - a.winPercentage; // Then by winPercentage descending
+    }
+    return b.pointDifferential - a.pointDifferential; // Finally by point differential descending
+  });
+
 
   const leaderTeam = sortedTeams[0] || null;
   const totalGames = teams.reduce((sum, team) => sum + team.wins + team.losses, 0) / 2;
