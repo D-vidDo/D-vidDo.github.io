@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase"; // Adjust this path to your Supabase 
 interface Player {
   id: string;
   name: string;
-  position: string;
+  primary_position: string;
 }
 
 interface PlayerTrade {
@@ -49,7 +49,7 @@ const Trades = () => {
             player:players (
               id,
               name,
-              position
+              primary_position
             )
           )
         `)
@@ -71,7 +71,7 @@ const Trades = () => {
             player: {
               id: pt.player.id,
               name: pt.player.name,
-              position: pt.player.position,
+              position: pt.player.primary_position,
             },
           })),
         }));
@@ -143,7 +143,7 @@ const Trades = () => {
                               {playerTrade.player.name}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {playerTrade.player.position}
+                              {playerTrade.player.primary_position}
                             </div>
                           </div>
                         </div>
