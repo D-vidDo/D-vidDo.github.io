@@ -45,9 +45,9 @@ interface Team {
   color: string;
   points_for: number;
   points_against: number;
+  player_ids: string[];
+  games: Game[];
 }
-
-// ... interfaces stay the same ...
 
 const TeamDetail = () => {
   const { teamId } = useParams<{ teamId: string }>();
@@ -63,91 +63,94 @@ const TeamDetail = () => {
       setLoading(true);
       setError(null);
 
-     // Fetch team
-const { data: teamData, error: teamError } = await supabase
-  .from("teams")
-  .select("*")
-  .eq("team_id", teamId)
-  .single();
+      try {
+        // Fetch team
+        const { data: teamData, error: teamError } = await supabase
+          .from("teams")
+          .select("*")
+          .eq("team_id", teamId)
+          .single();
 
-if (teamError || !teamData) {
-  setError("Team not found");
-  setLoading(false);
-  return;
-}
-setTeam(teamData);
+        if (teamError || !teamData) {
+          setError("Team not found");
+          setLoading(false);
+          return;
+        }
+        setTeam(teamData);
 
-// Fetch players
-const { data: playersData, error: playersError } = await supabase
-  .from("players")
-  .select("*")
-  .in("id", teamData.player_ids);
+        // Fetch players by player_ids
+        const { data: playersData, error: playersError } = await supabase
+          .from("players")
+          .select("*")
+          .in("id", teamData.player_ids ?? []);
 
-if (playersError) {
-  setError("Failed to load players");
-  setLoading(false);
-  return;
-}
-setPlayers(playersData ?? []);
+        if (playersError) {
+          setError("Failed to load players");
+          setLoading(false);
+          return;
+        }
+        setPlayers(playersData ?? []);
 
-// Use the games array from the team directly
-setGames(teamData.games ?? []);
+        // Set games from teamData directly (assuming stored there)
+        setGames(teamData.games ?? []);
 
+        // Fetch trades metadata
+        const { data: tradesData, error: tradesError } = await supabase
+          .from("trades")
+          .select("id, date, description")
+          .order("date", { ascending: false });
 
-// Fetch trades metadata
-const { data: tradesData, error: tradesError } = await supabase
-  .from("trades")
-  .select("id, date, description")
-  .order("date", { ascending: false });
+        if (tradesError) {
+          setError("Failed to load trades");
+          setLoading(false);
+          return;
+        }
 
-if (tradesError) {
-  setError(`Failed to load trades: ${tradesError.message}`);
-  setLoading(false);
-  return;
-}
+        if (!tradesData) {
+          setTrades([]);
+          setLoading(false);
+          return;
+        }
 
-if (!tradesData) {
-  setTrades([]);
-  setLoading(false);
-  return;
-}
+        // For each trade, fetch players traded and attach them
+        const tradesWithPlayers = await Promise.all(
+          tradesData.map(async (trade) => {
+            const { data: playersTradedData, error: playersTradedError } = await supabase
+              .from("players_traded")
+              .select("player, fromTeam, toTeam")
+              .eq("trade_id", trade.id);
 
-// For each trade, fetch players traded
-const tradesWithPlayers = await Promise.all(
-  tradesData.map(async (trade) => {
-    const { data: playersData, error: playersError } = await supabase
-      .from("players_traded")
-      .select("player, fromTeam, toTeam")
-      .eq("trade_id", trade.id);  // Assuming players_traded has trade_id FK
+            if (playersTradedError) {
+              setError(`Failed to load players traded for trade ${trade.id}: ${playersTradedError.message}`);
+              setLoading(false);
+              return null;
+            }
 
-    if (playersError) {
-      setError(`Failed to load players traded for trade ${trade.id}: ${playersError.message}`);
-      setLoading(false);
-      return null;
-    }
+            return {
+              id: trade.id,
+              date: trade.date,
+              description: trade.description,
+              playersTraded: playersTradedData ?? [],
+            };
+          })
+        );
 
-    return {
-      id: trade.id,
-      date: trade.date,
-      description: trade.description,
-      playersTraded: playersData ?? [],
-    };
-  })
-);
+        // Filter out any null trades (in case of errors)
+        const filteredTrades = (tradesWithPlayers ?? []).filter(Boolean);
 
-// Filter out any null trades due to errors
-const filteredTrades = (tradesWithPlayers ?? []).filter(Boolean);
+        // Filter trades to only those involving this team (either toTeam or fromTeam)
+        const teamTrades = filteredTrades.filter((trade) =>
+          trade.playersTraded.some(
+            (pt) => pt.toTeam === teamData.name || pt.fromTeam === teamData.name
+          )
+        );
 
-// Now filter to only those related to this team
-const teamTrades = filteredTrades.filter((trade) =>
-  trade.playersTraded.some(
-    (pt) => pt.toTeam === team.name || pt.fromTeam === team.name
-  )
-);
-
-setTrades(teamTrades);
-
-      setLoading(false);
+        setTrades(teamTrades);
+      } catch (err) {
+        setError("Unexpected error: " + (err as Error).message);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchTeamData();
@@ -183,71 +186,115 @@ setTrades(teamTrades);
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      {/* ... your existing header code unchanged ... */}
+      <section className="bg-gradient-hero py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <Link
+            to="/teams"
+            className="inline-flex items-center text-primary-foreground hover:text-primary-foreground/80 mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Teams
+          </Link>
+
+          <div className="flex items-center space-x-6">
+            <div
+              className="w-24 h-24 rounded-xl flex items-center justify-center text-white font-bold text-3xl shadow-primary"
+              style={{ backgroundColor: team.color }}
+            >
+              {team.name.slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <h1 className="text-5xl font-bold text-primary-foreground mb-2">{team.name}</h1>
+              <p className="text-lg text-primary-foreground/90 mb-4">Captain: {team.captain}</p>
+              <div className="flex gap-3 flex-wrap">
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  {team.wins}W - {team.losses}L
+                </Badge>
+                <Badge variant="outline" className="text-lg px-4 py-2 bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground">
+                  {winPercentage}% Win Rate
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
         {/* Stats Grid */}
-        {/* ... your existing stats grid ... */}
+        <div className="grid md:grid-cols-4 gap-6">
+          <StatCard title="Points For" icon={<Trophy />} value={team.points_for} />
+          <StatCard title="Team +/-" icon={<TrendingUp />} value={teamPlusMinus} isPlusMinus />
+          <StatCard title="Total Games" icon={<Users />} value={teamGames} />
+          <StatCard title="Team Average" icon={<Trophy />} value={teamAverage.toFixed(1)} isPlusMinus />
+        </div>
 
         {/* Player Cards */}
-        {/* ... your existing player cards ... */}
-
-        {/* --- New: Match History --- */}
         <Card className="bg-gradient-card shadow-card">
           <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              Match History ({games.length})
+              <Users className="h-5 w-5 text-primary" />
+              Team Roster ({players.length} players)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {games.length === 0 ? (
-              <div className="text-muted-foreground text-center py-4">
-                No games played yet.
-              </div>
-            ) : (
-              <table className="w-full text-left border-collapse border border-slate-300">
-                <thead>
-                  <tr>
-                    <th className="border border-slate-300 px-2 py-1">Date</th>
-                    <th className="border border-slate-300 px-2 py-1">Opponent</th>
-                    <th className="border border-slate-300 px-2 py-1">Points For</th>
-                    <th className="border border-slate-300 px-2 py-1">Points Against</th>
-                    <th className="border border-slate-300 px-2 py-1">Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {games.map((game) => (
-                    <tr key={game.id} className="even:bg-slate-100">
-                      <td className="border border-slate-300 px-2 py-1">{game.date}</td>
-                      <td className="border border-slate-300 px-2 py-1">{game.opponent}</td>
-                      <td className="border border-slate-300 px-2 py-1">{game.pointsFor}</td>
-                      <td className="border border-slate-300 px-2 py-1">{game.pointsAgainst}</td>
-                      <td
-                        className={`border border-slate-300 px-2 py-1 font-bold ${
-                          game.result === "W" ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
-                        {game.result}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {players.map((player) => (
+                <PlayerCard
+                  key={player.id}
+                  player={{ ...player, isCaptain: player.name === team.captain }}
+                />
+              ))}
+            </div>
           </CardContent>
         </Card>
 
         {/* Roster History */}
-        {/* ... your existing roster history card ... */}
+        <Card className="bg-gradient-card shadow-card">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Roster History
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {trades.length === 0 ? (
+              <div className="text-muted-foreground text-center py-4">
+                No roster changes or trades for this team yet.
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {trades.map((trade) => (
+                  <div key={trade.id} className="border-b pb-4">
+                    <div className="font-semibold text-primary mb-1">
+                      {trade.date} &mdash; {trade.description}
+                    </div>
+                    <ul className="ml-2">
+                      {trade.playersTraded.map((pt, idx) => {
+                        const isIncoming = pt.toTeam === team.name;
+                        const isOutgoing = pt.fromTeam === team.name;
+                        if (!isIncoming && !isOutgoing) return null;
+                        return (
+                          <li key={idx} className="text-sm flex items-center gap-2 py-1">
+                            <span className="font-bold">{pt.player.name}</span>
+                            <span>
+                              {isIncoming
+                                ? `acquired from ${pt.fromTeam}`
+                                : `traded to ${pt.toTeam}`}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 };
-
-// ... StatCard component unchanged ...
-
-
 
 // Reusable Stat Card
 const StatCard = ({
@@ -283,6 +330,7 @@ const StatCard = ({
 };
 
 export default TeamDetail;
+
 
 
 
