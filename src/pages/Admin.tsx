@@ -142,7 +142,7 @@ const AdminGameEntry = () => {
 
           const { error: updatePlayerError } = await supabase
             .from("players")
-            .update({ plus_minus: updatedPlusMinus, games_played: updatedGamesPlayed, updated_at: new Date().toISOString() })
+            .update({ plus_minus: updatedPlusMinus, games_played: updatedGamesPlayed })
             .eq("id", player.id);
 
           if (updatePlayerError) {
