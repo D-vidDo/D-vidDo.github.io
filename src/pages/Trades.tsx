@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase"; // adjust this path as needed
+import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, ArrowLeftRight, FileText } from "lucide-react";
-import { getTeamColorByName } from "@/data/mockData";
 
 interface Trade {
   id: number;
   date: string;
   description: string;
   playersTraded: {
-    fromTeam: string;
-    toTeam: string;
+    from_team: string;
+    to_team: string;
     player: {
       id: number;
       name: string;
@@ -19,6 +18,18 @@ interface Trade {
     };
   }[];
 }
+
+// Replace with your actual team color mapping
+const teamColorMap: Record<string, string> = {
+  "Team A": "#ef4444",
+  "Team B": "#3b82f6",
+  "Team C": "#10b981",
+  // Add more team name -> color pairs here
+};
+
+const getTeamColorByName = (teamName: string) => {
+  return teamColorMap[teamName] || "#6b7280"; // fallback: gray-500
+};
 
 const Trades = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -47,16 +58,17 @@ const Trades = () => {
 
       if (error) {
         console.error("Error fetching trades:", error);
+        setLoading(false);
         return;
       }
 
-      const formatted = data.map((trade) => ({
+      const formatted = data.map((trade: any) => ({
         id: trade.id,
         date: trade.date,
         description: trade.description,
-        playersTraded: trade.players_traded.map((pt) => ({
-          fromTeam: pt.from_team,
-          toTeam: pt.to_team,
+        playersTraded: trade.players_traded.map((pt: any) => ({
+          from_team: pt.from_team,
+          to_team: pt.to_team,
           player: {
             id: pt.player.id,
             name: pt.player.name,
@@ -126,30 +138,32 @@ const Trades = () => {
                         key={index}
                         className="flex items-center justify-between p-3 bg-gradient-stats rounded-lg"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="text-center">
-                            <div className="font-semibold text-card-foreground">{pt.player.name}</div>
-                            <div className="text-sm text-muted-foreground">{pt.player.position}</div>
+                        <div className="text-left">
+                          <div className="font-semibold text-card-foreground">
+                            {pt.player.name}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {pt.player.position}
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2 text-sm">
                           <span
                             style={{
-                              color: getTeamColorByName(pt.fromTeam),
+                              color: getTeamColorByName(pt.from_team),
                               fontWeight: "bold",
                             }}
                           >
-                            {pt.fromTeam}
+                            {pt.from_team}
                           </span>
                           <span className="mx-1">→</span>
                           <span
                             style={{
-                              color: getTeamColorByName(pt.toTeam),
+                              color: getTeamColorByName(pt.to_team),
                               fontWeight: "bold",
                             }}
                           >
-                            {pt.toTeam}
+                            {pt.to_team}
                           </span>
                         </div>
                       </div>
@@ -174,6 +188,7 @@ const Trades = () => {
 };
 
 export default Trades;
+
 
 
 
@@ -250,20 +265,20 @@ export default Trades;
 //                         <div className="flex items-center gap-2 text-sm">
 //                           <span
 //                             style={{
-//                               color: getTeamColorByName(playerTrade.fromTeam),
+//                               color: getTeamColorByName(playerTrade.from_team),
 //                               fontWeight: "bold"
 //                             }}
 //                           >
-//                             {playerTrade.fromTeam}
+//                             {playerTrade.from_team}
 //                           </span>
 //                           <span className="mx-1">→</span>
 //                           <span
 //                             style={{
-//                               color: getTeamColorByName(playerTrade.toTeam),
+//                               color: getTeamColorByName(playerTrade.to_team),
 //                               fontWeight: "bold"
 //                             }}
 //                           >
-//                             {playerTrade.toTeam}
+//                             {playerTrade.to_team}
 //                           </span>
 //                         </div>
 //                       </div>
