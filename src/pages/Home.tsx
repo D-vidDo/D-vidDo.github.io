@@ -100,7 +100,7 @@ const Home = () => {
   const { topplus_minus, topAverage } = getTopPerformers();
 
   // Total games played (each game counts for both teams, so divide by 2)
-  const totalGames = teams.reduce((sum, team) => sum + team.wins + team.losses, 0) / 2;
+  const totalGames = teams.reduce((sum, team) => sum + team.wins + team.losses, 0) ;
 
   return (
     <div className="min-h-screen bg-background">
