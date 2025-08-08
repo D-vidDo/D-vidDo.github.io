@@ -21,7 +21,7 @@ interface Game {
 }
 
 interface Team {
-  id: string;
+  team_id: string;
   name: string;
   wins: number;
   losses: number;
@@ -112,12 +112,12 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
           </TableHeader>
           <TableBody>
             {sortedTeams.map((team) => (
-              <React.Fragment key={team.id}>
+              <React.Fragment key={team.team_id}>
                 <TableRow
                   className="hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => handleRowClick(team.id)}
+                  onClick={() => handleRowClick(team.team_id)}
                   style={{
-                    backgroundColor: expandedTeamId === team.id ? "#f7fafc" : undefined,
+                    backgroundColor: expandedTeamId === team.team_id ? "#f7fafc" : undefined,
                   }}
                 >
                   <TableCell className="font-medium">
@@ -138,7 +138,7 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                       </div>
                       <span className="font-semibold">{team.name}</span>
                       <span className="ml-2">
-                        {expandedTeamId === team.id ? (
+                        {expandedTeamId === team.team_id ? (
                           <ChevronUp className="w-4 h-4 text-muted-foreground" />
                         ) : (
                           <ChevronDown className="w-4 h-4 text-muted-foreground" />
@@ -172,7 +172,7 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                 </TableRow>
                 <TableRow>
                   <TableCell colSpan={8} className="bg-background border-t p-0">
-                    <AccordionContent expanded={expandedTeamId === team.id}>
+                    <AccordionContent expanded={expandedTeamId === team.team_id}>
                       <div className="p-4">
                         <div className="font-semibold mb-4 text-lg flex items-center gap-2">
                           <TrendingUp className="h-4 w-4 text-primary" />
