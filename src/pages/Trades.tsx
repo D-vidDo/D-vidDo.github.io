@@ -21,9 +21,9 @@ interface Trade {
 
 // Replace with your actual team color mapping
 const teamColorMap: Record<string, string> = {
-  "Team A": "#ef4444",
-  "Team B": "#3b82f6",
-  "Team C": "#10b981",
+  "Brawl Luu": "#ef4444",
+  "Cuck Luu": "#3b82f6",
+  "Bull Luu": "#10b981",
   // Add more team name -> color pairs here
 };
 
