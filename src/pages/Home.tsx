@@ -17,9 +17,9 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 type Player = {
   id: string;
   name: string;
-  position: string; // or primaryPosition if you want
-  plusMinus: number;
-  gamesPlayed: number;
+  primary_position: string; // or primaryprimary_position if you want
+  plus_minus: number;
+  games_played: number;
 };
 
 type Team = {
@@ -87,17 +87,17 @@ const Home = () => {
     })
     .slice(0, 3);
 
-  // Helper to compute top performers by plusMinus and average
+  // Helper to compute top performers by plus_minus and average
   function getTopPerformers() {
-    const validPlayers = players.filter((p) => p.gamesPlayed > 0);
-    const topPlusMinus = [...players].sort((a, b) => b.plusMinus - a.plusMinus);
+    const validPlayers = players.filter((p) => p.games_played > 0);
+    const topplus_minus = [...players].sort((a, b) => b.plus_minus - a.plus_minus);
     const topAverage = [...validPlayers].sort(
-      (a, b) => b.plusMinus / b.gamesPlayed - a.plusMinus / a.gamesPlayed
+      (a, b) => b.plus_minus / b.games_played - a.plus_minus / a.games_played
     );
-    return { topPlusMinus, topAverage };
+    return { topplus_minus, topAverage };
   }
 
-  const { topPlusMinus, topAverage } = getTopPerformers();
+  const { topplus_minus, topAverage } = getTopPerformers();
 
   // Total games played (each game counts for both teams, so divide by 2)
   const totalGames = teams.reduce((sum, team) => sum + team.wins + team.losses, 0) / 2;
@@ -209,7 +209,7 @@ const Home = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {topPlusMinus.slice(0, 3).map((player, index) => (
+                {topplus_minus.slice(0, 3).map((player, index) => (
                   <div
                     key={player.id}
                     className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
@@ -218,21 +218,21 @@ const Home = () => {
                       <Badge variant={index === 0 ? "default" : "secondary"}>#{index + 1}</Badge>
                       <div>
                         <div className="font-semibold">{player.name}</div>
-                        <div className="text-sm text-muted-foreground">{player.position}</div>
+                        <div className="text-sm text-muted-foreground">{player.primary_position}</div>
                       </div>
                     </div>
                     <div className="text-right">
                       <div
                         className={`text-lg font-bold ${
-                          player.plusMinus > 0
+                          player.plus_minus > 0
                             ? "text-green-600"
-                            : player.plusMinus < 0
+                            : player.plus_minus < 0
                             ? "text-red-500"
                             : "text-muted-foreground"
                         }`}
                       >
-                        {player.plusMinus > 0 ? "+" : ""}
-                        {player.plusMinus}
+                        {player.plus_minus > 0 ? "+" : ""}
+                        {player.plus_minus}
                       </div>
                       <div className="text-xs text-muted-foreground">+/-</div>
                     </div>
@@ -252,7 +252,7 @@ const Home = () => {
             <CardContent>
               <div className="space-y-3">
                 {topAverage.slice(0, 3).map((player, index) => {
-                  const average = player.gamesPlayed > 0 ? player.plusMinus / player.gamesPlayed : 0;
+                  const average = player.games_played > 0 ? player.plus_minus / player.games_played : 0;
                   return (
                     <div
                       key={player.id}
@@ -262,7 +262,7 @@ const Home = () => {
                         <Badge variant={index === 0 ? "default" : "secondary"}>#{index + 1}</Badge>
                         <div>
                           <div className="font-semibold">{player.name}</div>
-                          <div className="text-sm text-muted-foreground">{player.position}</div>
+                          <div className="text-sm text-muted-foreground">{player.primary_position}</div>
                         </div>
                       </div>
                       <div className="text-right">
@@ -317,7 +317,7 @@ export default Home;
 //     })
 //     .slice(0, 3);
 
-//   const { topPlusMinus, topAverage } = getTopPerformers();
+//   const { topplus_minus, topAverage } = getTopPerformers();
 //   const totalGames = mockTeams.reduce((sum, team) => sum + team.wins + team.losses, 0) / 2;
 
 //   return (
@@ -418,7 +418,7 @@ export default Home;
 //             </CardHeader>
 //             <CardContent>
 //               <div className="space-y-3">
-//                 {topPlusMinus.slice(0, 3).map((player, index) => (
+//                 {topplus_minus.slice(0, 3).map((player, index) => (
 //                   <div key={player.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
 //                     <div className="flex items-center gap-3">
 //                       <Badge variant={index === 0 ? "default" : "secondary"}>
@@ -426,12 +426,12 @@ export default Home;
 //                       </Badge>
 //                       <div>
 //                         <div className="font-semibold">{player.name}</div>
-//                         <div className="text-sm text-muted-foreground">{player.position}</div>
+//                         <div className="text-sm text-muted-foreground">{player.primary_position}</div>
 //                       </div>
 //                     </div>
 //                     <div className="text-right">
-//                       <div className={`text-lg font-bold ${player.plusMinus > 0 ? 'text-green-600' : player.plusMinus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-//                         {player.plusMinus > 0 ? '+' : ''}{player.plusMinus}
+//                       <div className={`text-lg font-bold ${player.plus_minus > 0 ? 'text-green-600' : player.plus_minus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+//                         {player.plus_minus > 0 ? '+' : ''}{player.plus_minus}
 //                       </div>
 //                       <div className="text-xs text-muted-foreground">+/-</div>
 //                     </div>
@@ -451,7 +451,7 @@ export default Home;
 //             <CardContent>
 //               <div className="space-y-3">
 //                 {topAverage.slice(0, 3).map((player, index) => {
-//                   const average = player.gamesPlayed > 0 ? (player.plusMinus / player.gamesPlayed) : 0;
+//                   const average = player.games_played > 0 ? (player.plus_minus / player.games_played) : 0;
 //                   return (
 //                     <div key={player.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
 //                       <div className="flex items-center gap-3">
@@ -460,7 +460,7 @@ export default Home;
 //                         </Badge>
 //                         <div>
 //                           <div className="font-semibold">{player.name}</div>
-//                           <div className="text-sm text-muted-foreground">{player.position}</div>
+//                           <div className="text-sm text-muted-foreground">{player.primary_position}</div>
 //                         </div>
 //                       </div>
 //                       <div className="text-right">
