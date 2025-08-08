@@ -79,10 +79,11 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
       pointDifferential: (team.points_for ?? 0) - (team.points_against ?? 0),
     }))
     .sort((a, b) => {
-      if (b.wins !== a.wins) return b.wins - a.wins;
-      if (b.points_for !== a.points_for) return b.points_for - a.points_for;
-      return b.winPercentage - a.winPercentage;
-    })
+  if (b.wins !== a.wins) return b.wins - a.wins;
+  if (b.pointDifferential !== a.pointDifferential) return b.pointDifferential - a.pointDifferential;
+  return b.points_for - a.points_for; // optional third tie-breaker
+})
+
     .map((team, index) => ({
       ...team,
       rank: index + 1,
