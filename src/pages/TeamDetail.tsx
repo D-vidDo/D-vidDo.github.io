@@ -108,27 +108,35 @@ const TeamDetail = () => {
           return;
         }
 
-        const tradesWithPlayers = await Promise.all(
-          tradesData.map(async (trade) => {
-            const { data: playersTradedData, error: playersTradedError } = await supabase
-              .from("players_traded")
-              .select("player, fromTeam, toTeam")
-              .eq("trade_id", trade.id);
+const tradesWithPlayers = await Promise.all(
+  tradesData.map(async (trade) => {
+    const { data: playersTradedData, error: playersTradedError } = await supabase
+      .from("players_traded")
+      .select(`
+        from_team,
+        to_team,
+        player:player_id (
+          id,
+          name
+        )
+      `)
+      .eq("trade_id", trade.id);
 
-            if (playersTradedError) {
-              setError(`Failed to load players traded for trade ${trade.id}: ${playersTradedError.message}`);
-              setLoading(false);
-              return null;
-            }
+    if (playersTradedError) {
+      setError(`Failed to load players traded for trade ${trade.id}: ${playersTradedError.message}`);
+      setLoading(false);
+      return null;
+    }
 
-            return {
-              id: trade.id,
-              date: trade.date,
-              description: trade.description,
-              playersTraded: playersTradedData ?? [],
-            };
-          })
-        );
+    return {
+      id: trade.id,
+      date: trade.date,
+      description: trade.description,
+      playersTraded: playersTradedData ?? [],
+    };
+  })
+);
+
 
         const filteredTrades = (tradesWithPlayers ?? []).filter(Boolean);
 
