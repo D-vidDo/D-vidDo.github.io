@@ -13,8 +13,8 @@ const AdminGameEntry = () => {
   const [teamId, setTeamId] = useState<string>("");
   const [date, setDate] = useState("");
   const [opponent, setOpponent] = useState("");
-  const [pointsFor, setPointsFor] = useState("");
-  const [pointsAgainst, setPointsAgainst] = useState("");
+  const [points_for, setpoints_for] = useState("");
+  const [points_against, setpoints_against] = useState("");
   const [result, setResult] = useState<"W" | "L">("W");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,8 +22,8 @@ const AdminGameEntry = () => {
   // --- Trade Admin State ---
   const [players, setPlayers] = useState<{id: string; name: string}[]>([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
-  const [fromTeamId, setFromTeamId] = useState("");
-  const [toTeamId, setToTeamId] = useState("");
+  const [from_teamId, setfrom_teamId] = useState("");
+  const [to_teamId, setto_teamId] = useState("");
   const [tradeDescription, setTradeDescription] = useState("");
   const [tradeMessage, setTradeMessage] = useState<string | null>(null);
   const [tradeLoading, setTradeLoading] = useState(false);
@@ -59,7 +59,7 @@ const AdminGameEntry = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!teamId || !date || !opponent || !pointsFor || !pointsAgainst || !result) {
+    if (!teamId || !date || !opponent || !points_for || !points_against || !result) {
       setMessage("Please fill out all fields.");
       return;
     }
@@ -71,8 +71,8 @@ const AdminGameEntry = () => {
       id: "g" + Date.now(),
       date,
       opponent,
-      pointsFor: Number(pointsFor),
-      pointsAgainst: Number(pointsAgainst),
+      points_for: Number(points_for),
+      points_against: Number(points_against),
       result,
     };
 
@@ -102,8 +102,8 @@ const AdminGameEntry = () => {
       if (result === "W") wins += 1;
       else if (result === "L") losses += 1;
 
-      points_for += newGame.pointsFor;
-      points_against += newGame.pointsAgainst;
+      points_for += newGame.points_for;
+      points_against += newGame.points_against;
 
       // Update team record
       const { error: updateError } = await supabase
@@ -137,12 +137,12 @@ const AdminGameEntry = () => {
         }
 
         for (const player of playersData) {
-          const updatedPlusMinus = (player.plus_minus ?? 0) + (newGame.pointsFor - newGame.pointsAgainst);
+          const updatedplus_minus = (player.plus_minus ?? 0) + (newGame.points_for - newGame.points_against);
           const updatedGamesPlayed = (player.games_played ?? 0) + 1;
 
           const { error: updatePlayerError } = await supabase
             .from("players")
-            .update({ plus_minus: updatedPlusMinus, games_played: updatedGamesPlayed })
+            .update({ plus_minus: updatedplus_minus, games_played: updatedGamesPlayed })
             .eq("id", player.id);
 
           if (updatePlayerError) {
@@ -156,8 +156,8 @@ const AdminGameEntry = () => {
       setMessage("Game added and stats synced!");
       setDate("");
       setOpponent("");
-      setPointsFor("");
-      setPointsAgainst("");
+      setpoints_for("");
+      setpoints_against("");
       setResult("W");
 
       // Refresh teams list
@@ -178,11 +178,11 @@ const AdminGameEntry = () => {
   );
 
   const handleTrade = async () => {
-    if (!selectedPlayerId || !fromTeamId || !toTeamId || !tradeDescription) {
+    if (!selectedPlayerId || !from_teamId || !to_teamId || !tradeDescription) {
       setTradeMessage("Please fill all trade fields.");
       return;
     }
-    if (fromTeamId === toTeamId) {
+    if (from_teamId === to_teamId) {
       setTradeMessage("From and To teams must be different.");
       return;
     }
@@ -191,30 +191,30 @@ const AdminGameEntry = () => {
     setTradeMessage(null);
 
     const player = players.find((p) => p.id === selectedPlayerId);
-    const fromTeam = teams.find((t) => t.team_id === fromTeamId);
-    const toTeam = teams.find((t) => t.team_id === toTeamId);
+    const from_team = teams.find((t) => t.team_id === from_teamId);
+    const to_team = teams.find((t) => t.team_id === to_teamId);
 
-    if (!player || !fromTeam || !toTeam) {
+    if (!player || !from_team || !to_team) {
       setTradeMessage("Invalid player or teams selected.");
       setTradeLoading(false);
       return;
     }
 
     try {
-      // Remove player from fromTeam roster
-      const newFromRoster = (fromTeam.player_ids || []).filter((id) => id !== selectedPlayerId);
+      // Remove player from from_team roster
+      const newFromRoster = (from_team.player_ids || []).filter((id) => id !== selectedPlayerId);
       const { error: fromError } = await supabase
         .from("teams")
         .update({ player_ids: newFromRoster })
-        .eq("team_id", fromTeamId);
+        .eq("team_id", from_teamId);
       if (fromError) throw fromError;
 
-      // Add player to toTeam roster
-      const newToRoster = Array.from(new Set([...(toTeam.player_ids || []), selectedPlayerId]));
+      // Add player to to_team roster
+      const newToRoster = Array.from(new Set([...(to_team.player_ids || []), selectedPlayerId]));
       const { error: toError } = await supabase
         .from("teams")
         .update({ player_ids: newToRoster })
-        .eq("team_id", toTeamId);
+        .eq("team_id", to_teamId);
       if (toError) throw toError;
 
       // Insert trade record
@@ -225,18 +225,18 @@ const AdminGameEntry = () => {
           players_traded: [
             {
               player: { name: player.name },
-              fromTeam: fromTeam.name,
-              toTeam: toTeam.name,
+              from_team: from_team.name,
+              to_team: to_team.name,
             },
           ],
         },
       ]);
       if (tradeInsertError) throw tradeInsertError;
 
-      setTradeMessage(`Trade successful! ${player.name} moved from ${fromTeam.name} to ${toTeam.name}.`);
+      setTradeMessage(`Trade successful! ${player.name} moved from ${from_team.name} to ${to_team.name}.`);
       setSelectedPlayerId("");
-      setFromTeamId("");
-      setToTeamId("");
+      setfrom_teamId("");
+      setto_teamId("");
       setTradeDescription("");
 
       // Refresh teams (rosters)
@@ -296,8 +296,8 @@ const AdminGameEntry = () => {
               <label className="block mb-1 font-semibold">Points For</label>
               <input
                 type="number"
-                value={pointsFor}
-                onChange={(e) => setPointsFor(e.target.value)}
+                value={points_for}
+                onChange={(e) => setpoints_for(e.target.value)}
                 className="w-full border rounded px-2 py-1"
                 min={0}
                 disabled={loading}
@@ -307,8 +307,8 @@ const AdminGameEntry = () => {
               <label className="block mb-1 font-semibold">Points Against</label>
               <input
                 type="number"
-                value={pointsAgainst}
-                onChange={(e) => setPointsAgainst(e.target.value)}
+                value={points_against}
+                onChange={(e) => setpoints_against(e.target.value)}
                 className="w-full border rounded px-2 py-1"
                 min={0}
                 disabled={loading}
@@ -373,8 +373,8 @@ const AdminGameEntry = () => {
               const playerTeam = teams.find((team) =>
                 team.player_ids?.includes(e.target.value)
               );
-              setFromTeamId(playerTeam ? playerTeam.team_id : "");
-              setToTeamId("");
+              setfrom_teamId(playerTeam ? playerTeam.team_id : "");
+              setto_teamId("");
               setTradeMessage(null);
             }}
             disabled={tradeLoading}
@@ -392,7 +392,7 @@ const AdminGameEntry = () => {
           From Team
           <select
             className="w-full border rounded p-2 mt-1 bg-gray-100 cursor-not-allowed"
-            value={fromTeamId}
+            value={from_teamId}
             disabled
             readOnly
           >
@@ -404,13 +404,13 @@ const AdminGameEntry = () => {
           To Team
           <select
             className="w-full border rounded p-2 mt-1"
-            value={toTeamId}
-            onChange={(e) => setToTeamId(e.target.value)}
+            value={to_teamId}
+            onChange={(e) => setto_teamId(e.target.value)}
             disabled={tradeLoading}
           >
             <option value="">-- Select Team --</option>
             {teams
-              .filter((t) => t.team_id !== fromTeamId)
+              .filter((t) => t.team_id !== from_teamId)
               .map((t) => (
                 <option key={t.team_id} value={t.team_id}>
                   {t.name}
@@ -455,14 +455,14 @@ export default AdminGameEntry;
 //   const [teamId, setTeamId] = useState(mockTeams[0]?.id || "");
 //   const [date, setDate] = useState("");
 //   const [opponent, setOpponent] = useState("");
-//   const [pointsFor, setPointsFor] = useState("");
-//   const [pointsAgainst, setPointsAgainst] = useState("");
+//   const [points_for, setpoints_for] = useState("");
+//   const [points_against, setpoints_against] = useState("");
 //   const [result, setResult] = useState<"W" | "L">("W");
 //   const [message, setMessage] = useState("");
 
 //   const handleSubmit = (e: React.FormEvent) => {
 //     e.preventDefault();
-//     if (!teamId || !date || !opponent || !pointsFor || !pointsAgainst || !result) {
+//     if (!teamId || !date || !opponent || !points_for || !points_against || !result) {
 //       setMessage("Please fill out all fields.");
 //       return;
 //     }
@@ -470,8 +470,8 @@ export default AdminGameEntry;
 //       id: "g" + Date.now(),
 //       date,
 //       opponent,
-//       pointsFor: Number(pointsFor),
-//       pointsAgainst: Number(pointsAgainst),
+//       points_for: Number(points_for),
+//       points_against: Number(points_against),
 //       result,
 //     };
 //     addGameResult(teamId, game);
@@ -480,8 +480,8 @@ export default AdminGameEntry;
 //     setMessage("Game added and stats synced!");
 //     setDate("");
 //     setOpponent("");
-//     setPointsFor("");
-//     setPointsAgainst("");
+//     setpoints_for("");
+//     setpoints_against("");
 //     setResult("W");
 //   };
 
@@ -527,8 +527,8 @@ export default AdminGameEntry;
 //             <label className="block mb-1 font-semibold">Points For</label>
 //             <input
 //               type="number"
-//               value={pointsFor}
-//               onChange={e => setPointsFor(e.target.value)}
+//               value={points_for}
+//               onChange={e => setpoints_for(e.target.value)}
 //               className="w-full border rounded px-2 py-1"
 //               min={0}
 //             />
@@ -537,8 +537,8 @@ export default AdminGameEntry;
 //             <label className="block mb-1 font-semibold">Points Against</label>
 //             <input
 //               type="number"
-//               value={pointsAgainst}
-//               onChange={e => setPointsAgainst(e.target.value)}
+//               value={points_against}
+//               onChange={e => setpoints_against(e.target.value)}
 //               className="w-full border rounded px-2 py-1"
 //               min={0}
 //             />
