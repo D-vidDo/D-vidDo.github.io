@@ -389,16 +389,12 @@ const AdminGameEntry = () => {
         </label>
 
         <label className="block mb-2 font-semibold">
-          From Team
-          <select
-            className="w-full border rounded p-2 mt-1 bg-gray-100 cursor-not-allowed"
-            value={from_teamId}
-            disabled
-            readOnly
-          >
-            <option value="">{playerCurrentTeam?.name || "-- Select Player First --"}</option>
-          </select>
-        </label>
+  From Team
+  <div className="w-full border rounded p-2 mt-1 bg-gray-100 text-gray-700">
+    {playerCurrentTeam?.name || "-- Select Player First --"}
+  </div>
+</label>
+
 
         <label className="block mb-2 font-semibold">
           To Team
