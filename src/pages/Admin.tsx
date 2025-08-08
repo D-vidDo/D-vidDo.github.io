@@ -34,7 +34,6 @@ const AdminGameEntry = () => {
       if (error) {
         setMessage(`Error loading teams: ${error.message}`);
       } else {
-        console.log("Teams loaded:", data);
         setTeams(data ?? []);
         if (data && data.length > 0) setTeamId(data[0].team_id);
       }
@@ -61,7 +60,120 @@ const AdminGameEntry = () => {
     return teams.find(team => Array.isArray(team.player_ids) && team.player_ids.includes(playerId)) || null;
   };
 
-  // Game Entry Submit Handler (unchanged, omitted for brevity)...
+  // Game Entry Submit Handler
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!teamId || !date || !opponent || !points_for || !points_against || !result) {
+      setMessage("Please fill out all fields.");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
+    const newGame = {
+      id: "g" + Date.now(),
+      date,
+      opponent,
+      points_for: Number(points_for),
+      points_against: Number(points_against),
+      result,
+    };
+
+    try {
+      // Fetch current team data
+      const { data: teamData, error: fetchError } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("team_id", teamId)
+        .single();
+
+      if (fetchError || !teamData) {
+        setMessage(`Failed to fetch team data: ${fetchError?.message || "No data"}`);
+        setLoading(false);
+        return;
+      }
+
+      // Append new game to existing games array
+      const updatedGames = [...(teamData.games || []), newGame];
+
+      // Recalculate team stats
+      let wins = teamData.wins ?? 0;
+      let losses = teamData.losses ?? 0;
+      let total_points_for = teamData.points_for ?? 0;
+      let total_points_against = teamData.points_against ?? 0;
+
+      if (result === "W") wins += 1;
+      else if (result === "L") losses += 1;
+
+      total_points_for += newGame.points_for;
+      total_points_against += newGame.points_against;
+
+      // Update team record
+      const { error: updateError } = await supabase
+        .from("teams")
+        .update({
+          games: updatedGames,
+          wins,
+          losses,
+          points_for: total_points_for,
+          points_against: total_points_against,
+        })
+        .eq("team_id", teamId);
+
+      if (updateError) {
+        setMessage(`Failed to update team: ${updateError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      // Update player stats for all players in this team
+      if (teamData.player_ids && teamData.player_ids.length > 0) {
+        const { data: playersData, error: playersError } = await supabase
+          .from("players")
+          .select("*")
+          .in("id", teamData.player_ids);
+
+        if (playersError) {
+          setMessage(`Failed to fetch players: ${playersError.message}`);
+          setLoading(false);
+          return;
+        }
+
+        for (const player of playersData) {
+          const updatedplus_minus = (player.plus_minus ?? 0) + (newGame.points_for - newGame.points_against);
+          const updatedGamesPlayed = (player.games_played ?? 0) + 1;
+
+          const { error: updatePlayerError } = await supabase
+            .from("players")
+            .update({ plus_minus: updatedplus_minus, games_played: updatedGamesPlayed })
+            .eq("id", player.id);
+
+          if (updatePlayerError) {
+            setMessage(`Failed to update player ${player.name}: ${updatePlayerError.message}`);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      setMessage("Game added and stats synced!");
+      setDate("");
+      setOpponent("");
+      setpoints_for("");
+      setpoints_against("");
+      setResult("W");
+
+      // Refresh teams list
+      const { data: refreshedTeams } = await supabase.from("teams").select("*");
+      setTeams(refreshedTeams ?? []);
+    } catch (error) {
+      setMessage("Unexpected error: " + (error as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Trade handler for 2-way trade
   const handleTrade = async () => {
@@ -162,7 +274,98 @@ const AdminGameEntry = () => {
       {/* Game Entry Section */}
       <section>
         <h2 className="text-2xl font-bold mb-4">Secret Admin: Add Game Result</h2>
-        {/* The game entry form remains unchanged, you can keep your existing code here */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block mb-1 font-semibold">Team</label>
+            <select
+              value={teamId}
+              onChange={(e) => setTeamId(e.target.value)}
+              className="w-full border rounded px-2 py-1"
+              disabled={loading}
+            >
+              {teams.map((team) => (
+                <option key={team.team_id} value={team.team_id}>
+                  {team.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">Date</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full border rounded px-2 py-1"
+              disabled={loading}
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">Opponent</label>
+            <input
+              type="text"
+              value={opponent}
+              onChange={(e) => setOpponent(e.target.value)}
+              className="w-full border rounded px-2 py-1"
+              placeholder="Opponent team name"
+              disabled={loading}
+            />
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <label className="block mb-1 font-semibold">Points For</label>
+              <input
+                type="number"
+                value={points_for}
+                onChange={(e) => setpoints_for(e.target.value)}
+                className="w-full border rounded px-2 py-1"
+                min={0}
+                disabled={loading}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block mb-1 font-semibold">Points Against</label>
+              <input
+                type="number"
+                value={points_against}
+                onChange={(e) => setpoints_against(e.target.value)}
+                className="w-full border rounded px-2 py-1"
+                min={0}
+                disabled={loading}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">Result</label>
+            <select
+              value={result}
+              onChange={(e) => setResult(e.target.value as "W" | "L")}
+              className="w-full border rounded px-2 py-1"
+              disabled={loading}
+            >
+              <option value="W">Win</option>
+              <option value="L">Loss</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-primary text-primary-foreground py-2 rounded font-bold mt-2"
+            disabled={loading}
+          >
+            {loading ? "Submitting..." : "Submit & Sync Stats"}
+          </button>
+          {message && (
+            <div
+              className={`mt-2 text-center font-semibold ${
+                message.toLowerCase().includes("failed") || message.toLowerCase().includes("error")
+                  ? "text-red-600"
+                  : "text-green-600"
+              }`}
+            >
+              {message}
+            </div>
+          )}
+        </form>
       </section>
 
       {/* Trade Admin Section */}
