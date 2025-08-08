@@ -21,12 +21,15 @@ const AdminGameEntry = () => {
 
   // --- Trade Admin State ---
   const [players, setPlayers] = useState<{id: string; name: string}[]>([]);
-  const [selectedPlayerId, setSelectedPlayerId] = useState("");
-  const [from_teamId, setfrom_teamId] = useState("");
-  const [to_teamId, setto_teamId] = useState("");
+  const [player1Id, setPlayer1Id] = useState("");
+  const [player2Id, setPlayer2Id] = useState("");
   const [tradeDescription, setTradeDescription] = useState("");
   const [tradeMessage, setTradeMessage] = useState<string | null>(null);
   const [tradeLoading, setTradeLoading] = useState(false);
+
+  // Helper: Find team by player id
+  const findTeamByPlayerId = (playerId: string) =>
+    teams.find(team => team.player_ids?.includes(playerId));
 
   useEffect(() => {
     // Load teams on mount
@@ -170,76 +173,101 @@ const AdminGameEntry = () => {
     }
   };
 
-  // Trade Admin handlers
-
-  // Find the team the selected player currently belongs to
-  const playerCurrentTeam = teams.find((team) =>
-    team.player_ids?.includes(selectedPlayerId)
-  );
-
+  // Trade Submit Handler (two-way trade)
   const handleTrade = async () => {
-    if (!selectedPlayerId || !from_teamId || !to_teamId || !tradeDescription) {
-      setTradeMessage("Please fill all trade fields.");
+    if (!player1Id || !player2Id || !tradeDescription) {
+      setTradeMessage("Please select both players and provide a trade description.");
       return;
     }
-    if (from_teamId === to_teamId) {
-      setTradeMessage("From and To teams must be different.");
+    if (player1Id === player2Id) {
+      setTradeMessage("Please select two different players for trade.");
+      return;
+    }
+
+    const player1Team = findTeamByPlayerId(player1Id);
+    const player2Team = findTeamByPlayerId(player2Id);
+
+    if (!player1Team || !player2Team) {
+      setTradeMessage("Could not find teams for selected players.");
+      return;
+    }
+
+    if (player1Team.team_id === player2Team.team_id) {
+      setTradeMessage("Players are on the same team; trade requires players from different teams.");
       return;
     }
 
     setTradeLoading(true);
     setTradeMessage(null);
 
-    const player = players.find((p) => p.id === selectedPlayerId);
-    const from_team = teams.find((t) => t.team_id === from_teamId);
-    const to_team = teams.find((t) => t.team_id === to_teamId);
-
-    if (!player || !from_team || !to_team) {
-      setTradeMessage("Invalid player or teams selected.");
-      setTradeLoading(false);
-      return;
-    }
-
     try {
-      // Remove player from from_team roster
-      const newFromRoster = (from_team.player_ids || []).filter((id) => id !== selectedPlayerId);
-      const { error: fromError } = await supabase
+      // Update rosters: remove players from their original teams and add to the other's team
+      // Remove player1 from player1Team
+      const newRoster1 = (player1Team.player_ids || []).filter(id => id !== player1Id);
+      const { error: errorRemove1 } = await supabase
         .from("teams")
-        .update({ player_ids: newFromRoster })
-        .eq("team_id", from_teamId);
-      if (fromError) throw fromError;
+        .update({ player_ids: newRoster1 })
+        .eq("team_id", player1Team.team_id);
+      if (errorRemove1) throw errorRemove1;
 
-      // Add player to to_team roster
-      const newToRoster = Array.from(new Set([...(to_team.player_ids || []), selectedPlayerId]));
-      const { error: toError } = await supabase
+      // Remove player2 from player2Team
+      const newRoster2 = (player2Team.player_ids || []).filter(id => id !== player2Id);
+      const { error: errorRemove2 } = await supabase
         .from("teams")
-        .update({ player_ids: newToRoster })
-        .eq("team_id", to_teamId);
-      if (toError) throw toError;
+        .update({ player_ids: newRoster2 })
+        .eq("team_id", player2Team.team_id);
+      if (errorRemove2) throw errorRemove2;
 
-      // Insert trade record
+      // Add player1 to player2Team
+      const updatedRoster2 = Array.from(new Set([...(player2Team.player_ids || []), player1Id]));
+      const { error: errorAdd1 } = await supabase
+        .from("teams")
+        .update({ player_ids: updatedRoster2 })
+        .eq("team_id", player2Team.team_id);
+      if (errorAdd1) throw errorAdd1;
+
+      // Add player2 to player1Team
+      const updatedRoster1 = Array.from(new Set([...(player1Team.player_ids || []), player2Id]));
+      const { error: errorAdd2 } = await supabase
+        .from("teams")
+        .update({ player_ids: updatedRoster1 })
+        .eq("team_id", player1Team.team_id);
+      if (errorAdd2) throw errorAdd2;
+
+      // Insert trade record with players_traded array (two entries)
+      const player1 = players.find(p => p.id === player1Id);
+      const player2 = players.find(p => p.id === player2Id);
+
+      if (!player1 || !player2) {
+        throw new Error("Selected players not found in player list");
+      }
+
       const { error: tradeInsertError } = await supabase.from("trades").insert([
         {
           date: new Date().toISOString(),
           description: tradeDescription,
           players_traded: [
             {
-              player: { name: player.name },
-              from_team: from_team.name,
-              to_team: to_team.name,
+              player: { name: player1.name },
+              from_team: player1Team.name,
+              to_team: player2Team.name,
+            },
+            {
+              player: { name: player2.name },
+              from_team: player2Team.name,
+              to_team: player1Team.name,
             },
           ],
         },
       ]);
       if (tradeInsertError) throw tradeInsertError;
 
-      setTradeMessage(`Trade successful! ${player.name} moved from ${from_team.name} to ${to_team.name}.`);
-      setSelectedPlayerId("");
-      setfrom_teamId("");
-      setto_teamId("");
+      setTradeMessage(`Trade successful! ${player1.name} swapped with ${player2.name}.`);
+      setPlayer1Id("");
+      setPlayer2Id("");
       setTradeDescription("");
 
-      // Refresh teams (rosters)
+      // Refresh teams list to update rosters
       const { data: refreshedTeams } = await supabase.from("teams").select("*");
       setTeams(refreshedTeams ?? []);
     } catch (error: any) {
@@ -350,7 +378,7 @@ const AdminGameEntry = () => {
 
       {/* Trade Admin Section */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">Execute Player Trade</h2>
+        <h2 className="text-2xl font-bold mb-4">Execute Player Trade (Two-Way Swap)</h2>
         {tradeMessage && (
           <div
             className={`mb-4 p-3 rounded ${
@@ -364,55 +392,49 @@ const AdminGameEntry = () => {
         )}
 
         <label className="block mb-2 font-semibold">
-          Select Player to Trade
+          Select Player 1 (From Team 1)
           <select
             className="w-full border rounded p-2 mt-1"
-            value={selectedPlayerId}
+            value={player1Id}
             onChange={(e) => {
-              setSelectedPlayerId(e.target.value);
-              const playerTeam = teams.find((team) =>
-                team.player_ids?.includes(e.target.value)
-              );
-              setfrom_teamId(playerTeam ? playerTeam.team_id : "");
-              setto_teamId("");
+              setPlayer1Id(e.target.value);
               setTradeMessage(null);
             }}
             disabled={tradeLoading}
           >
-            <option value="">-- Select Player --</option>
+            <option value="">-- Select Player 1 --</option>
             {players.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>
             ))}
           </select>
+          <div className="mt-1 text-sm text-gray-600">
+            {player1Id ? `Team: ${findTeamByPlayerId(player1Id)?.name || "Unknown"}` : "-- Select Player 1 to see team --"}
+          </div>
         </label>
 
         <label className="block mb-2 font-semibold">
-  From Team
-  <div className="w-full border rounded p-2 mt-1 bg-gray-100 text-gray-700">
-    {playerCurrentTeam?.name || "-- Select Player First --"}
-  </div>
-</label>
-
-
-        <label className="block mb-2 font-semibold">
-          To Team
+          Select Player 2 (From Team 2)
           <select
             className="w-full border rounded p-2 mt-1"
-            value={to_teamId}
-            onChange={(e) => setto_teamId(e.target.value)}
+            value={player2Id}
+            onChange={(e) => {
+              setPlayer2Id(e.target.value);
+              setTradeMessage(null);
+            }}
             disabled={tradeLoading}
           >
-            <option value="">-- Select Team --</option>
-            {teams
-              .filter((t) => t.team_id !== from_teamId)
-              .map((t) => (
-                <option key={t.team_id} value={t.team_id}>
-                  {t.name}
-                </option>
-              ))}
+            <option value="">-- Select Player 2 --</option>
+            {players.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
           </select>
+          <div className="mt-1 text-sm text-gray-600">
+            {player2Id ? `Team: ${findTeamByPlayerId(player2Id)?.name || "Unknown"}` : "-- Select Player 2 to see team --"}
+          </div>
         </label>
 
         <label className="block mb-4 font-semibold">
@@ -420,7 +442,7 @@ const AdminGameEntry = () => {
           <input
             type="text"
             className="w-full border rounded p-2 mt-1"
-            placeholder="e.g., Traded for draft pick"
+            placeholder="e.g., Swap for draft pick"
             value={tradeDescription}
             onChange={(e) => setTradeDescription(e.target.value)}
             disabled={tradeLoading}
@@ -440,8 +462,6 @@ const AdminGameEntry = () => {
 };
 
 export default AdminGameEntry;
-
-
 
 
 // import React, { useState } from "react";
