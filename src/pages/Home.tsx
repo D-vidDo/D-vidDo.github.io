@@ -172,24 +172,31 @@ const Home = () => {
         </section>
 
         {/* Top Teams */}
-        <section>
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-foreground">Top Teams</h2>
-            <Link to="/teams">
-              <Button variant="outline">View All Teams</Button>
-            </Link>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {topTeams.map((team, index) => (
-              <div key={team.team_id} className="relative">
-                {index === 0 && (
-                  <Badge className="absolute -top-2 -right-2 z-10 bg-gradient-hero">🏆 #1</Badge>
-                )}
-                <TeamCard team={team} />
-              </div>
-            ))}
-          </div>
-        </section>
+<section>
+  <div className="flex justify-between items-center mb-8">
+    <h2 className="text-3xl font-bold text-foreground">Standings</h2>
+    <Link to="/teams">
+      <Button variant="outline">View All Teams</Button>
+    </Link>
+  </div>
+  <div className="grid md:grid-cols-3 gap-6">
+    {topTeams.map((team, index) => (
+      <div key={team.team_id} className="relative">
+        {index === 0 && (
+          <Badge className="absolute -top-2 -right-2 z-10 bg-gradient-hero">🏆 #1</Badge>
+        )}
+        {index === 1 && (
+          <Badge className="absolute -top-2 -right-2 z-10 bg-yellow-400 text-black">🥈 #2</Badge>
+        )}
+        {index === 2 && (
+          <Badge className="absolute -top-2 -right-2 z-10 bg-orange-400 text-black">🥉 #3</Badge>
+        )}
+        <TeamCard team={team} />
+      </div>
+    ))}
+  </div>
+</section>
+
 
         {/* Player Highlights */}
         <section className="grid md:grid-cols-2 gap-8">
