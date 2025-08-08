@@ -18,8 +18,8 @@ interface Game {
   id: string;
   date: string;
   opponent: string;
-  pointsFor: number;
-  pointsAgainst: number;
+  points_for: number;
+  points_against: number;
   result: "W" | "L";
 }
 
@@ -244,7 +244,7 @@ const TeamDetail = () => {
                 <td className="px-4 py-2">{game.date}</td>
                 <td className="px-4 py-2">{game.opponent}</td>
                 <td className="px-4 py-2">
-                  {game.pointsFor} - {game.pointsAgainst}
+                  {game.points_for} - {game.points_against}
                 </td>
                 <td className="px-4 py-2">
                   <Badge
@@ -346,8 +346,8 @@ export default TeamDetail;
 //   id: string;
 //   date: string;
 //   opponent: string;
-//   pointsFor: number;
-//   pointsAgainst: number;
+//   points_for: number;
+//   points_against: number;
 //   result: "W" | "L";
 // }
 
@@ -690,7 +690,7 @@ export default TeamDetail;
 
 //   const players = getPlayersByTeam(team.id);
 //   const winPercentage = ((team.wins / (team.wins + team.losses)) * 100).toFixed(1);
-//   const pointDifferential = team.pointsFor - team.pointsAgainst;
+//   const pointDifferential = team.points_for - team.points_against;
   
 //   // Team stats
 //   const teamplus_minus = players.reduce((sum, player) => sum + player.plus_minus, 0);
@@ -759,7 +759,7 @@ export default TeamDetail;
 //           <Card className="bg-gradient-stats shadow-card">
 //             <CardContent className="p-6 text-center">
 //               <Trophy className="h-8 w-8 text-primary mx-auto mb-2" />
-//               <div className="text-2xl font-bold text-card-foreground">{team.pointsFor}</div>
+//               <div className="text-2xl font-bold text-card-foreground">{team.points_for}</div>
 //               <div className="text-sm text-muted-foreground">Points For</div>
 //             </CardContent>
 //           </Card>
@@ -850,8 +850,8 @@ export default TeamDetail;
 //                       >
 //                         <td className="py-2 px-3">{game.date}</td>
 //                         <td className="py-2 px-3 font-semibold">{game.opponent}</td>
-//                         <td className="py-2 px-3 text-center font-bold text-green-700">{game.pointsFor}</td>
-//                         <td className="py-2 px-3 text-center font-bold text-red-600">{game.pointsAgainst}</td>
+//                         <td className="py-2 px-3 text-center font-bold text-green-700">{game.points_for}</td>
+//                         <td className="py-2 px-3 text-center font-bold text-red-600">{game.points_against}</td>
 //                         <td className="py-2 px-3 text-center">
 //                           <span className={`px-2 py-1 rounded-full text-xs font-bold ${game.result === "W" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
 //                             {game.result}
