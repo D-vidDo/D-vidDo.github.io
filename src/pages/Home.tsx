@@ -82,7 +82,10 @@ const Home = () => {
 
   // ribbon
 
-
+<NotificationRibbon
+  message="📢 The draft starts this Friday at 7PM!"
+  type="warning"
+/>
 
 
   // Calculate top teams by win percentage
@@ -110,12 +113,7 @@ const Home = () => {
   const totalGames = teams.reduce((sum, team) => sum + team.wins + team.losses, 0) ;
 
   return (
-    
     <div className="min-h-screen bg-background">
-      <NotificationRibbon
-  message="📢 The draft starts this Friday at 7PM!"
-  type="warning"
-/>
       {/* Hero Section */}
       <section className="bg-gradient-hero py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
