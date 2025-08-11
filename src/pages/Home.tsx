@@ -80,7 +80,7 @@ const Home = () => {
   if (loading) return <div>Loading...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
-  // ribbon
+  // notifcation ribbon
 
 <NotificationRibbon
   message="📢 The draft starts this Friday at 7PM!"
