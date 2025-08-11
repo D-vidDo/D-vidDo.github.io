@@ -107,17 +107,15 @@ const Home = () => {
       {/* Hero Section */}
       <section className="bg-gradient-hero py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-primary-foreground mb-6">
-            
-          <img
-            src="logo.png"          // ← update this path to your logo
-            alt=""
-            aria-hidden="true"
-            className="h-10 w-10 md:h-12 md:w-12 rounded-sm drop-shadow-sm"
-          />
+          <h1 className="flex flex-col items-center text-5xl md:text-6xl font-bold text-primary-foreground mb-6">
+  <img
+    src="/logo.png"  // or .svg if that's your file type
+    alt="NCL Logo"
+    className="h-24 w-24 md:h-32 md:w-32 mb-4" // Bigger logo + spacing below
+  />
+  <span>Northeast Community League</span>
+</h1>
 
-            Northeast Community League
-          </h1>
           <p className="text-xl text-primary-foreground/90 mb-8 max-w-3xl mx-auto">
             Welcome to the NCL hub. Track teams, players, standings, and statistics all in one place.
           </p>
