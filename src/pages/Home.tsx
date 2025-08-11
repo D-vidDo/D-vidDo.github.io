@@ -7,8 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Users, Target, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import TeamCard from "@/components/TeamCard";
-import NotificationRibbon from "@/components/NotificationRibbon";
-
 
 // Initialize Supabase client
 const supabaseUrl = 'https://bqqotvjpvaznkjfldcgm.supabase.co';
@@ -79,14 +77,6 @@ const Home = () => {
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
-
-  // notifcation ribbon
-
-<NotificationRibbon
-  message="📢 The draft starts this Friday at 7PM!"
-  type="warning"
-/>
-
 
   // Calculate top teams by win percentage
   const topTeams = [...teams]
