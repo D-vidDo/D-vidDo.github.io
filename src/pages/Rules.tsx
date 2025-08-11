@@ -41,14 +41,14 @@ const Rules = () => {
               </h2>
               <h3 className="font-semibold mt-2">Pre-Season Draft</h3>
               <ul className="list-disc list-inside mt-1 text-muted-foreground space-y-1">
-                <li>Team Captains will draft from an anonymous list of players before the season start</li>
-                <li>Players in the pool will only be identified by their player card which shows the following:</li>
+                <li>Teams will be randomly generated at the start of the season</li>
+                {/* <li>Players in the pool will only be identified by their player card which shows the following:</li>
                 <ul className="list-inside ml-4">
                   <li>Gender</li>
                   <li>Position (Primary & Secondary)</li>
                   <li>Rating</li>
-                </ul>
-                <li>Draft order will be determined randomly and will be done serpentine style</li>
+                </ul> */}
+                {/* <li>Draft order will be determined randomly and will be done serpentine style</li> */}
               </ul>
 
               <h3 className="font-semibold mt-4">Re-Tier Drafts</h3>
