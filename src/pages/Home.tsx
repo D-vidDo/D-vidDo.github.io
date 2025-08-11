@@ -109,8 +109,8 @@ const Home = () => {
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-primary-foreground mb-6">
             
-<img
-            src="public\jpeg.jpg"          // ← update this path to your logo
+          <img
+            src="logo.png"          // ← update this path to your logo
             alt=""
             aria-hidden="true"
             className="h-10 w-10 md:h-12 md:w-12 rounded-sm drop-shadow-sm"
