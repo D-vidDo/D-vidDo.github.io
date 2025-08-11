@@ -110,7 +110,7 @@ const Home = () => {
           <h1 className="text-5xl md:text-6xl font-bold text-primary-foreground mb-6">
             
 <img
-            src="public\logo.png"          // ← update this path to your logo
+            src="public\jpeg.jpg"          // ← update this path to your logo
             alt=""
             aria-hidden="true"
             className="h-10 w-10 md:h-12 md:w-12 rounded-sm drop-shadow-sm"
