@@ -39,7 +39,7 @@ const Rules = () => {
                 <Repeat className="h-5 w-5 text-muted-foreground" />
                 Draft
               </h2>
-              <h3 className="font-semibold mt-2">Pre-Season Draft</h3>
+              <h3 className="font-semibold mt-2">Pre-Season Random Draft</h3>
               <ul className="list-disc list-inside mt-1 text-muted-foreground space-y-1">
                 <li>Teams will be randomly generated at the start of the season</li>
                 {/* <li>Players in the pool will only be identified by their player card which shows the following:</li>
@@ -53,9 +53,15 @@ const Rules = () => {
 
               <h3 className="font-semibold mt-4">Re-Tier Drafts</h3>
               <ul className="list-disc list-inside mt-1 text-muted-foreground space-y-1">
-                <li>All players will re-enter the draft pool at each new schedule except for the retained players of the winning team</li>
-                <li>The winning team will have the first pick in the re-draft, second highest win/loss ratio will have second, and so forth</li>
-                <li>These drafts will not be anonymous</li>
+                <li>All players will re-enter the draft pool at each new schedule except for the retained players as explained in the next section</li>
+                <li>The last place team will have the first pick in the re-draft, second highest win/loss ratio will have second, and so forth</li>
+                <li>Players in the pool will only be identified by their player card which shows the following:</li>
+                <ul className="list-inside ml-4">
+                  <li>Position (Primary & Secondary)</li>
+                  <li>Overall Rating</li>
+                </ul>
+                <li>The name of the players will not be visible in this draft.</li>
+                <li>Only when the 1st re-tier draft is finished, will the stat ratings be visible to all. Until then, only the Overall Rating score will be visible for each player</li>
               </ul>
             </section>
 
@@ -68,7 +74,7 @@ const Rules = () => {
               </h2>
               <ul className="list-disc list-inside mt-2 text-muted-foreground space-y-1">
                 <li>All non-captain players re-enter the draft pool</li>
-                <li>Captains stay with their original team</li>
+                <li>Captains stay with their original team for the entirety of the season</li>
                 <li>Redraft happens, selecting from the full player pool</li>
               </ul>
             </section>
@@ -81,7 +87,7 @@ const Rules = () => {
                 Winning Incentive
               </h2>
               <ul className="list-disc list-inside mt-2 text-muted-foreground space-y-1">
-                <li>At the end of each re-tier, the team with the highest win/loss ratio can:</li>
+                <li>At the end of each schedule, the team with the highest win/loss ratio can:</li>
                 <ul className="list-inside ml-4">
                   <li>Retain up to 2 players from their current roster</li>
                 </ul>
