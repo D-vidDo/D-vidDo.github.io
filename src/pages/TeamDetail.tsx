@@ -181,24 +181,74 @@ const tradesWithPlayers = await Promise.all(
 
   return (
     <div className="min-h-screen bg-background">
-      <section className="bg-gradient-hero py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <Link to="/teams" className="inline-flex items-center text-primary-foreground hover:text-primary-foreground/80 mb-6">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Teams
-          </Link>
-          <div className="flex items-center space-x-6">
-            <div className="w-24 h-24 rounded-xl flex items-center justify-center text-white font-bold text-3xl shadow-primary" style={{ backgroundColor: team.color }}>{team.name.slice(0, 2).toUpperCase()}</div>
-            <div>
-              <h1 className="text-5xl font-bold text-primary-foreground mb-2">{team.name}</h1>
-              <p className="text-lg text-primary-foreground/90 mb-4">Captain: {team.captain}</p>
-              <div className="flex gap-3 flex-wrap">
-                <Badge variant="secondary" className="text-lg px-4 py-2">{team.wins}W - {team.losses}L</Badge>
-                <Badge variant="outline" className="text-lg px-4 py-2 bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground">{winPercentage}% Win Rate</Badge>
-              </div>
-            </div>
-          </div>
+
+      <section className="relative py-16 px-4">
+  {/* Faded logo background layer */}
+  <div
+    className="
+      absolute inset-0 pointer-events-none opacity-10
+      [mask-image:linear-gradient(to_bottom,transparent,black_15%,black_85%,transparent)]
+      md:[background-position:right_-10%_center] [background-position:center]
+    "
+    style={{
+      backgroundImage: `url(/logos/${team.team_id}.jpg)`,
+      backgroundSize: "contain",
+      backgroundRepeat: "no-repeat",
+    }}
+    aria-hidden="true"
+  />
+
+  {/* Optional readability overlay (tweak/keep/remove as needed) */}
+  <div className="absolute inset-0 bg-background/60" aria-hidden="true" />
+
+  {/* Content */}
+  <div className="relative max-w-6xl mx-auto">
+    <Link
+      to="/teams"
+      className="inline-flex items-center text-primary-foreground hover:text-primary-foreground/80 mb-6"
+    >
+      <ArrowLeft className="h-4 w-4 mr-2" /> Back to Teams
+    </Link>
+
+    <div className="flex items-center space-x-6">
+      {/* Logo / initials (from your previous code with state fallback recommended) */}
+      <img
+        src={`/logos/${team.team_id}.jpg`}
+        alt={`${team.name} logo`}
+        className="w-24 h-24 rounded-xl object-contain shadow-md"
+        onError={(e) => {
+          const img = e.currentTarget as HTMLImageElement;
+          img.onerror = null;
+          img.src = "/logos/default.jpg"; // fallback file in /public/logos
+        }}
+      />
+
+      <div>
+        <h1 className="text-5xl font-bold text-primary-foreground mb-2">{team.name}</h1>
+        <p className="text-lg text-primary-foreground/90 mb-4">Captain: {team.captain}</p>
+        <div className="flex gap-3 flex-wrap">
+          <Badge variant="secondary" className="text-lg px-4 py-2">
+            {team.wins}W - {team.losses}L
+          </Badge>
+          <Badge
+            variant="outline"
+            className="text-lg px-4 py-2 bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground"
+          >
+            {winPercentage}% Win Rate
+          </Badge>
         </div>
-      </section>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+     
 
       <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
         <div className="grid md:grid-cols-4 gap-6">
