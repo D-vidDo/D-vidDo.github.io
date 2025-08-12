@@ -43,6 +43,7 @@ interface Team {
   losses: number;
   captain: string;
   color: string;
+  color2: string;
   points_for: number;
   points_against: number;
   player_ids: string[];
@@ -180,9 +181,18 @@ const tradesWithPlayers = await Promise.all(
   const teamAverage = teamGames > 0 ? parseFloat((teamplus_minus / teamGames).toFixed(1)) : 0;
 
   return (
-    <div className="min-h-screen bg-background">
 
- <section className="bg-gradient-hero py-16 px-4">
+<div className="min-h-screen bg-background">
+  <section
+    className="relative isolate py-16 px-4 min-h-[280px] md:min-h-[360px] rounded-none"
+    style={{
+      background: `linear-gradient(135deg, ${team.color} 0%, ${team.color2} 100%)`,
+    }}
+  >
+    {/* Optional neutral overlay for readability (NOT bg-background) */}
+    <div className="absolute inset-0 bg-black/30 pointer-events-none" aria-hidden="true" />
+
+
         <div className="max-w-6xl mx-auto">
           <Link to="/teams" className="inline-flex items-center text-primary-foreground hover:text-primary-foreground/80 mb-6">
             <ArrowLeft className="h-4 w-4 mr-2" /> Back to Teams
