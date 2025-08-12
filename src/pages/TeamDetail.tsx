@@ -189,9 +189,7 @@ const tradesWithPlayers = await Promise.all(
       background: `linear-gradient(135deg, ${team.color} 0%, ${team.color2} 100%)`,
     }}
   >
-    {/* Optional neutral overlay for readability (NOT bg-background) */}
-    <div className="absolute inset-0 bg-black/30 pointer-events-none" aria-hidden="true" />
-
+ 
 
         <div className="max-w-6xl mx-auto">
           <Link to="/teams" className="inline-flex items-center text-primary-foreground hover:text-primary-foreground/80 mb-6">
