@@ -55,18 +55,23 @@ const TeamCard = ({ team }: TeamCardProps) => {
 
             {/* icon  */}
             
-<img
-  src={`/logos/${team.team_id}.jpg`} // or team.logo if you store it in the object
-  alt={`${team.name} logo`}
-  className="w-12 h-12 rounded-lg object-contain shadow-md"
-/>
-
-            {/* <div
+            <img
+              src={`/logos/${team.team_id}.jpg`} // or team.logo if you store it in the object
+              alt={`${team.name} logo`}
+              
+              onError={(e) => {
+                   <div
               className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md"
               style={{ backgroundColor: team.color }}
             >
               {team.name.substring(0, 2).toUpperCase()}
-            </div> */}
+            </div> 
+                }}
+
+              className="w-12 h-12 rounded-lg object-contain shadow-md"
+            />
+
+            
             <div>
               <h3 className="text-lg font-bold text-card-foreground group-hover:text-primary transition-colors">
                 {team.name}
