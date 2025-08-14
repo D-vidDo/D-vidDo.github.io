@@ -11,6 +11,8 @@ interface Player {
   plus_minus: number;
   games_played: number;
   isCaptain?: boolean;
+  title: string;
+  team: string;
   stats: Record<string, number>;
 }
 
@@ -55,6 +57,7 @@ const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
                 <span className="ml-2 text-xs text-muted-foreground">
                   / {player.secondary_position}
                 </span>
+                {player.title}
               )}
             </p>
           </div>
