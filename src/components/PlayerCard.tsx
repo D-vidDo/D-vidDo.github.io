@@ -134,10 +134,6 @@ const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
 };
 
 export default PlayerCard;
-
-
-
-// import { Card, CardContent, CardHeader } from "@/components/ui/card";
 // import { Badge } from "@/components/ui/badge";
 // import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 // import { User, Award, TrendingUp } from "lucide-react";
