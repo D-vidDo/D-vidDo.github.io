@@ -55,10 +55,9 @@ const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
               {player.primary_position}
               {player.secondary_position && (
                 <span className="ml-2 text-xs text-muted-foreground">
-                  / {player.secondary_position} / {player.title}
+                  / {player.secondary_position}
                 </span>
               )}
-              {player.team}
             </p>
           </div>
 
