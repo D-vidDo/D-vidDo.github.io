@@ -73,7 +73,6 @@ const LeagueProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
         .then(({ data }) => setPlayers(data ?? []));
     } }}>
       {children}
-      <Analytics />
     </LeagueContext.Provider>
   );
 };
@@ -103,7 +102,6 @@ const App = () => (
       </LeagueProvider>
     </TooltipProvider>
   </QueryClientProvider>
-  
 );
 
 export default App;
