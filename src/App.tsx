@@ -82,9 +82,10 @@ const LeagueProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const App = () => (
   
   <QueryClientProvider client={queryClient}>
-    <Analytics />
+
     <TooltipProvider>
       <LeagueProvider>
+        <Analytics />
         <Toaster />
         <Sonner />
         <BrowserRouter>
