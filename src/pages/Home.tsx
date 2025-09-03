@@ -298,8 +298,9 @@ const Home = () => {
           </Card>
         </section>
       </div>
+      <BillOfTheDay/>
     </div>
-    <BillOfTheDay/>
+    
   );
 };
 
