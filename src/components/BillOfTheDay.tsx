@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
 
-const BUCKET_NAME = "bill-of-the-day"; // Replace with your actual bucket name
+const BUCKET_NAME = "photos_of_bill";
 
 const BillOfTheDay = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -12,7 +12,7 @@ const BillOfTheDay = () => {
 
   useEffect(() => {
     async function fetchImage() {
-      const { data, error } = await supabase.storage.from(photos_of_bill).list("", {
+      const { data, error } = await supabase.storage.from(BUCKET_NAME).list("", {
         limit: 100,
         sortBy: { column: "name", order: "asc" },
       });
