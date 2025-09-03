@@ -24,20 +24,17 @@ const BillOfTheDay = () => {
       }
 
       if (data && data.length > 0) {
-        // Use current day to pick image
-        const dayIndex = new Date().getDate() % data.length;
-        const selectedImage = data[dayIndex];
+  const totalImages = data.length;
+  const dayIndex = new Date().getDate() % totalImages;
+  const selectedImage = data[dayIndex];
 
-        const { data: publicUrlData } = supabase.storage
-          .from(BUCKET_NAME)
-          .getPublicUrl(selectedImage.name);
+  const { data: publicUrlData } = supabase.storage
+    .from(BUCKET_NAME)
+    .getPublicUrl(selectedImage.name);
 
-          console.log("Selected image:", selectedImage.name);
-console.log("Public URL:", publicUrlData?.publicUrl);
+  setImageUrl(publicUrlData?.publicUrl ?? null);
+}
 
-
-        setImageUrl(publicUrlData?.publicUrl ?? null);
-      }
 
       setLoading(false);
     }
