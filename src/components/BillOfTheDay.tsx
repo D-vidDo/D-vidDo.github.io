@@ -22,6 +22,14 @@ const BillOfTheDay = () => {
         setLoading(false);
         return;
       }
+      
+if (!data || data.length === 0) {
+  console.warn("Bucket is empty — no images found.");
+  setImageUrl(null); // or set a fallback image URL here
+  setLoading(false);
+  return;
+}
+
 
       if (data && data.length > 0) {
   const totalImages = data.length;
