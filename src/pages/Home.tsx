@@ -8,6 +8,7 @@ import { Trophy, Users, Target, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import TeamCard from "@/components/TeamCard";
 import UpcomingGames from "@/components/UpcomingGames";
+import BillOfTheDay from "@/components/BillOfTheDay";
 
 // Initialize Supabase client
 const supabaseUrl = 'https://bqqotvjpvaznkjfldcgm.supabase.co';
@@ -298,6 +299,7 @@ const Home = () => {
         </section>
       </div>
     </div>
+    <BillOfTheDay/>
   );
 };
 
