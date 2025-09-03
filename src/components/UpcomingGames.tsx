@@ -80,7 +80,7 @@ function formatGameTime(time24) {
       <CardHeader className="flex items-center space-x-3">
         <Calendar className="text-primary" />
         <h2 className="text-xl font-bold text-card-foreground">Upcoming Games</h2>
-              <div className="warmup-note">Warm‑up starts 10 minutes before</div>
+              <div className="warmup-note">Warm‑up starts 10 minutes before the first game</div>
 
       </CardHeader>
 
