@@ -32,6 +32,10 @@ const BillOfTheDay = () => {
           .from(BUCKET_NAME)
           .getPublicUrl(selectedImage.name);
 
+          console.log("Selected image:", selectedImage.name);
+console.log("Public URL:", publicUrlData?.publicUrl);
+
+
         setImageUrl(publicUrlData?.publicUrl ?? null);
       }
 
