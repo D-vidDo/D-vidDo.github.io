@@ -52,6 +52,16 @@ const UpcomingGameCard = () => {
 
   if (loading) return <div>Loading upcoming games...</div>;
 
+  
+function formatGameTime(time24) {
+  // time24 like "20:10:00" or "20:10"
+  const [hh, mm] = time24.split(':').map(Number);
+  const h12 = ((hh + 11) % 12) + 1;
+  const ampm = hh >= 12 ? 'PM' : 'AM';
+  return `${h12}:${String(mm).padStart(2, '0')} ${ampm}`;
+}
+
+
   return (
     <Card className="bg-gradient-card shadow-card">
       <CardHeader className="flex items-center space-x-3">
@@ -87,13 +97,19 @@ const UpcomingGameCard = () => {
 
           {/* Game Info */}
           <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-            <div>
+            {/* <div>
               {new Date(`1970-01-01T${game.time}Z`).toLocaleTimeString([], {
                 hour: "numeric",
                 minute: "2-digit",
                 hour12: true,
               })}
-            </div>
+            </div> */}
+            
+<div className="game-time">
+      {formatGameTime(game.time)}
+      <div className="warmup-note">Warm‑up starts 10 minutes before</div>
+    </div>
+
             <div>Court {game.court}</div>
             <Badge variant="secondary">
               {new Date(game.date).toLocaleDateString()}
