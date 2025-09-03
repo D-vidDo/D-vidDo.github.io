@@ -34,7 +34,7 @@ const UpcomingGames = () => {
           time,
           court,
           opponent,
-          teams (
+          teams:team_id (
             name
           )
         `)
