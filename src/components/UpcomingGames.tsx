@@ -1,12 +1,8 @@
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
-
-const supabase = createClient(
-  "https://bqqotvjpvaznkjfldcgm.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcW90dmpwdmF6bmtqZmxkY2dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0NDE4NjEsImV4cCI6MjA3MDAxNzg2MX0.VPClABOucYEo-bVPg_brc6WvSx17zR4LADC2FEWdI5Q"
-);
 
 type Game = {
   id: string;
@@ -16,10 +12,11 @@ type Game = {
   opponent: string;
   teams: {
     name: string;
+    color?: string;
   };
 };
 
-const UpcomingGames = () => {
+const UpcomingGameCard = () => {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,7 +32,8 @@ const UpcomingGames = () => {
           court,
           opponent,
           teams:team_id (
-            name
+            name,
+            color
           )
         `)
         .gte("date", today)
@@ -55,45 +53,64 @@ const UpcomingGames = () => {
   if (loading) return <div>Loading upcoming games...</div>;
 
   return (
-    <section>
-      <Card className="bg-gradient-card shadow-card">
-        <CardHeader className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-accent" />
-          <CardTitle className="text-2xl font-bold">Upcoming Games</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {games.length === 0 ? (
+    <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {games.length === 0 ? (
+        <Card className="bg-gradient-card shadow-card">
+          <CardHeader>
+            <h3 className="text-lg font-bold text-card-foreground">Upcoming Games</h3>
+          </CardHeader>
+          <CardContent>
             <p className="text-muted-foreground">No upcoming games scheduled.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="text-muted-foreground border-b border-muted">
-                    <th className="py-2 px-3">Date</th>
-                    <th className="py-2 px-3">Time</th>
-                    <th className="py-2 px-3">Court</th>
-                    <th className="py-2 px-3">Matchup</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {games.map((game) => (
-                    <tr key={game.id} className="border-t border-muted hover:bg-muted/30 transition">
-                      <td className="py-2 px-3">{new Date(game.date).toLocaleDateString()}</td>
-                      <td className="py-2 px-3">{game.time}</td>
-                      <td className="py-2 px-3">Court {game.court}</td>
-                      <td className="py-2 px-3 font-medium">
-                        {game.teams?.name ?? "Unknown"} vs {game.opponent}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : (
+        games.map((game) => (
+          <Card
+            key={game.id}
+            className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 group"
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  {/* Team Initials or Color Box */}
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md"
+                    style={{ backgroundColor: game.teams?.color ?? "#666" }}
+                  >
+                    {game.teams?.name?.substring(0, 2).toUpperCase()}
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-bold text-card-foreground group-hover:text-primary transition-colors">
+                      {game.teams?.name ?? "Unknown Team"}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">vs {game.opponent}</p>
+                  </div>
+                </div>
+
+                <Badge variant="secondary" className="font-semibold">
+                  {new Date(game.date).toLocaleDateString()}
+                </Badge>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div className="space-y-1">
+                  <div className="text-lg font-bold text-accent">{game.time}</div>
+                  <div className="text-xs text-muted-foreground">Time</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-lg font-bold text-primary">Court {game.court}</div>
+                  <div className="text-xs text-muted-foreground">Court</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
     </section>
   );
 };
 
-export default UpcomingGames;
+export default UpcomingGameCard;
