@@ -59,51 +59,52 @@ const UpcomingGameCard = () => {
         <h2 className="text-xl font-bold text-card-foreground">Upcoming Games</h2>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        {games.length === 0 ? (
-          <p className="text-muted-foreground">No upcoming games scheduled.</p>
-        ) : (
-          <ul className="space-y-3">
-            {games.map((game) => (
-              <li
-                key={game.id}
-                className="flex items-center justify-between p-3 rounded-md hover:bg-muted transition-colors"
-              >
-                {/* Team Color Box + Name */}
-                <div className="flex items-center space-x-3">
-                  <div
-                    className="w-10 h-10 rounded-md flex items-center justify-center text-white font-bold text-sm shadow"
-                    style={{ backgroundColor: game.teams?.color ?? "#666" }}
-                  >
-                    {game.teams?.name?.substring(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-card-foreground">
-                      {game.teams?.name ?? "Unknown Team"}
-                    </div>
-                    <div className="text-sm text-muted-foreground">vs {game.opponent}</div>
-                  </div>
-                </div>
+<CardContent className="max-h-[500px] overflow-y-auto space-y-4 pr-2">
+  {games.length === 0 ? (
+    <p className="text-muted-foreground">No upcoming games scheduled.</p>
+  ) : (
+    <ul className="space-y-3">
+      {games.map((game) => (
+        <li
+          key={game.id}
+          className="flex items-center justify-between p-3 rounded-md hover:bg-muted transition-colors"
+        >
+          {/* Team Info */}
+          <div className="flex items-center space-x-3">
+            <div
+              className="w-10 h-10 rounded-md flex items-center justify-center text-white font-bold text-sm shadow"
+              style={{ backgroundColor: game.teams?.color ?? "#666" }}
+            >
+              {game.teams?.name?.substring(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <div className="font-semibold text-card-foreground">
+                {game.teams?.name ?? "Unknown Team"}
+              </div>
+              <div className="text-sm text-muted-foreground">vs {game.opponent}</div>
+            </div>
+          </div>
 
-                {/* Game Info */}
-                <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                  <div>
-                    {new Date(`1970-01-01T${game.time}Z`).toLocaleTimeString([], {
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                    })}
-                  </div>
-                  <div>Court {game.court}</div>
-                  <Badge variant="secondary">
-                    {new Date(game.date).toLocaleDateString()}
-                  </Badge>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
+          {/* Game Info */}
+          <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+            <div>
+              {new Date(`1970-01-01T${game.time}Z`).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              })}
+            </div>
+            <div>Court {game.court}</div>
+            <Badge variant="secondary">
+              {new Date(game.date).toLocaleDateString()}
+            </Badge>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</CardContent>
+
     </Card>
   );
 };
