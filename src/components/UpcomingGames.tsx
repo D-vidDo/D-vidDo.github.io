@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
 
 type Game = {
-  id: string;
+  id: number;
   date: string;
   time: string;
   court: number;
