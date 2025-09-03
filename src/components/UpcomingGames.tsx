@@ -22,7 +22,7 @@ const UpcomingGameCard = () => {
 
   useEffect(() => {
     async function fetchGames() {
-      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const today = new Date().toISOString().split("T")[0];
       const { data, error } = await supabase
         .from("games")
         .select(`
@@ -53,7 +53,14 @@ const UpcomingGameCard = () => {
   if (loading) return <div>Loading upcoming games...</div>;
 
   return (
-    <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <section className="space-y-6">
+      {/* Title Section */}
+      <div className="flex items-center space-x-3">
+        <Calendar className="text-primary" />
+        <h2 className="text-2xl font-bold text-card-foreground">Upcoming Games</h2>
+      </div>
+
+      {/* Game List */}
       {games.length === 0 ? (
         <Card className="bg-gradient-card shadow-card">
           <CardHeader>
@@ -64,50 +71,49 @@ const UpcomingGameCard = () => {
           </CardContent>
         </Card>
       ) : (
-        games.map((game) => (
-          <Card
-            key={game.id}
-            className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 group"
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  {/* Team Initials or Color Box */}
-                  <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md"
-                    style={{ backgroundColor: game.teams?.color ?? "#666" }}
-                  >
-                    {game.teams?.name?.substring(0, 2).toUpperCase()}
+        <div className="space-y-4">
+          {games.map((game) => (
+            <Card
+              key={game.id}
+              className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-[1.02] group"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md"
+                      style={{ backgroundColor: game.teams?.color ?? "#666" }}
+                    >
+                      {game.teams?.name?.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-card-foreground group-hover:text-primary transition-colors">
+                        {game.teams?.name ?? "Unknown Team"}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">vs {game.opponent}</p>
+                    </div>
                   </div>
+                  <Badge variant="secondary" className="font-semibold">
+                    {new Date(game.date).toLocaleDateString()}
+                  </Badge>
+                </div>
+              </CardHeader>
 
-                  <div>
-                    <h3 className="text-lg font-bold text-card-foreground group-hover:text-primary transition-colors">
-                      {game.teams?.name ?? "Unknown Team"}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">vs {game.opponent}</p>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="space-y-1">
+                    <div className="text-lg font-bold text-accent">{game.time}</div>
+                    <div className="text-xs text-muted-foreground">Time</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-lg font-bold text-primary">Court {game.court}</div>
+                    <div className="text-xs text-muted-foreground">Court</div>
                   </div>
                 </div>
-
-                <Badge variant="secondary" className="font-semibold">
-                  {new Date(game.date).toLocaleDateString()}
-                </Badge>
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div className="space-y-1">
-                  <div className="text-lg font-bold text-accent">{game.time}</div>
-                  <div className="text-xs text-muted-foreground">Time</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-lg font-bold text-primary">Court {game.court}</div>
-                  <div className="text-xs text-muted-foreground">Court</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
     </section>
   );
