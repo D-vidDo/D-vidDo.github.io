@@ -36,7 +36,7 @@ const UpcomingGameCard = () => {
             color
           )
         `)
-        .gte("date", today)
+        //.gte("date", today)
         .order("date", { ascending: true });
 
       if (error) {
