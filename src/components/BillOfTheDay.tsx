@@ -13,8 +13,8 @@ const BillOfTheDay = () => {
   useEffect(() => {
     async function fetchImage() {
       const { data, error } = await supabase.storage.from(BUCKET_NAME).list("", {
-        limit: 100,
-        sortBy: { column: "name", order: "asc" },
+        //limit: 100,
+        //sortBy: { column: "name", order: "asc" },
       });
 
       if (error) {
