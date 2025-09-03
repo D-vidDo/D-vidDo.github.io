@@ -20,35 +20,48 @@ const UpcomingGameCard = () => {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchGames() {
-      const today = new Date().toISOString().split("T")[0];
-      const { data, error } = await supabase
-        .from("games")
-        .select(`
-          id,
-          date,
-          time,
-          court,
-          opponent,
-          teams:team_id (
-            name,
-            color
-          )
-        `)
-        //.gte("date", today)
-        .order("date", { ascending: true });
+useEffect(() => {
+  async function fetchGames() {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 (Sun) to 6 (Sat)
 
-      if (error) {
-        console.error("Error fetching games:", error.message);
-      } else {
-        setGames(data ?? []);
-      }
-      setLoading(false);
+    // Get start (Sunday) and end (Saturday) of the current week
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - dayOfWeek);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(today);
+    endOfWeek.setDate(today.getDate() + (6 - dayOfWeek));
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const { data, error } = await supabase
+      .from("games")
+      .select(`
+        id,
+        date,
+        time,
+        court,
+        opponent,
+        teams:team_id (
+          name,
+          color
+        )
+      `)
+      .gte("date", startOfWeek.toISOString().split("T")[0])
+      .lte("date", endOfWeek.toISOString().split("T")[0])
+      .order("date", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching games:", error.message);
+    } else {
+      setGames(data ?? []);
     }
+    setLoading(false);
+  }
 
-    fetchGames();
-  }, []);
+  fetchGames();
+}, []);
+
 
   if (loading) return <div>Loading upcoming games...</div>;
 
