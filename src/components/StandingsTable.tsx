@@ -12,6 +12,9 @@ import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
+
+// ...imports remain the same
+
 interface Set {
   set_no: number;
   points_for: number;
@@ -37,34 +40,7 @@ interface Team {
   points_against: number;
 }
 
-const AccordionContent = ({
-  expanded,
-  children,
-}: {
-  expanded: boolean;
-  children: React.ReactNode;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.style.maxHeight = expanded ? ref.current.scrollHeight + "px" : "0px";
-    }
-  }, [expanded]);
-
-  return (
-    <div
-      ref={ref}
-      style={{
-        overflow: "hidden",
-        transition: "max-height 0.4s ease",
-        maxHeight: expanded ? "500px" : "0px",
-      }}
-    >
-      {children}
-    </div>
-  );
-};
+// AccordionContent remains unchanged
 
 const StandingsTable = () => {
   const [teams, setTeams] = useState<Team[]>([]);
@@ -101,7 +77,8 @@ const StandingsTable = () => {
 
       gameData.forEach((game) => {
         const team = teamMap[game.team_id];
-        if (!team || !game.sets || game.sets.length === 0) return; // skip unplayed games
+        if (!team || !game.sets || game.sets.length === 0) return;
+
         let gameWins = 0;
         let gameLosses = 0;
         let gameTies = 0;
@@ -261,26 +238,49 @@ const StandingsTable = () => {
                                   <th className="py-2 px-3 text-center">Set</th>
                                   <th className="py-2 px-3 text-center">PF</th>
                                   <th className="py-2 px-3 text-center">PA</th>
+                                  <th className="py-2 px-3 text-center">Result</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {team.games.map((game) =>
-                                  game.sets.map((set, idx) => (
-                                    <tr
-                                      key={`${game.id}-set-${set.set_no}`}
-                                      className={idx % 2 === 0 ? "bg-muted/30" : "bg-background"}
-                                    >
-                                      <td className="py-2 px-3">{game.date}</td>
-                                      <td className="py-2 px-3 font-semibold">{game.opponent}</td>
-                                      <td className="py-2 px-3 text-center">{set.set_no}</td>
-                                      <td className="py-2 px-3 text-center text-green-700 font-bold">
-                                        {set.points_for}
-                                      </td>
-                                      <td className="py-2 px-3 text-center text-red-600 font-bold">
-                                        {set.points_against}
-                                      </td>
-                                    </tr>
-                                  ))
+                                  game.sets.map((set, idx) => {
+                                    let result: "W" | "L" | "T" =
+                                      set.points_for === set.points_against
+                                        ? "T"
+                                        : set.points_for > set.points_against
+                                        ? "W"
+                                        : "L";
+
+                                    return (
+                                      <tr
+                                        key={`${game.id}-set-${set.set_no}`}
+                                        className={idx % 2 === 0 ? "bg-muted/30" : "bg-background"}
+                                      >
+                                        <td className="py-2 px-3">{game.date}</td>
+                                        <td className="py-2 px-3 font-semibold">{game.opponent}</td>
+                                        <td className="py-2 px-3 text-center">{set.set_no}</td>
+                                        <td className="py-2 px-3 text-center text-green-700 font-bold">
+                                          {set.points_for}
+                                        </td>
+                                        <td className="py-2 px-3 text-center text-red-600 font-bold">
+                                          {set.points_against}
+                                        </td>
+                                        <td className="py-2 px-3 text-center">
+                                          <span
+                                            className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                              result === "W"
+                                                ? "bg-green-100 text-green-700"
+                                                : result === "L"
+                                                ? "bg-red-100 text-red-700"
+                                                : "bg-yellow-100 text-yellow-700"
+                                            }`}
+                                          >
+                                            {result}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })
                                 )}
                               </tbody>
                             </table>
