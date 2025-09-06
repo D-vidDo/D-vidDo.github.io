@@ -30,7 +30,7 @@ const Teams = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from("teams")
-        .select("team_id, name, wins, losses, captain, color, player_ids");
+        .select("team_id, name, wins, losses, captain, color, player_ids, points_for, points_against");
 
       if (error) {
         console.error("Error fetching teams:", error);
