@@ -55,12 +55,12 @@ const Rules = () => {
               <ul className="list-disc list-inside mt-1 text-muted-foreground space-y-1">
                 <li>All players will re-enter the draft pool at each new schedule except for the retained players as explained in the next section</li>
                 <li>The last place team will have the first pick in the re-draft, second highest win/loss ratio will have second, and so forth</li>
-                <li>Players in the pool will be identified by their player card which shows the following:</li>
+                <li>The draft will be anonymously made, only the team captains will know the draft order.</li>
                 <ul className="list-inside ml-4">
-                  <li>Name</li>
-                  <li>Position (Primary & Secondary)</li>
-                  <li>Overall Rating</li>
-                  <li>Stats</li>
+                  <li>Captains will privately do the draft with the commissioner</li>
+                  <li>Each captain will take turns making a pick, following the draft order as outlined by the commissioner</li>
+                  <li>Picks will be made until 3 teams of 6 have been made</li>
+                  <li>Teams will be revealed at the end of the draft. No indication of draft order will be seen</li>
                 </ul>
                 {/* <li>Only when the 1st re-tier draft is finished, will the stat ratings be visible to all. Until then, only the Overall Rating score will be visible for each player</li> */}
               </ul>
