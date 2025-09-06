@@ -13,10 +13,12 @@ const AdminGameEntry = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // New state for editing games/sets
-  const [games, setGames] = useState<any[]>([]);
-  const [selectedGame, setSelectedGame] = useState<any>(null);
-  const [sets, setSets] = useState<any[]>([]);
+  // New state for set entry
+  const [newGameId, setNewGameId] = useState<string | null>(null);
+  const [setsToAdd, setSetsToAdd] = useState<{ set_no: number; points_for: number; points_against: number }[]>([]);
+  const [set_no, setSetNo] = useState(1);
+  const [set_points_for, setSetPointsFor] = useState("");
+  const [set_points_against, setSetPointsAgainst] = useState("");
 
   useEffect(() => {
     async function loadTeams() {
@@ -28,12 +30,7 @@ const AdminGameEntry = () => {
         if (data && data.length > 0) setTeamId(data[0].team_id);
       }
     }
-    async function loadGames() {
-      const { data, error } = await supabase.from("games").select("*");
-      if (!error) setGames(data ?? []);
-    }
     loadTeams();
-    loadGames();
   }, []);
 
   useEffect(() => {
@@ -45,7 +42,6 @@ const AdminGameEntry = () => {
         .eq("team_id", teamId)
         .neq("opponent", null);
       if (error) {
-        console.error("Error loading opponents:", error.message);
         setOpponents([]);
       } else {
         const formatted = data.map((g) => {
@@ -67,18 +63,7 @@ const AdminGameEntry = () => {
     loadOpponentsForTeam();
   }, [teamId]);
 
-  useEffect(() => {
-    async function fetchSets() {
-      if (!selectedGame) return;
-      const { data, error } = await supabase
-        .from("sets")
-        .select("*")
-        .eq("id", selectedGame.id);
-      if (!error) setSets(data ?? []);
-    }
-    fetchSets();
-  }, [selectedGame]);
-
+  // Submit new game
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!teamId || !date || !opponent || !points_for || !points_against || !result) {
@@ -97,36 +82,19 @@ const AdminGameEntry = () => {
       team_id: teamId,
     };
     try {
-      // Insert new game
       const { error: gameError } = await supabase.from("games").insert([newGame]);
       if (gameError) {
         setMessage(`Failed to add game: ${gameError.message}`);
         setLoading(false);
         return;
       }
-      // Insert initial set
-      const { error: setError } = await supabase.from("sets").insert([
-        {
-          id: newGame.id,
-          set_no: 1,
-          points_for: Number(points_for),
-          points_against: Number(points_against),
-        },
-      ]);
-      if (setError) {
-        setMessage(`Failed to add set: ${setError.message}`);
-        setLoading(false);
-        return;
-      }
-      setMessage("Game and set added!");
+      setNewGameId(newGame.id); // Save new game id for set entry
+      setMessage("Game added! Now enter sets for this game.");
       setDate("");
       setOpponent("");
       setpoints_for("");
       setpoints_against("");
       setResult("W");
-      // Refresh games
-      const { data: refreshedGames } = await supabase.from("games").select("*");
-      setGames(refreshedGames ?? []);
     } catch (error) {
       setMessage("Unexpected error: " + (error as Error).message);
     } finally {
@@ -134,37 +102,54 @@ const AdminGameEntry = () => {
     }
   };
 
-  // Edit game info
-  const handleGameUpdate = async (field: string, value: any) => {
-    if (!selectedGame) return;
-    const { error } = await supabase
-      .from("games")
-      .update({ [field]: value })
-      .eq("id", selectedGame.id);
-    if (!error) setMessage("Game updated!");
-    else setMessage(error.message);
+  // Add set to local array
+  const handleAddSet = () => {
+    if (!set_no || !set_points_for || !set_points_against) {
+      setMessage("Please fill out all set fields.");
+      return;
+    }
+    setSetsToAdd([
+      ...setsToAdd,
+      {
+        set_no: Number(set_no),
+        points_for: Number(set_points_for),
+        points_against: Number(set_points_against),
+      },
+    ]);
+    setSetNo(set_no + 1);
+    setSetPointsFor("");
+    setSetPointsAgainst("");
+    setMessage("");
   };
 
-  // Edit set info
-  const handleSetUpdate = async (setNo: number, field: string, value: any) => {
-    const { error } = await supabase
-      .from("sets")
-      .update({ [field]: value })
-      .eq("id", selectedGame.id)
-      .eq("set_no", setNo);
-    if (!error) setMessage("Set updated!");
-    else setMessage(error.message);
-  };
-
-  // Add new set
-  const handleAddSet = async () => {
-    if (!selectedGame) return;
-    const newSetNo = sets.length + 1;
-    const { error } = await supabase
-      .from("sets")
-      .insert([{ id: selectedGame.id, set_no: newSetNo, points_for: 0, points_against: 0 }]);
-    if (!error) setMessage("Set added!");
-    else setMessage(error.message);
+  // Submit all sets to DB
+  const handleSubmitSets = async () => {
+    if (!newGameId || setsToAdd.length === 0) {
+      setMessage("No sets to submit.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const setsPayload = setsToAdd.map((set) => ({
+        id: newGameId,
+        set_no: set.set_no,
+        points_for: set.points_for,
+        points_against: set.points_against,
+      }));
+      const { error } = await supabase.from("sets").insert(setsPayload);
+      if (error) {
+        setMessage(`Failed to add sets: ${error.message}`);
+      } else {
+        setMessage("Sets added!");
+        setNewGameId(null);
+        setSetsToAdd([]);
+        setSetNo(1);
+      }
+    } catch (error) {
+      setMessage("Unexpected error: " + (error as Error).message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -298,82 +283,35 @@ const AdminGameEntry = () => {
         </form>
       </section>
 
-      {/* Game/Set Editor Section */}
-      <section>
-        <h2 className="text-xl font-bold mb-4">Edit Existing Games & Sets</h2>
-        <div>
-          <label>Select Game:</label>
-          <select
-            onChange={e => setSelectedGame(games.find(g => g.id === e.target.value))}
-            className="w-full border rounded px-2 py-1 mb-2"
-          >
-            <option value="">-- Select --</option>
-            {games.map(game => (
-              <option key={game.id} value={game.id}>
-                {game.opponent} ({game.date})
-              </option>
-            ))}
-          </select>
-        </div>
-        {selectedGame && (
-          <div className="space-y-2">
-            <h3 className="font-semibold">Game Info</h3>
-            <div>
-              <label>Date:</label>
-              <input
-                type="date"
-                value={selectedGame.date}
-                onChange={e => handleGameUpdate("date", e.target.value)}
-                className="border rounded px-2 py-1"
-              />
-            </div>
-            <div>
-              <label>Opponent:</label>
-              <input
-                type="text"
-                value={selectedGame.opponent}
-                onChange={e => handleGameUpdate("opponent", e.target.value)}
-                className="border rounded px-2 py-1"
-              />
-            </div>
-            <div>
-              <label>Court:</label>
-              <input
-                type="number"
-                value={selectedGame.court || ""}
-                onChange={e => handleGameUpdate("court", Number(e.target.value))}
-                className="border rounded px-2 py-1"
-              />
-            </div>
-            <div>
-              <label>Time:</label>
-              <input
-                type="time"
-                value={selectedGame.time || ""}
-                onChange={e => handleGameUpdate("time", e.target.value)}
-                className="border rounded px-2 py-1"
-              />
-            </div>
-            <h3 className="font-semibold mt-4">Sets</h3>
-            {sets.map(set => (
-              <div key={set.set_no} className="flex gap-2 items-center mb-2">
-                <span>Set {set.set_no}:</span>
-                <input
-                  type="number"
-                  value={set.points_for}
-                  onChange={e => handleSetUpdate(set.set_no, "points_for", Number(e.target.value))}
-                  placeholder="Points For"
-                  className="border rounded px-2 py-1"
-                />
-                <input
-                  type="number"
-                  value={set.points_against}
-                  onChange={e => handleSetUpdate(set.set_no, "points_against", Number(e.target.value))}
-                  placeholder="Points Against"
-                  className="border rounded px-2 py-1"
-                />
-              </div>
-            ))}
+      {/* Set Entry Section */}
+      {newGameId && (
+        <section>
+          <h2 className="text-xl font-bold mb-4">Add Sets for This Game</h2>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="number"
+              value={set_no}
+              onChange={e => setSetNo(Number(e.target.value))}
+              min={1}
+              placeholder="Set Number"
+              className="border rounded px-2 py-1"
+            />
+            <input
+              type="number"
+              value={set_points_for}
+              onChange={e => setSetPointsFor(e.target.value)}
+              min={0}
+              placeholder="Points For"
+              className="border rounded px-2 py-1"
+            />
+            <input
+              type="number"
+              value={set_points_against}
+              onChange={e => setSetPointsAgainst(e.target.value)}
+              min={0}
+              placeholder="Points Against"
+              className="border rounded px-2 py-1"
+            />
             <button
               onClick={handleAddSet}
               className="bg-primary text-primary-foreground py-1 px-4 rounded font-bold"
@@ -381,8 +319,23 @@ const AdminGameEntry = () => {
               Add Set
             </button>
           </div>
-        )}
-      </section>
+          {/* List of sets to add */}
+          <div>
+            {setsToAdd.map((set, idx) => (
+              <div key={idx} className="mb-1">
+                Set {set.set_no}: {set.points_for} - {set.points_against}
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={handleSubmitSets}
+            className="w-full bg-primary text-primary-foreground py-2 rounded font-bold mt-2"
+            disabled={loading}
+          >
+            {loading ? "Submitting..." : "Submit All Sets"}
+          </button>
+        </section>
+      )}
     </div>
   );
 };
