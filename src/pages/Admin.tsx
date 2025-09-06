@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
 // Initialize Supabase client
-const supabaseUrl = 'https://bqqotvjpvaznkjfldcgm.supabase.co';
-const supabaseAnonKey = 'your-anon-key-here';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 
 const AdminGameEntry = () => {
   const [teams, setTeams] = useState<any[]>([]);
