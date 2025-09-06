@@ -52,11 +52,11 @@ const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
       {player.title}
     </span>
   )}
-  {player.isCaptain && (
+  {/* {player.isCaptain && (
     <Badge variant="default" className="text-xs">
       <Award className="h-3 w-3 mr-1" /> Captain
     </Badge>
-  )}
+  )} */}
 </div>
 
               
