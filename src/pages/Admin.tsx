@@ -110,7 +110,7 @@ const AdminGameEntry = () => {
 
     try {
       const setsPayload = sets.map((set) => ({
-        id: selectedGameId,
+        game_id: selectedGameId,
         set_no: set.set_no,
         points_for: set.points_for,
         points_against: set.points_against,
