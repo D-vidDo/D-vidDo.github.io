@@ -7,17 +7,17 @@ const AdminGameEntry = () => {
   const [date, setDate] = useState("");
   const [opponent, setOpponent] = useState("");
   const [opponents, setOpponents] = useState<{ label: string; value: string }[]>([]);
-  const [points_for, setpoints_for] = useState("");
-  const [points_against, setpoints_against] = useState("");
-  const [result, setResult] = useState<"W" | "L">("W");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   // State for sets entry
-  const [sets, setSets] = useState<{ set_no: number; points_for: number; points_against: number }[]>([]);
+  const [sets, setSets] = useState<
+    { set_no: number; points_for: number; points_against: number; result: "W" | "L" }[]
+  >([]);
   const [set_no, setSetNo] = useState<number>(1);
   const [set_points_for, setSetPointsFor] = useState("");
   const [set_points_against, setSetPointsAgainst] = useState("");
+  const [set_result, setSetResult] = useState<"W" | "L">("W");
 
   useEffect(() => {
     async function loadTeams() {
@@ -74,11 +74,13 @@ const AdminGameEntry = () => {
         set_no: Number(set_no),
         points_for: Number(set_points_for),
         points_against: Number(set_points_against),
+        result: set_result,
       },
     ]);
     setSetNo(set_no + 1);
     setSetPointsFor("");
     setSetPointsAgainst("");
+    setSetResult("W");
     setMessage("");
   };
 
@@ -90,7 +92,7 @@ const AdminGameEntry = () => {
   // Submit game and sets
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!teamId || !date || !opponent || !points_for || !points_against || !result) {
+    if (!teamId || !date || !opponent) {
       setMessage("Please fill out all game fields.");
       return;
     }
@@ -105,9 +107,6 @@ const AdminGameEntry = () => {
       id: newGameId,
       date,
       opponent,
-      points_for: Number(points_for),
-      points_against: Number(points_against),
-      result,
       team_id: teamId,
     };
     try {
@@ -124,6 +123,7 @@ const AdminGameEntry = () => {
         set_no: set.set_no,
         points_for: set.points_for,
         points_against: set.points_against,
+        result: set.result,
       }));
       const { error: setError } = await supabase.from("sets").insert(setsPayload);
       if (setError) {
@@ -134,9 +134,6 @@ const AdminGameEntry = () => {
       setMessage("Game and sets added!");
       setDate("");
       setOpponent("");
-      setpoints_for("");
-      setpoints_against("");
-      setResult("W");
       setSets([]);
       setSetNo(1);
     } catch (error) {
@@ -216,44 +213,6 @@ const AdminGameEntry = () => {
               disabled={loading}
             />
           </div>
-          {/* Points */}
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="block mb-1 font-semibold">Points For</label>
-              <input
-                type="number"
-                value={points_for}
-                onChange={(e) => setpoints_for(e.target.value)}
-                className="w-full border rounded px-2 py-1"
-                min={0}
-                disabled={loading}
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block mb-1 font-semibold">Points Against</label>
-              <input
-                type="number"
-                value={points_against}
-                onChange={(e) => setpoints_against(e.target.value)}
-                className="w-full border rounded px-2 py-1"
-                min={0}
-                disabled={loading}
-              />
-            </div>
-          </div>
-          {/* Result */}
-          <div>
-            <label className="block mb-1 font-semibold">Result</label>
-            <select
-              value={result}
-              onChange={(e) => setResult(e.target.value as "W" | "L")}
-              className="w-full border rounded px-2 py-1"
-              disabled={loading}
-            >
-              <option value="W">Win</option>
-              <option value="L">Loss</option>
-            </select>
-          </div>
           {/* Sets Entry */}
           <div>
             <label className="block mb-2 font-semibold">Add Sets</label>
@@ -282,6 +241,14 @@ const AdminGameEntry = () => {
                 placeholder="Points Against"
                 className="border rounded px-2 py-1"
               />
+              <select
+                value={set_result}
+                onChange={e => setSetResult(e.target.value as "W" | "L")}
+                className="border rounded px-2 py-1"
+              >
+                <option value="W">Win</option>
+                <option value="L">Loss</option>
+              </select>
               <button
                 type="button"
                 onClick={handleAddSet}
@@ -294,7 +261,9 @@ const AdminGameEntry = () => {
             <div>
               {sets.map((set, idx) => (
                 <div key={idx} className="mb-1 flex items-center gap-2">
-                  <span>Set {set.set_no}: {set.points_for} - {set.points_against}</span>
+                  <span>
+                    Set {set.set_no}: {set.points_for} - {set.points_against} ({set.result === "W" ? "Win" : "Loss"})
+                  </span>
                   <button
                     type="button"
                     onClick={() => handleRemoveSet(idx)}
