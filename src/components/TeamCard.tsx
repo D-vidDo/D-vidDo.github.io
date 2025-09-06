@@ -15,6 +15,8 @@ interface TeamCardProps {
     captain: string;
     color: string;
     player_ids?: string[]; // Optional array of player IDs
+    points_for: number;
+    points_against: number;
   };
 }
 
@@ -96,8 +98,8 @@ const TeamCard = ({ team }: TeamCardProps) => {
             <div className="text-xs text-muted-foreground">Losses</div>
           </div>
           <div className="space-y-1">
-            <div className="text-2xl font-bold text-primary">{playerCount}</div>
-            <div className="text-xs text-muted-foreground">Players</div>
+            <div className="text-2xl font-bold text-primary">{(team.points_for-team.points_against)}</div>
+            <div className="text-xs text-muted-foreground">Team +/-</div>
           </div>
         </div>
 
