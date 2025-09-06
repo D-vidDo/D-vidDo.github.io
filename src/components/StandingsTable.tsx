@@ -12,9 +12,6 @@ import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
-
-// ...imports remain the same
-
 interface Set {
   set_no: number;
   points_for: number;
@@ -40,7 +37,34 @@ interface Team {
   points_against: number;
 }
 
-// AccordionContent remains unchanged
+const AccordionContent = ({
+  expanded,
+  children,
+}: {
+  expanded: boolean;
+  children: React.ReactNode;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.maxHeight = expanded ? ref.current.scrollHeight + "px" : "0px";
+    }
+  }, [expanded]);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        overflow: "hidden",
+        transition: "max-height 0.4s ease",
+        maxHeight: expanded ? "500px" : "0px",
+      }}
+    >
+      {children}
+    </div>
+  );
+};
 
 const StandingsTable = () => {
   const [teams, setTeams] = useState<Team[]>([]);
@@ -244,7 +268,7 @@ const StandingsTable = () => {
                               <tbody>
                                 {team.games.map((game) =>
                                   game.sets.map((set, idx) => {
-                                    let result: "W" | "L" | "T" =
+                                    const result =
                                       set.points_for === set.points_against
                                         ? "T"
                                         : set.points_for > set.points_against
