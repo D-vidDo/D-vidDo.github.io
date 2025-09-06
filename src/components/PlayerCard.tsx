@@ -44,7 +44,22 @@ const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
           </Avatar>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-card-foreground">{player.name}</h3>
+              {/* <h3 className="font-semibold text-card-foreground">{player.name}</h3> */}
+              <div className="flex items-center gap-2">
+  <h3 className="font-semibold text-card-foreground">{player.name}</h3>
+  {player.title && (
+    <span className="text-sm font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm">
+      {player.title}
+    </span>
+  )}
+  {player.isCaptain && (
+    <Badge variant="default" className="text-xs">
+      <Award className="h-3 w-3 mr-1" /> Captain
+    </Badge>
+  )}
+</div>
+
+              
               {player.isCaptain && (
                 <Badge variant="default" className="text-xs">
                   <Award className="h-3 w-3 mr-1" /> Captain
