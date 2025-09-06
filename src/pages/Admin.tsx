@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-
-// Initialize Supabase client
-
 
 const AdminGameEntry = () => {
   const [teams, setTeams] = useState<any[]>([]);
   const [teamId, setTeamId] = useState<string>("");
   const [date, setDate] = useState("");
   const [opponent, setOpponent] = useState("");
-  const [opponents, setOpponents] = useState<string[]>([]);
+  const [opponents, setOpponents] = useState<{ label: string; value: string }[]>([]);
   const [points_for, setpoints_for] = useState("");
   const [points_against, setpoints_against] = useState("");
   const [result, setResult] = useState<"W" | "L">("W");
@@ -37,7 +33,7 @@ const AdminGameEntry = () => {
 
       const { data, error } = await supabase
         .from("games")
-        .select("opponent")
+        .select("opponent, date, time, court")
         .eq("team_id", teamId)
         .neq("opponent", null);
 
@@ -45,8 +41,26 @@ const AdminGameEntry = () => {
         console.error("Error loading opponents:", error.message);
         setOpponents([]);
       } else {
-        const uniqueOpponents = Array.from(new Set(data.map((g) => g.opponent)));
-        setOpponents(uniqueOpponents);
+        const formatted = data.map((g) => {
+          const rawTime = g.time?.slice(0, 5) || ""; // "18:00"
+          const [hourStr, minute] = rawTime.split(":");
+          let hour = parseInt(hourStr, 10);
+          const ampm = hour >= 12 ? "PM" : "AM";
+          hour = hour % 12 || 12;
+          const formattedTime = `${hour}:${minute} ${ampm}`;
+          const label = `${g.opponent} — ${g.date} ${formattedTime} (Court ${g.court ?? "?"})`;
+
+          return {
+            label,
+            value: g.opponent,
+          };
+        });
+
+        const unique = Array.from(
+          new Map(formatted.map((item) => [item.value, item])).values()
+        );
+
+        setOpponents(unique);
       }
     }
 
@@ -201,8 +215,8 @@ const AdminGameEntry = () => {
             >
               <option value="">Select opponent</option>
               {opponents.map((oppo, idx) => (
-                <option key={idx} value={oppo}>
-                  {oppo}
+                <option key={idx} value={oppo.value}>
+                  {oppo.label}
                 </option>
               ))}
             </select>
@@ -276,6 +290,7 @@ const AdminGameEntry = () => {
 };
 
 export default AdminGameEntry;
+
 
 
 
