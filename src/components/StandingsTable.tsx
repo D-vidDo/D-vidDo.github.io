@@ -9,30 +9,31 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { supabase } from "@/lib/supabase";
 
 interface Game {
   id: string;
   date: string;
   opponent: string;
-  points_for: number;
-  points_against: number;
-  result: "W" | "L";
+  sets: {
+    set_no: number;
+    points_for: number;
+    points_against: number;
+    result: "W" | "L";
+  }[];
 }
 
 interface Team {
   team_id: string;
   name: string;
+  color: string;
+  games: Game[];
   wins: number;
   losses: number;
+  ties: number;
   points_for: number;
   points_against: number;
-  color: string;
-  games?: Game[];
-}
-
-interface StandingsTableProps {
-  teams: Team[];
 }
 
 const AccordionContent = ({
@@ -64,26 +65,100 @@ const AccordionContent = ({
   );
 };
 
-const StandingsTable = ({ teams }: StandingsTableProps) => {
+const StandingsTable = () => {
+  const [teams, setTeams] = useState<Team[]>([]);
   const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
 
   const handleRowClick = (teamId: string) => {
     setExpandedTeamId((prev) => (prev === teamId ? null : teamId));
   };
 
+  useEffect(() => {
+    async function fetchData() {
+      const { data: teamData, error: teamError } = await supabase.from("teams").select("*");
+      const { data: gameData, error: gameError } = await supabase
+        .from("games")
+        .select("id, date, opponent, team_id, sets (set_no, points_for, points_against, result)");
+
+      if (teamError || gameError || !teamData || !gameData) {
+        console.error("Error loading data", teamError, gameError);
+        return;
+      }
+
+      const teamMap: Record<string, Team> = {};
+
+      teamData.forEach((team) => {
+        teamMap[team.team_id] = {
+          team_id: team.team_id,
+          name: team.name,
+          color: team.color,
+          games: [],
+          wins: 0,
+          losses: 0,
+          ties: 0,
+          points_for: 0,
+          points_against: 0,
+        };
+      });
+
+      gameData.forEach((game) => {
+        const team = teamMap[game.team_id];
+        if (!team) return;
+
+        let gamePointsFor = 0;
+        let gamePointsAgainst = 0;
+        let gameWins = 0;
+        let gameLosses = 0;
+        let gameTies = 0;
+
+        game.sets?.forEach((set) => {
+          gamePointsFor += set.points_for;
+          gamePointsAgainst += set.points_against;
+
+          if (set.points_for === set.points_against) {
+            gameTies += 1;
+          } else if (set.points_for > set.points_against) {
+            gameWins += 1;
+          } else {
+            gameLosses += 1;
+          }
+        });
+
+        team.points_for += gamePointsFor;
+        team.points_against += gamePointsAgainst;
+        team.wins += gameWins > gameLosses ? 1 : 0;
+        team.losses += gameLosses > gameWins ? 1 : 0;
+        team.ties += gameWins === gameLosses ? 1 : 0;
+
+        team.games.push({
+          id: game.id,
+          date: game.date,
+          opponent: game.opponent,
+          sets: game.sets ?? [],
+        });
+      });
+
+      setTeams(Object.values(teamMap));
+    }
+
+    fetchData();
+  }, []);
+
   const sortedTeams = teams
     .map((team) => ({
       ...team,
       winPercentage:
-        team.wins + team.losses > 0 ? team.wins / (team.wins + team.losses) : 0,
-      pointDifferential: (team.points_for ?? 0) - (team.points_against ?? 0),
+        team.wins + team.losses + team.ties > 0
+          ? team.wins / (team.wins + team.losses + team.ties)
+          : 0,
+      pointDifferential: team.points_for - team.points_against,
     }))
     .sort((a, b) => {
-  if (b.wins !== a.wins) return b.wins - a.wins;
-  if (b.pointDifferential !== a.pointDifferential) return b.pointDifferential - a.pointDifferential;
-  return b.points_for - a.points_for; // optional third tie-breaker
-})
-
+      if (b.wins !== a.wins) return b.wins - a.wins;
+      if (b.pointDifferential !== a.pointDifferential)
+        return b.pointDifferential - a.pointDifferential;
+      return b.points_for - a.points_for;
+    })
     .map((team, index) => ({
       ...team,
       rank: index + 1,
@@ -105,6 +180,7 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
               <TableHead>Team</TableHead>
               <TableHead className="text-center">W</TableHead>
               <TableHead className="text-center">L</TableHead>
+              <TableHead className="text-center">T</TableHead>
               <TableHead className="text-center">Win %</TableHead>
               <TableHead className="text-center">PF</TableHead>
               <TableHead className="text-center">PA</TableHead>
@@ -153,6 +229,9 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                   <TableCell className="text-center font-semibold text-red-500">
                     {team.losses}
                   </TableCell>
+                  <TableCell className="text-center font-semibold text-muted-foreground">
+                    {team.ties}
+                  </TableCell>
                   <TableCell className="text-center font-semibold">
                     {(team.winPercentage * 100).toFixed(1)}%
                   </TableCell>
@@ -172,14 +251,14 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell colSpan={8} className="bg-background border-t p-0">
+                  <TableCell colSpan={9} className="bg-background border-t p-0">
                     <AccordionContent expanded={expandedTeamId === team.team_id}>
                       <div className="p-4">
                         <div className="font-semibold mb-4 text-lg flex items-center gap-2">
                           <TrendingUp className="h-4 w-4 text-primary" />
                           Match History
                         </div>
-                        {team.games && team.games.length > 0 ? (
+                        {team.games.length > 0 ? (
                           <div className="overflow-x-auto">
                             <table className="min-w-full text-xs rounded-lg overflow-hidden shadow">
                               <thead>
@@ -192,32 +271,43 @@ const StandingsTable = ({ teams }: StandingsTableProps) => {
                                 </tr>
                               </thead>
                               <tbody>
-                                {team.games.map((game, idx) => (
-                                  <tr
-                                    key={game.id}
-                                    className={idx % 2 === 0 ? "bg-muted/30" : "bg-background"}
-                                  >
-                                    <td className="py-2 px-3">{game.date}</td>
-                                    <td className="py-2 px-3 font-semibold">{game.opponent}</td>
-                                    <td className="py-2 px-3 text-center font-bold text-green-700">
-                                      {game.points_for}
-                                    </td>
-                                    <td className="py-2 px-3 text-center font-bold text-red-600">
-                                      {game.points_against}
-                                    </td>
-                                    <td className="py-2 px-3 text-center">
-                                      <span
-                                        className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                          game.result === "W"
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-red-100 text-red-700"
-                                        }`}
-                                      >
-                                        {game.result}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                ))}
+                                {team.games.map((game, idx) => {
+                                  const totalPF = game.sets.reduce((sum, s) => sum + s.points_for, 0);
+                                  const totalPA = game.sets.reduce((sum, s) => sum + s.points_against, 0);
+                                  const wins = game.sets.filter((s) => s.points_for > s.points_against).length;
+                                  const losses = game.sets.filter((s) => s.points_for < s.points_against).length;
+                                  const result =
+                                    wins > losses ? "W" : losses > wins ? "L" : "T";
+
+                                  return (
+                                    <tr
+                                      key={game.id}
+                                      className={idx % 2 === 0 ? "bg-muted/30" : "bg-background"}
+                                    >
+                                      <td className="py-2 px-3">{game.date}</td>
+                                      <td className="py-2 px-3 font-semibold">{game.opponent}</td>
+                                      <td className="py-2 px-3 text-center font-bold text-green-700">
+                                        {totalPF}
+                                      </td>
+                                      <td className="py-2 px-3 text-center font-bold text-red-600">
+                                        {totalPA}
+                                      </td>
+                                      <td className="py-2 px-3 text-center">
+                                        <span
+                                          className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                            result === "W"
+                                              ? "bg-green-100 text-green-700"
+                                              : result === "L"
+                                              ? "bg-red-100 text-red-700"
+                                              : "bg-yellow-100 text-yellow-700"
+                                          }`}
+                                        >
+                                          {result}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </div>
