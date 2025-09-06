@@ -12,16 +12,17 @@ import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
+interface Set {
+  set_no: number;
+  points_for: number;
+  points_against: number;
+}
+
 interface Game {
   id: string;
   date: string;
   opponent: string;
-  sets: {
-    set_no: number;
-    points_for: number;
-    points_against: number;
-    result: "W" | "L";
-  }[];
+  sets: Set[];
 }
 
 interface Team {
@@ -75,15 +76,12 @@ const StandingsTable = () => {
 
   useEffect(() => {
     async function fetchData() {
-      const { data: teamData, error: teamError } = await supabase.from("teams").select("*");
-      const { data: gameData, error: gameError } = await supabase
+      const { data: teamData } = await supabase.from("teams").select("*");
+      const { data: gameData } = await supabase
         .from("games")
-        .select("id, date, opponent, team_id, sets (set_no, points_for, points_against, result)");
+        .select("id, date, opponent, team_id, sets (set_no, points_for, points_against)");
 
-      if (teamError || gameError || !teamData || !gameData) {
-        console.error("Error loading data", teamError, gameError);
-        return;
-      }
+      if (!teamData || !gameData) return;
 
       const teamMap: Record<string, Team> = {};
 
@@ -103,38 +101,33 @@ const StandingsTable = () => {
 
       gameData.forEach((game) => {
         const team = teamMap[game.team_id];
-        if (!team) return;
-
-        let gamePointsFor = 0;
-        let gamePointsAgainst = 0;
+        if (!team || !game.sets || game.sets.length === 0) return; // skip unplayed games
         let gameWins = 0;
         let gameLosses = 0;
         let gameTies = 0;
+        let pf = 0;
+        let pa = 0;
 
-        game.sets?.forEach((set) => {
-          gamePointsFor += set.points_for;
-          gamePointsAgainst += set.points_against;
+        game.sets.forEach((set) => {
+          pf += set.points_for;
+          pa += set.points_against;
 
-          if (set.points_for === set.points_against) {
-            gameTies += 1;
-          } else if (set.points_for > set.points_against) {
-            gameWins += 1;
-          } else {
-            gameLosses += 1;
-          }
+          if (set.points_for === set.points_against) gameTies++;
+          else if (set.points_for > set.points_against) gameWins++;
+          else gameLosses++;
         });
 
-        team.points_for += gamePointsFor;
-        team.points_against += gamePointsAgainst;
-        team.wins += gameWins > gameLosses ? 1 : 0;
-        team.losses += gameLosses > gameWins ? 1 : 0;
-        team.ties += gameWins === gameLosses ? 1 : 0;
+        team.points_for += pf;
+        team.points_against += pa;
+        if (gameWins > gameLosses) team.wins++;
+        else if (gameLosses > gameWins) team.losses++;
+        else team.ties++;
 
         team.games.push({
           id: game.id,
           date: game.date,
           opponent: game.opponent,
-          sets: game.sets ?? [],
+          sets: game.sets,
         });
       });
 
@@ -256,58 +249,39 @@ const StandingsTable = () => {
                       <div className="p-4">
                         <div className="font-semibold mb-4 text-lg flex items-center gap-2">
                           <TrendingUp className="h-4 w-4 text-primary" />
-                          Match History
+                          Match History (Set-by-Set)
                         </div>
                         {team.games.length > 0 ? (
                           <div className="overflow-x-auto">
                             <table className="min-w-full text-xs rounded-lg overflow-hidden shadow">
                               <thead>
                                 <tr className="bg-primary text-primary-foreground">
-                                  <th className="py-2 px-3 text-left rounded-tl-lg">Date</th>
+                                  <th className="py-2 px-3 text-left">Date</th>
                                   <th className="py-2 px-3 text-left">Opponent</th>
+                                  <th className="py-2 px-3 text-center">Set</th>
                                   <th className="py-2 px-3 text-center">PF</th>
                                   <th className="py-2 px-3 text-center">PA</th>
-                                  <th className="py-2 px-3 text-center rounded-tr-lg">Result</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {team.games.map((game, idx) => {
-                                  const totalPF = game.sets.reduce((sum, s) => sum + s.points_for, 0);
-                                  const totalPA = game.sets.reduce((sum, s) => sum + s.points_against, 0);
-                                  const wins = game.sets.filter((s) => s.points_for > s.points_against).length;
-                                  const losses = game.sets.filter((s) => s.points_for < s.points_against).length;
-                                  const result =
-                                    wins > losses ? "W" : losses > wins ? "L" : "T";
-
-                                  return (
+                                {team.games.map((game) =>
+                                  game.sets.map((set, idx) => (
                                     <tr
-                                      key={game.id}
+                                      key={`${game.id}-set-${set.set_no}`}
                                       className={idx % 2 === 0 ? "bg-muted/30" : "bg-background"}
                                     >
                                       <td className="py-2 px-3">{game.date}</td>
                                       <td className="py-2 px-3 font-semibold">{game.opponent}</td>
-                                      <td className="py-2 px-3 text-center font-bold text-green-700">
-                                        {totalPF}
+                                      <td className="py-2 px-3 text-center">{set.set_no}</td>
+                                      <td className="py-2 px-3 text-center text-green-700 font-bold">
+                                        {set.points_for}
                                       </td>
-                                      <td className="py-2 px-3 text-center font-bold text-red-600">
-                                        {totalPA}
-                                      </td>
-                                      <td className="py-2 px-3 text-center">
-                                        <span
-                                          className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                            result === "W"
-                                              ? "bg-green-100 text-green-700"
-                                              : result === "L"
-                                              ? "bg-red-100 text-red-700"
-                                              : "bg-yellow-100 text-yellow-700"
-                                          }`}
-                                        >
-                                          {result}
-                                        </span>
+                                      <td className="py-2 px-3 text-center text-red-600 font-bold">
+                                        {set.points_against}
                                       </td>
                                     </tr>
-                                  );
-                                })}
+                                  ))
+                                )}
                               </tbody>
                             </table>
                           </div>
