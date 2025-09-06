@@ -4,13 +4,11 @@ import { supabase } from "@/lib/supabase";
 const AdminGameEntry = () => {
   const [teams, setTeams] = useState<any[]>([]);
   const [teamId, setTeamId] = useState<string>("");
-  const [date, setDate] = useState("");
-  const [opponent, setOpponent] = useState("");
-  const [opponents, setOpponents] = useState<{ label: string; value: string }[]>([]);
+  const [games, setGames] = useState<{ id: string; label: string }[]>([]);
+  const [selectedGameId, setSelectedGameId] = useState<string>("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // State for sets entry
   const [sets, setSets] = useState<
     { set_no: number; points_for: number; points_against: number; result: "W" | "L" }[]
   >([]);
@@ -33,41 +31,47 @@ const AdminGameEntry = () => {
   }, []);
 
   useEffect(() => {
-    async function loadOpponentsForTeam() {
+    async function loadGamesForTeam() {
       if (!teamId) return;
       const { data, error } = await supabase
         .from("games")
-        .select("opponent, date, time, court")
-        .eq("team_id", teamId)
-        .neq("opponent", null);
-      if (error) {
-        setOpponents([]);
-      } else {
-        const formatted = data.map((g) => {
-          const rawTime = g.time?.slice(0, 5) || "";
-          const [hourStr, minute] = rawTime.split(":");
-          let hour = parseInt(hourStr, 10);
-          const ampm = hour >= 12 ? "PM" : "AM";
-          hour = hour % 12 || 12;
-          const formattedTime = `${hour}:${minute} ${ampm}`;
-          const label = `${g.opponent} — ${g.date} ${formattedTime} (Court ${g.court ?? "?"})`;
-          return { label, value: g.opponent };
-        });
-        const unique = Array.from(
-          new Map(formatted.map((item) => [item.value, item])).values()
-        );
-        setOpponents(unique);
+        .select("id, opponent, date, time, court")
+        .eq("team_id", teamId);
+
+      if (error || !data) {
+        setGames([]);
+        return;
       }
+
+      const formattedGames = data.map((g) => {
+        const rawTime = g.time?.slice(0, 5) || "";
+        const [hourStr, minute] = rawTime.split(":");
+        let hour = parseInt(hourStr, 10);
+        const ampm = hour >= 12 ? "PM" : "AM";
+        hour = hour % 12 || 12;
+        const formattedTime = `${hour}:${minute} ${ampm}`;
+        const label = `${g.opponent} — ${g.date} ${formattedTime} (Court ${g.court ?? "?"})`;
+        return { id: g.id, label };
+      });
+
+      setGames(formattedGames);
+      if (formattedGames.length > 0) setSelectedGameId(formattedGames[0].id);
     }
-    loadOpponentsForTeam();
+
+    loadGamesForTeam();
   }, [teamId]);
 
-  // Add set to local array
   const handleAddSet = () => {
     if (!set_no || !set_points_for || !set_points_against) {
       setMessage("Please fill out all set fields.");
       return;
     }
+
+    if (sets.some((s) => s.set_no === set_no)) {
+      setMessage(`Set ${set_no} already exists.`);
+      return;
+    }
+
     setSets([
       ...sets,
       {
@@ -84,58 +88,68 @@ const AdminGameEntry = () => {
     setMessage("");
   };
 
-  // Remove set from local array
   const handleRemoveSet = (idx: number) => {
     setSets(sets.filter((_, i) => i !== idx));
   };
 
-  // Submit game and sets
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!teamId || !date || !opponent) {
-      setMessage("Please fill out all game fields.");
+
+    if (!selectedGameId) {
+      setMessage("Please select a game.");
       return;
     }
+
     if (sets.length === 0) {
       setMessage("Please add at least one set.");
       return;
     }
+
     setLoading(true);
     setMessage("");
-    const newGameId = "g" + Date.now();
-    const newGame = {
-      id: newGameId,
-      date,
-      opponent,
-      team_id: teamId,
-    };
+
     try {
-      // Insert new game
-      const { error: gameError } = await supabase.from("games").insert([newGame]);
-      if (gameError) {
-        setMessage(`Failed to add game: ${gameError.message}`);
-        setLoading(false);
-        return;
-      }
-      // Insert sets
       const setsPayload = sets.map((set) => ({
-        id: newGameId,
+        id: selectedGameId,
         set_no: set.set_no,
         points_for: set.points_for,
         points_against: set.points_against,
         result: set.result,
       }));
+
       const { error: setError } = await supabase.from("sets").insert(setsPayload);
+
       if (setError) {
         setMessage(`Failed to add sets: ${setError.message}`);
         setLoading(false);
         return;
       }
-      setMessage("Game and sets added!");
-      setDate("");
-      setOpponent("");
+
+      // Calculate match result
+      let wins = 0;
+      let losses = 0;
+      let ties = 0;
+
+      sets.forEach((s) => {
+        if (s.points_for === s.points_against) {
+          ties += 1;
+        } else if (s.points_for > s.points_against) {
+          wins += 1;
+        } else {
+          losses += 1;
+        }
+      });
+
+      let matchResult = "Draw";
+      if (wins > losses) matchResult = "Win";
+      else if (losses > wins) matchResult = "Loss";
+
+      setMessage(`Sets added! Match result: ${matchResult} (${wins}W - ${losses}L - ${ties}T)`);
       setSets([]);
       setSetNo(1);
+      setSetPointsFor("");
+      setSetPointsAgainst("");
+      setSetResult("W");
     } catch (error) {
       setMessage("Unexpected error: " + (error as Error).message);
     } finally {
@@ -146,9 +160,9 @@ const AdminGameEntry = () => {
   return (
     <div className="max-w-3xl mx-auto mt-12 p-6 bg-card rounded-lg shadow space-y-12">
       <section>
-        <h2 className="text-2xl font-bold mb-4">Secret Admin: Add Game Result & Sets</h2>
+        <h2 className="text-2xl font-bold mb-4">Secret Admin: Add Sets to Game</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Team Selection with Logos */}
+          {/* Team Selection */}
           <div>
             <label className="block mb-2 font-semibold">Select Team</label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -177,42 +191,24 @@ const AdminGameEntry = () => {
               ))}
             </div>
           </div>
-          {/* Date */}
+
+          {/* Game Selection */}
           <div>
-            <label className="block mb-1 font-semibold">Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
+            <label className="block mb-1 font-semibold">Select Game</label>
+            <select
+              value={selectedGameId}
+              onChange={(e) => setSelectedGameId(e.target.value)}
               className="w-full border rounded px-2 py-1"
               disabled={loading}
-            />
-          </div>
-          {/* Opponent Dropdown */}
-          <div>
-            <label className="block mb-1 font-semibold">Opponent</label>
-            <select
-              value={opponent}
-              onChange={(e) => setOpponent(e.target.value)}
-              className="w-full border rounded px-2 py-1 mb-2"
-              disabled={loading}
             >
-              <option value="">Select opponent</option>
-              {opponents.map((oppo, idx) => (
-                <option key={idx} value={oppo.value}>
-                  {oppo.label}
+              {games.map((game) => (
+                <option key={game.id} value={game.id}>
+                  {game.label}
                 </option>
               ))}
             </select>
-            <input
-              type="text"
-              value={opponent}
-              onChange={(e) => setOpponent(e.target.value)}
-              className="w-full border rounded px-2 py-1"
-              placeholder="Or enter a new opponent"
-              disabled={loading}
-            />
           </div>
+
           {/* Sets Entry */}
           <div>
             <label className="block mb-2 font-semibold">Add Sets</label>
@@ -220,7 +216,7 @@ const AdminGameEntry = () => {
               <input
                 type="number"
                 value={set_no}
-                onChange={e => setSetNo(Number(e.target.value))}
+                onChange={(e) => setSetNo(Number(e.target.value))}
                 min={1}
                 placeholder="Set Number"
                 className="border rounded px-2 py-1"
@@ -228,7 +224,7 @@ const AdminGameEntry = () => {
               <input
                 type="number"
                 value={set_points_for}
-                onChange={e => setSetPointsFor(e.target.value)}
+                onChange={(e) => setSetPointsFor(e.target.value)}
                 min={0}
                 placeholder="Points For"
                 className="border rounded px-2 py-1"
@@ -236,14 +232,14 @@ const AdminGameEntry = () => {
               <input
                 type="number"
                 value={set_points_against}
-                onChange={e => setSetPointsAgainst(e.target.value)}
+                onChange={(e) => setSetPointsAgainst(e.target.value)}
                 min={0}
                 placeholder="Points Against"
                 className="border rounded px-2 py-1"
               />
               <select
                 value={set_result}
-                onChange={e => setSetResult(e.target.value as "W" | "L")}
+                onChange={(e) => setSetResult(e.target.value as "W" | "L")}
                 className="border rounded px-2 py-1"
               >
                 <option value="W">Win</option>
@@ -257,7 +253,6 @@ const AdminGameEntry = () => {
                 Add Set
               </button>
             </div>
-            {/* List of sets to add */}
             <div>
               {sets.map((set, idx) => (
                 <div key={idx} className="mb-1 flex items-center gap-2">
@@ -275,14 +270,16 @@ const AdminGameEntry = () => {
               ))}
             </div>
           </div>
+
           {/* Submit */}
           <button
             type="submit"
             className="w-full bg-primary text-primary-foreground py-2 rounded font-bold mt-2"
             disabled={loading}
           >
-            {loading ? "Submitting..." : "Submit Game & Sets"}
+            {loading ? "Submitting..." : "Submit Sets"}
           </button>
+
           {/* Message */}
           {message && (
             <div
