@@ -14,6 +14,8 @@ interface Team {
   captain: string;
   color: string;
   player_ids?: string[];
+  points_for: number;
+  points_against: number;
 }
 
 const Teams = () => {
