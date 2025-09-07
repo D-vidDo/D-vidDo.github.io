@@ -93,69 +93,140 @@ const AdminGameEntry = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!selectedGameId) {
-      setMessage("Please select a game.");
+  if (!selectedGameId) {
+    setMessage("Please select a game.");
+    return;
+  }
+
+  if (sets.length === 0) {
+    setMessage("Please add at least one set.");
+    return;
+  }
+
+  setLoading(true);
+  setMessage("");
+
+  try {
+    // Step 1: Insert sets
+    const setsPayload = sets.map((set) => ({
+      game_id: selectedGameId,
+      set_no: set.set_no,
+      points_for: set.points_for,
+      points_against: set.points_against,
+      result: set.result,
+    }));
+
+    const { error: setError } = await supabase.from("sets").insert(setsPayload);
+
+    if (setError) {
+      setMessage(`Failed to add sets: ${setError.message}`);
+      setLoading(false);
       return;
     }
 
-    if (sets.length === 0) {
-      setMessage("Please add at least one set.");
+    // Step 2: Calculate match stats
+    let wins = 0;
+    let losses = 0;
+    let ties = 0;
+    let totalPF = 0;
+    let totalPA = 0;
+
+    sets.forEach((s) => {
+      totalPF += s.points_for;
+      totalPA += s.points_against;
+
+      if (s.points_for === s.points_against) ties++;
+      else if (s.points_for > s.points_against) wins++;
+      else losses++;
+    });
+
+    const matchResult = wins > losses ? "Win" : losses > wins ? "Loss" : "Draw";
+    const matchPlusMinus = totalPF - totalPA;
+
+    // Step 3: Fetch team data
+    const { data: teamData, error: teamError } = await supabase
+      .from("teams")
+      .select("player_ids, points_for, points_against, wins, losses")
+      .eq("team_id", teamId)
+      .single();
+
+    if (teamError || !teamData) {
+      setMessage(`Failed to fetch team info: ${teamError?.message || "No team returned"}`);
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setMessage("");
+    // Step 4: Update player stats
+    if (teamData.player_ids && teamData.player_ids.length > 0) {
+      const { data: playersData, error: playersError } = await supabase
+        .from("players")
+        .select("id, plus_minus, games_played")
+        .in("id", teamData.player_ids);
 
-    try {
-      const setsPayload = sets.map((set) => ({
-        game_id: selectedGameId,
-        set_no: set.set_no,
-        points_for: set.points_for,
-        points_against: set.points_against,
-        result: set.result,
-      }));
-
-      const { error: setError } = await supabase.from("sets").insert(setsPayload);
-
-      if (setError) {
-        setMessage(`Failed to add sets: ${setError.message}`);
+      if (playersError) {
+        setMessage(`Failed to fetch players: ${playersError.message}`);
         setLoading(false);
         return;
       }
 
-      // Calculate match result
-      let wins = 0;
-      let losses = 0;
-      let ties = 0;
+      for (const player of playersData) {
+        const updatedplus_minus = (player.plus_minus ?? 0) + matchPlusMinus;
+        const updatedGamesPlayed = (player.games_played ?? 0) + 1;
 
-      sets.forEach((s) => {
-        if (s.points_for === s.points_against) {
-          ties += 1;
-        } else if (s.points_for > s.points_against) {
-          wins += 1;
-        } else {
-          losses += 1;
+        const { error: updatePlayerError } = await supabase
+          .from("players")
+          .update({
+            plus_minus: updatedplus_minus,
+            games_played: updatedGamesPlayed,
+          })
+          .eq("id", player.id);
+
+        if (updatePlayerError) {
+          setMessage(`Failed to update player ${player.id}: ${updatePlayerError.message}`);
+          setLoading(false);
+          return;
         }
-      });
-
-      let matchResult = "Draw";
-      if (wins > losses) matchResult = "Win";
-      else if (losses > wins) matchResult = "Loss";
-
-      setMessage(`Sets added! Match result: ${matchResult} (${wins}W - ${losses}L - ${ties}T)`);
-      setSets([]);
-      setSetNo(1);
-      setSetPointsFor("");
-      setSetPointsAgainst("");
-      setSetResult("W");
-    } catch (error) {
-      setMessage("Unexpected error: " + (error as Error).message);
-    } finally {
-      setLoading(false);
+      }
     }
-  };
+
+    // Step 5: Update team stats
+    const updatedTeamStats = {
+      points_for: (teamData.points_for ?? 0) + totalPF,
+      points_against: (teamData.points_against ?? 0) + totalPA,
+      wins: (teamData.wins ?? 0) + (wins > losses ? 1 : 0),
+      losses: (teamData.losses ?? 0) + (losses > wins ? 1 : 0),
+    };
+
+    const { error: updateTeamError } = await supabase
+      .from("teams")
+      .update(updatedTeamStats)
+      .eq("team_id", teamId);
+
+    if (updateTeamError) {
+      setMessage(`Failed to update team stats: ${updateTeamError.message}`);
+      setLoading(false);
+      return;
+    }
+
+    // Step 6: Reset form and refresh teams
+    setMessage(`Sets added! Match result: ${matchResult} (${wins}W - ${losses}L - ${ties}T)`);
+    setSets([]);
+    setSetNo(1);
+    setSetPointsFor("");
+    setSetPointsAgainst("");
+    setSetResult("W");
+
+    const { data: refreshedTeams } = await supabase.from("teams").select("*");
+    setTeams(refreshedTeams ?? []);
+  } catch (error) {
+    setMessage("Unexpected error: " + (error as Error).message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="max-w-3xl mx-auto mt-12 p-6 bg-card rounded-lg shadow space-y-12">
