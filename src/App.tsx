@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import Players from "./pages/Players";
 import Admin from "./pages/Admin";
 import Rules from "./pages/Rules";
+import AdminVod from "./pages/AdminSetVodLink";
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -96,6 +97,7 @@ const App = () => (
             <Route path="/trades" element={<Trades />} />
             <Route path="/Admin" element={<Admin />} />
             <Route path="/rules" element={<Rules />} />
+            <Route path="/AdminVod" element={<AdminVod />} />
             {/* Add a NotFound route at the end */}
             <Route path="*" element={<NotFound />} />
           </Routes>
