@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, TrendingUp, Users, CalendarDays } from "lucide-react";
+import { ArrowLeft, Trophy, TrendingUp, Users, CalendarDays, PlayCircle } from "lucide-react";
 import PlayerCard from "@/components/PlayerCard";
 import { supabase } from "@/lib/supabase";
 
@@ -11,6 +11,7 @@ interface Set {
   set_no: number;
   points_for: number;
   points_against: number;
+  vod_link?: string | null;
 }
 
 interface Game {
@@ -95,7 +96,8 @@ const TeamDetail = () => {
             sets (
               set_no,
               points_for,
-              points_against
+              points_against,
+              vod_link
             )
           `)
           .eq("team_id", teamId);
@@ -103,18 +105,18 @@ const TeamDetail = () => {
         const playedGames = (gameData ?? [])
           .filter((g) => g.sets && g.sets.length > 0)
           .map((g) => {
-            const totalPF = g.sets.reduce((sum, s) => sum + s.points_for, 0);
-            const totalPA = g.sets.reduce((sum, s) => sum + s.points_against, 0);
-            const result = totalPF > totalPA ? "W" : totalPF < totalPA ? "L" : "T";
+            const totalPF = g.sets.reduce((sum: number, s: Set) => sum + s.points_for, 0);
+            const totalPA = g.sets.reduce((sum: number, s: Set) => sum + s.points_against, 0);
+            const result: "W" | "L" | "T" = totalPF > totalPA ? "W" : totalPF < totalPA ? "L" : "T";
 
             return {
-              id: g.id,
-              date: g.date,
-              opponent: g.opponent,
+              id: g.id as string,
+              date: g.date as string,
+              opponent: g.opponent as string,
               points_for: totalPF,
               points_against: totalPA,
               result,
-              sets: g.sets,
+              sets: g.sets as Set[],
             };
           });
 
@@ -167,15 +169,24 @@ const TeamDetail = () => {
     fetchTeamData();
   }, [teamId]);
 
-  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Loading team details...</div>;
-  if (error || !team) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">{error || "Team not found"}</h1>
-        <Link to="/teams"><Button>Back to Teams</Button></Link>
+  if (loading)
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">
+        Loading team details...
       </div>
-    </div>
-  );
+    );
+
+  if (error || !team)
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">{error || "Team not found"}.</h1>
+          <Link to="/teams">
+            <Button>Back to Teams</Button>
+          </Link>
+        </div>
+      </div>
+    );
 
   const winPercentage = ((team.wins / (team.wins + team.losses)) * 100).toFixed(1);
   const teamplus_minus = players.reduce((sum, p) => sum + (p.plus_minus || 0), 0);
@@ -191,7 +202,10 @@ const TeamDetail = () => {
         }}
       >
         <div className="max-w-6xl mx-auto">
-          <Link to="/teams" className="inline-flex items-center text-primary-foreground hover:text-primary-foreground/80 mb-6">
+          <Link
+            to="/teams"
+            className="inline-flex items-center text-primary-foreground hover:text-primary-foreground/80 mb-6"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" /> Back to Teams
           </Link>
           <div className="flex items-center space-x-6">
@@ -207,8 +221,15 @@ const TeamDetail = () => {
               <h1 className="text-5xl font-bold text-primary-foreground mb-2">{team.name}</h1>
               <p className="text-lg text-primary-foreground/90 mb-4">Captain: {team.captain}</p>
               <div className="flex gap-3 flex-wrap">
-                <Badge variant="secondary" className="text-lg px-4 py-2">{team.wins}W - {team.losses}L</Badge>
-                <Badge variant="outline" className="text-lg px-4 py-2 bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground">{winPercentage}% Win Rate</Badge>
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  {team.wins}W - {team.losses}L
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="text-lg px-4 py-2 bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground"
+                >
+                  {winPercentage}% Win Rate
+                </Badge>
               </div>
             </div>
           </div>
@@ -258,6 +279,7 @@ const TeamDetail = () => {
                       <th className="px-4 py-2 text-center">PF</th>
                       <th className="px-4 py-2 text-center">PA</th>
                       <th className="px-4 py-2 text-center">Result</th>
+                      <th className="px-4 py-2 text-center">VOD</th> {/* 👈 new column */}
                     </tr>
                   </thead>
                   <tbody>
@@ -290,6 +312,26 @@ const TeamDetail = () => {
                                 {result}
                               </Badge>
                             </td>
+
+                            {/* VOD cell with brand-colored button */}
+                            <td className="px-4 py-2 text-center">
+                              {set.vod_link ? (
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  className="inline-flex items-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                                  onClick={() =>
+                                    window.open(set.vod_link as string, "_blank", "noopener,noreferrer")
+                                  }
+                                  title="Watch VOD"
+                                >
+                                  <PlayCircle className="h-4 w-4" />
+                                  Watch
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">—</span>
+                              )}
+                            </td>
                           </tr>
                         );
                       })
@@ -309,12 +351,16 @@ const TeamDetail = () => {
           </CardHeader>
           <CardContent>
             {trades.length === 0 ? (
-              <div className="text-muted-foreground text-center py-4">No roster changes or trades for this team yet.</div>
+              <div className="text-muted-foreground text-center py-4">
+                No roster changes or trades for this team yet.
+              </div>
             ) : (
               <div className="space-y-6">
                 {trades.map((trade) => (
                   <div key={trade.id} className="border-b pb-4">
-                    <div className="font-semibold text-primary mb-1">{trade.date} — {trade.description}</div>
+                    <div className="font-semibold text-primary mb-1">
+                      {trade.date} — {trade.description}
+                    </div>
                     <ul className="ml-2">
                       {trade.playersTraded.map((pt, idx) => {
                         const isIncoming = pt.toTeam === team.name;
@@ -351,8 +397,7 @@ const StatCard = ({
   isplus_minus?: boolean;
 }) => {
   const numeric = typeof value === "number" ? value : parseFloat(value);
-  const color =
-    numeric > 0 ? "text-green-600" : numeric < 0 ? "text-red-500" : "text-muted-foreground";
+  const color = numeric > 0 ? "text-green-600" : numeric < 0 ? "text-red-500" : "text-muted-foreground";
   return (
     <Card className="bg-gradient-stats shadow-card">
       <CardContent className="p-6 text-center">
