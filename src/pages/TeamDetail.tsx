@@ -17,6 +17,7 @@ interface Set {
 interface Game {
   id: string;
   date: string;
+  time: string;
   opponent: string;
   points_for: number;
   points_against: number;
@@ -102,7 +103,7 @@ useEffect(() => {
           )
         `)
         .eq("team_id", teamId)
-        .order("date", { ascending: false }) // newest games first
+        .order("date", { ascending: true }) // newest games first
         .order("time", { ascending: false, nullsFirst: false }) // optional
         .order("set_no", { foreignTable: "sets", ascending: true }); // sets in order
       if (gameErr) {
