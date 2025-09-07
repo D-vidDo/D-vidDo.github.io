@@ -184,75 +184,157 @@ const TeamDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header and Stats */}
-      {/* ... same as before */}
-
-      {/* Match History (Set-by-Set) */}
-      <Card className="bg-gradient-card shadow-card">
-        <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" /> Match History (Set-by-Set)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {games.length === 0 ? (
-            <div className="text-muted-foreground text-center py-4">No games played yet.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-muted">
-                    <th className="px-4 py-2">Date</th>
-                    <th className="px-4 py-2">Opponent</th>
-                    <th className="px-4 py-2 text-center">Set</th>
-                    <th className="px-4 py-2 text-center">PF</th>
-                    <th className="px-4 py-2 text-center">PA</th>
-                    <th className="px-4 py-2 text-center">Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {games.map((game) =>
-                    game.sets.map((set, idx) => {
-                      const result =
-                        set.points_for === set.points_against
-                          ? "T"
-                          : set.points_for > set.points_against
-                          ? "W"
-                          : "L";
-
-                      return (
-                        <tr key={`${game.id}-set-${set.set_no}`} className={idx % 2 === 0 ? "bg-muted/10" : ""}>
-                          <td className="px-4 py-2">{game.date}</td>
-                          <td className="px-4 py-2 font-semibold">{game.opponent}</td>
-                          <td className="px-4 py-2 text-center">{set.set_no}</td>
-                          <td className="px-4 py-2 text-center text-green-700 font-bold">{set.points_for}</td>
-                          <td className="px-4 py-2 text-center text-red-600 font-bold">{set.points_against}</td>
-                          <td className="px-4 py-2 text-center">
-                            <Badge
-                              className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                result === "W"
-                                  ? "bg-green-100 text-green-700"
-                                  : result === "L"
-                                  ? "bg-red-100 text-red-700"
-                                  : "bg-yellow-100 text-yellow-700"
-                              }`}
-                            >
-                              {result}
-                            </Badge>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+      <section
+        className="relative isolate py-16 px-4 min-h-[280px] md:min-h-[360px] rounded-none"
+        style={{
+          background: `linear-gradient(135deg, ${team.color} 0%, ${team.color2} 100%)`,
+        }}
+      >
+        <div className="max-w-6xl mx-auto">
+          <Link to="/teams" className="inline-flex items-center text-primary-foreground hover:text-primary-foreground/80 mb-6">
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Teams
+          </Link>
+          <div className="flex items-center space-x-6">
+            <img
+              src={`/logos/${team.team_id}.jpg`}
+              alt={`${team.name} logo`}
+              className="w-24 h-24 rounded-xl object-contain shadow-md"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+            <div>
+              <h1 className="text-5xl font-bold text-primary-foreground mb-2">{team.name}</h1>
+              <p className="text-lg text-primary-foreground/90 mb-4">Captain: {team.captain}</p>
+              <div className="flex gap-3 flex-wrap">
+                <Badge variant="secondary" className="text-lg px-4 py-2">{team.wins}W - {team.losses}L</Badge>
+                <Badge variant="outline" className="text-lg px-4 py-2 bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground">{winPercentage}% Win Rate</Badge>
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      </section>
 
-      {/* Roster History */}
-      {/* ... same as before */}
+      <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
+        <div className="grid md:grid-cols-4 gap-6">
+          <StatCard title="Points For" icon={<Trophy />} value={team.points_for} />
+          <StatCard title="Team +/-" icon={<TrendingUp />} value={teamplus_minus} isplus_minus />
+          <StatCard title="Total Games" icon={<Users />} value={teamGames} />
+          <StatCard title="Team Average" icon={<Trophy />} value={teamAverage.toFixed(1)} isplus_minus />
+        </div>
+
+        <Card className="bg-gradient-card shadow-card">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" /> Team Roster ({players.length} players)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {players.map((player) => (
+                <PlayerCard key={player.id} player={{ ...player, isCaptain: player.name === team.captain }} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-card shadow-card">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-primary" /> Match History (Set-by-Set)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {games.length === 0 ? (
+              <div className="text-muted-foreground text-center py-4">No games played yet.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-muted">
+                      <th className="px-4 py-2">Date</th>
+                      <th className="px-4 py-2">Opponent</th>
+                      <th className="px-4 py-2 text-center">Set</th>
+                      <th className="px-4 py-2 text-center">PF</th>
+                      <th className="px-4 py-2 text-center">PA</th>
+                      <th className="px-4 py-2 text-center">Result</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {games.map((game) =>
+                      game.sets.map((set, idx) => {
+                        const result =
+                          set.points_for === set.points_against
+                            ? "T"
+                            : set.points_for > set.points_against
+                            ? "W"
+                            : "L";
+
+                        return (
+                          <tr key={`${game.id}-set-${set.set_no}`} className={idx % 2 === 0 ? "bg-muted/10" : ""}>
+                            <td className="px-4 py-2">{game.date}</td>
+                            <td className="px-4 py-2 font-semibold">{game.opponent}</td>
+                            <td className="px-4 py-2 text-center">{set.set_no}</td>
+                            <td className="px-4 py-2 text-center text-green-700 font-bold">{set.points_for}</td>
+                            <td className="px-4 py-2 text-center text-red-600 font-bold">{set.points_against}</td>
+                            <td className="px-4 py-2 text-center">
+                              <Badge
+                                className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                  result === "W"
+                                    ? "bg-green-100 text-green-700"
+                                    : result === "L"
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-yellow-100 text-yellow-700"
+                                }`}
+                              >
+                                {result}
+                              </Badge>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-card shadow-card">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" /> Roster History
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {trades.length === 0 ? (
+              <div className="text-muted-foreground text-center py-4">No roster changes or trades for this team yet.</div>
+            ) : (
+              <div className="space-y-6">
+                {trades.map((trade) => (
+                  <div key={trade.id} className="border-b pb-4">
+                    <div className="font-semibold text-primary mb-1">{trade.date} — {trade.description}</div>
+                    <ul className="ml-2">
+                      {trade.playersTraded.map((pt, idx) => {
+                        const isIncoming = pt.toTeam === team.name;
+                        const isOutgoing = pt.fromTeam === team.name;
+                        if (!isIncoming && !isOutgoing) return null;
+                        return (
+                          <li key={idx} className="text-sm flex items-center gap-2 py-1">
+                            <span className="font-bold">{pt.player.name}</span>
+                            <span>{isIncoming ? `acquired from ${pt.fromTeam}` : `traded to ${pt.toTeam}`}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
