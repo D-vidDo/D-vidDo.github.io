@@ -296,6 +296,7 @@ useEffect(() => {
                   <thead>
                     <tr className="border-b border-muted">
                       <th className="px-4 py-2">Date</th>
+                      <th className="px-4 py-2">Time</th>
                       <th className="px-4 py-2">Opponent</th>
                       <th className="px-4 py-2 text-center">Set</th>
                       <th className="px-4 py-2 text-center">PF</th>
@@ -317,6 +318,7 @@ useEffect(() => {
                         return (
                           <tr key={`${game.id}-set-${set.set_no}`} className={idx % 2 === 0 ? "bg-muted/10" : ""}>
                             <td className="px-4 py-2">{game.date}</td>
+                            <td className="px-4 py-2">{game.time}</td>
                             <td className="px-4 py-2 font-semibold">{game.opponent}</td>
                             <td className="px-4 py-2 text-center">{set.set_no}</td>
                             <td className="px-4 py-2 text-center text-green-700 font-bold">{set.points_for}</td>
