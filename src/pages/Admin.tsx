@@ -93,150 +93,142 @@ const AdminGameEntry = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!selectedGameId) {
-    setMessage("Please select a game.");
-    return;
-  }
-
-  if (sets.length === 0) {
-    setMessage("Please add at least one set.");
-    return;
-  }
-
-  setLoading(true);
-  setMessage("");
-
-  try {
-    // Step 1: Insert sets
-    const setsPayload = sets.map((set) => ({
-      game_id: selectedGameId,
-      set_no: set.set_no,
-      points_for: set.points_for,
-      points_against: set.points_against,
-      result: set.result,
-    }));
-
-    const { error: setError } = await supabase.from("sets").insert(setsPayload);
-
-    if (setError) {
-      setMessage(`Failed to add sets: ${setError.message}`);
-      setLoading(false);
+    if (!selectedGameId) {
+      setMessage("Please select a game.");
       return;
     }
 
-    // Step 2: Calculate match stats
-    let wins = 0;
-    let losses = 0;
-    let ties = 0;
-    let totalPF = 0;
-    let totalPA = 0;
-
-    sets.forEach((s) => {
-      totalPF += s.points_for;
-      totalPA += s.points_against;
-
-      if (s.points_for === s.points_against) ties++;
-      else if (s.points_for > s.points_against) wins++;
-      else losses++;
-    });
-
-    const matchResult = wins > losses ? "Win" : losses > wins ? "Loss" : "Draw";
-    const matchPlusMinus = totalPF - totalPA;
-
-    // Step 3: Fetch team data
-    const { data: teamData, error: teamError } = await supabase
-      .from("teams")
-      .select("player_ids, points_for, points_against, wins, losses")
-      .eq("team_id", teamId)
-      .single();
-
-    if (teamError || !teamData) {
-      setMessage(`Failed to fetch team info: ${teamError?.message || "No team returned"}`);
-      setLoading(false);
+    if (sets.length === 0) {
+      setMessage("Please add at least one set.");
       return;
     }
 
-    // Step 4: Update player stats
-    if (teamData.player_ids && teamData.player_ids.length > 0) {
-      const { data: playersData, error: playersError } = await supabase
-        .from("players")
-        .select("id, plus_minus, games_played")
-        .in("id", teamData.player_ids);
+    setLoading(true);
+    setMessage("");
 
-      if (playersError) {
-        setMessage(`Failed to fetch players: ${playersError.message}`);
+    try {
+      const setsPayload = sets.map((set) => ({
+        game_id: selectedGameId,
+        set_no: set.set_no,
+        points_for: set.points_for,
+        points_against: set.points_against,
+        result: set.result,
+      }));
+
+      const { error: setError } = await supabase.from("sets").insert(setsPayload);
+
+      if (setError) {
+        setMessage(`Failed to add sets: ${setError.message}`);
         setLoading(false);
         return;
       }
 
-      for (const player of playersData) {
-        const updatedplus_minus = (player.plus_minus ?? 0) + matchPlusMinus;
-        const updatedGamesPlayed = (player.games_played ?? 0) + 1;
+      let wins = 0;
+      let losses = 0;
+      let ties = 0;
+      let totalPF = 0;
+      let totalPA = 0;
 
-        const { error: updatePlayerError } = await supabase
+      sets.forEach((s) => {
+        totalPF += s.points_for;
+        totalPA += s.points_against;
+        if (s.points_for === s.points_against) ties++;
+        else if (s.points_for > s.points_against) wins++;
+        else losses++;
+      });
+
+      const matchResult = wins > losses ? "Win" : losses > wins ? "Loss" : "Draw";
+      const matchPlusMinus = totalPF - totalPA;
+
+      const { data: teamData, error: teamError } = await supabase
+        .from("teams")
+        .select("player_ids, points_for, points_against, wins, losses")
+        .eq("team_id", teamId)
+        .single();
+
+      if (teamError || !teamData) {
+        setMessage(`Failed to fetch team info: ${teamError?.message || "No team returned"}`);
+        setLoading(false);
+        return;
+      }
+
+      if (teamData.player_ids && teamData.player_ids.length > 0) {
+        const { data: playersData, error: playersError } = await supabase
           .from("players")
-          .update({
-            plus_minus: updatedplus_minus,
-            games_played: updatedGamesPlayed,
-          })
-          .eq("id", player.id);
+          .select("id, plus_minus, games_played")
+          .in("id", teamData.player_ids);
 
-        if (updatePlayerError) {
-          setMessage(`Failed to update player ${player.id}: ${updatePlayerError.message}`);
+        if (playersError) {
+          setMessage(`Failed to fetch players: ${playersError.message}`);
           setLoading(false);
           return;
         }
+
+        for (const player of playersData) {
+          const updatedplus_minus = (player.plus_minus ?? 0) + matchPlusMinus;
+          const updatedGamesPlayed = (player.games_played ?? 0) + 1;
+
+          const { error: updatePlayerError } = await supabase
+            .from("players")
+            .update({
+              plus_minus: updatedplus_minus,
+              games_played: updatedGamesPlayed,
+            })
+            .eq("id", player.id);
+
+          if (updatePlayerError) {
+            setMessage(`Failed to update player ${player.id}: ${updatePlayerError.message}`);
+            setLoading(false);
+            return;
+          }
+        }
       }
-    }
 
-    // Step 5: Update team stats
-    const updatedTeamStats = {
-      points_for: (teamData.points_for ?? 0) + totalPF,
-      points_against: (teamData.points_against ?? 0) + totalPA,
-      wins: (teamData.wins ?? 0) + (wins > losses ? 1 : 0),
-      losses: (teamData.losses ?? 0) + (losses > wins ? 1 : 0),
-    };
+      const updatedTeamStats = {
+        points_for: (teamData.points_for ?? 0) + totalPF,
+        points_against: (teamData.points_against ?? 0) + totalPA,
+        wins: (teamData.wins ?? 0) + (wins > losses ? 1 : 0),
+        losses: (teamData.losses ?? 0) + (losses > wins ? 1 : 0),
+      };
 
-    const { error: updateTeamError } = await supabase
-      .from("teams")
-      .update(updatedTeamStats)
-      .eq("team_id", teamId);
+      const { error: updateTeamError } = await supabase
+        .from("teams")
+        .update(updatedTeamStats)
+        .eq("team_id", teamId);
 
-    if (updateTeamError) {
-      setMessage(`Failed to update team stats: ${updateTeamError.message}`);
+      if (updateTeamError) {
+        setMessage(`Failed to update team stats: ${updateTeamError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      setMessage(`Sets added! Match result: ${matchResult} (${wins}W - ${losses}L - ${ties}T)`);
+      setSets([]);
+      setSetNo(1);
+      setSetPointsFor("");
+      setSetPointsAgainst("");
+      setSetResult("W");
+
+      const { data: refreshedTeams } = await supabase.from("teams").select("*");
+      setTeams(refreshedTeams ?? []);
+    } catch (error) {
+      setMessage("Unexpected error: " + (error as Error).message);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Step 6: Reset form and refresh teams
-    setMessage(`Sets added! Match result: ${matchResult} (${wins}W - ${losses}L - ${ties}T)`);
-    setSets([]);
-    setSetNo(1);
-    setSetPointsFor("");
-    setSetPointsAgainst("");
-    setSetResult("W");
-
-    const { data: refreshedTeams } = await supabase.from("teams").select("*");
-    setTeams(refreshedTeams ?? []);
-  } catch (error) {
-    setMessage("Unexpected error: " + (error as Error).message);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
-    <div className="max-w-3xl mx-auto mt-12 p-6 bg-card rounded-lg shadow space-y-12">
+    <div className="max-w-3xl mx-auto mt-12 p-4 sm:p-6 bg-card rounded-lg shadow space-y-8">
       <section>
         <h2 className="text-2xl font-bold mb-4">Secret Admin: Add Sets to Game</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Team Selection */}
           <div>
             <label className="block mb-2 font-semibold">Select Team</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {teams.map((team) => (
                 <label
                   key={team.team_id}
@@ -269,7 +261,7 @@ const AdminGameEntry = () => {
             <select
               value={selectedGameId}
               onChange={(e) => setSelectedGameId(e.target.value)}
-              className="w-full border rounded px-2 py-1"
+              className="w-full border rounded px-2 py-2"
               disabled={loading}
             >
               {games.map((game) => (
@@ -283,14 +275,14 @@ const AdminGameEntry = () => {
           {/* Sets Entry */}
           <div>
             <label className="block mb-2 font-semibold">Add Sets</label>
-            <div className="flex gap-2 mb-2">
+            <div className="flex flex-wrap gap-2 mb-2">
               <input
                 type="number"
                 value={set_no}
                 onChange={(e) => setSetNo(Number(e.target.value))}
                 min={1}
                 placeholder="Set Number"
-                className="border rounded px-2 py-1"
+                className="border rounded px-2 py-2 w-full sm:w-24"
               />
               <input
                 type="number"
@@ -298,7 +290,7 @@ const AdminGameEntry = () => {
                 onChange={(e) => setSetPointsFor(e.target.value)}
                 min={0}
                 placeholder="Points For"
-                className="border rounded px-2 py-1"
+                className="border rounded px-2 py-2 w-full sm:w-24"
               />
               <input
                 type="number"
@@ -306,12 +298,12 @@ const AdminGameEntry = () => {
                 onChange={(e) => setSetPointsAgainst(e.target.value)}
                 min={0}
                 placeholder="Points Against"
-                className="border rounded px-2 py-1"
+                className="border rounded px-2 py-2 w-full sm:w-24"
               />
               <select
                 value={set_result}
                 onChange={(e) => setSetResult(e.target.value as "W" | "L")}
-                className="border rounded px-2 py-1"
+                className="border rounded px-2 py-2 w-full sm:w-24"
               >
                 <option value="W">Win</option>
                 <option value="L">Loss</option>
@@ -319,14 +311,14 @@ const AdminGameEntry = () => {
               <button
                 type="button"
                 onClick={handleAddSet}
-                className="bg-primary text-primary-foreground py-1 px-4 rounded font-bold"
+                className="bg-primary text-primary-foreground py-2 px-4 rounded font-bold w-full sm:w-auto"
               >
                 Add Set
               </button>
             </div>
             <div>
               {sets.map((set, idx) => (
-                <div key={idx} className="mb-1 flex items-center gap-2">
+                <div key={idx} className="mb-1 flex items-center justify-between">
                   <span>
                     Set {set.set_no}: {set.points_for} - {set.points_against} ({set.result === "W" ? "Win" : "Loss"})
                   </span>
