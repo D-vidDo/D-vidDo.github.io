@@ -10,70 +10,88 @@ interface TeamCardProps {
   team: {
     team_id: string;
     name: string;
-    wins: number;
-    losses: number;
     captain: string;
     color: string;
-    player_ids?: string[]; // Optional array of player IDs
-    points_for: number;
-    points_against: number;
+    player_ids?: string[];
   };
 }
 
 const TeamCard = ({ team }: TeamCardProps) => {
-  const winPercentage = ((team.wins / (team.wins + team.losses)) * 100).toFixed(1);
-  const [playerCount, setPlayerCount] = useState<number>(
-    Array.isArray(team.player_ids) ? team.player_ids.length : 0
-  );
+  const [playerCount, setPlayerCount] = useState<number>(0);
+  const [wins, setWins] = useState<number>(0);
+  const [losses, setLosses] = useState<number>(0);
+  const [pointsFor, setPointsFor] = useState<number>(0);
+  const [pointsAgainst, setPointsAgainst] = useState<number>(0);
 
-  // Optional: fetch player count from Supabase if playerIds exists
   useEffect(() => {
-    async function fetchPlayerCount() {
-      if (team.player_ids && team.player_ids.length > 0) {
-        // Assuming you have a 'players' table and want to confirm existing players
-        const { data, error } = await supabase
+    async function fetchStats() {
+      // Fetch player count
+      if (team.player_ids?.length) {
+        const { data } = await supabase
           .from("players")
           .select("id")
           .in("id", team.player_ids);
-
-        if (error) {
-          console.error("Error fetching players:", error);
-        } else {
-          setPlayerCount(data?.length || 0);
-        }
-      } else {
-        setPlayerCount(0);
+        setPlayerCount(data?.length || 0);
       }
+
+      // Fetch games and sets
+      const { data: games } = await supabase
+        .from("games")
+        .select(`
+          id,
+          team_id,
+          sets (
+            points_for,
+            points_against
+          )
+        `)
+        .eq("team_id", team.team_id);
+
+      let w = 0, l = 0, pf = 0, pa = 0;
+
+      (games ?? []).forEach((game) => {
+        const sets = game.sets ?? [];
+        let gamePF = 0;
+        let gamePA = 0;
+
+        sets.forEach((set) => {
+          gamePF += set.points_for;
+          gamePA += set.points_against;
+        });
+
+        pf += gamePF;
+        pa += gamePA;
+
+        if (gamePF > gamePA) w++;
+        else if (gamePF < gamePA) l++;
+      });
+
+      setWins(w);
+      setLosses(l);
+      setPointsFor(pf);
+      setPointsAgainst(pa);
     }
 
-    fetchPlayerCount();
-  }, [team.player_ids]);
+    fetchStats();
+  }, [team.team_id, team.player_ids]);
+
+  const winPercentage =
+    wins + losses > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : "0.0";
+  const plusMinus = pointsFor - pointsAgainst;
 
   return (
     <Card className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 group">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-
-            {/* icon  */}
-            
             <img
-              src={`/logos/${team.team_id}.jpg`} // or team.logo if you store it in the object
+              src={`/logos/${team.team_id}.jpg`}
               alt={`${team.name} logo`}
-              
               onError={(e) => {
-                   <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md"
-              style={{ backgroundColor: team.color }}
-            >
-              {team.name.substring(0, 2).toUpperCase()}
-            </div> 
-                }}
-
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
               className="w-12 h-12 rounded-lg object-contain shadow-md"
             />
-
-            
             <div>
               <h3 className="text-lg font-bold text-card-foreground group-hover:text-primary transition-colors">
                 {team.name}
@@ -90,15 +108,15 @@ const TeamCard = ({ team }: TeamCardProps) => {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="space-y-1">
-            <div className="text-2xl font-bold text-green-600">{team.wins}</div>
+            <div className="text-2xl font-bold text-green-600">{wins}</div>
             <div className="text-xs text-muted-foreground">Wins</div>
           </div>
           <div className="space-y-1">
-            <div className="text-2xl font-bold text-red-500">{team.losses}</div>
+            <div className="text-2xl font-bold text-red-500">{losses}</div>
             <div className="text-xs text-muted-foreground">Losses</div>
           </div>
           <div className="space-y-1">
-            <div className="text-2xl font-bold text-primary">{(team.points_for-team.points_against)}</div>
+            <div className="text-2xl font-bold text-primary">{plusMinus}</div>
             <div className="text-xs text-muted-foreground">Team +/-</div>
           </div>
         </div>
