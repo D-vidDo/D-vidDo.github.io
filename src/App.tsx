@@ -97,7 +97,7 @@ const App = () => (
             <Route path="/trades" element={<Trades />} />
             <Route path="/Admin" element={<Admin />} />
             <Route path="/rules" element={<Rules />} />
-            <Route path="/AdminVod" element={<AdminVod />} />
+            <Route path="/vod" element={<AdminVod />} />
             {/* Add a NotFound route at the end */}
             <Route path="*" element={<NotFound />} />
           </Routes>
