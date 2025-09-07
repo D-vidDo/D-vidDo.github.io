@@ -57,6 +57,14 @@ interface Team {
   points_against: number;
   player_ids: string[];
 }
+const formatTime12H = (time: string) => {
+  const [hourStr, minute] = time.split(":");
+  const hour = parseInt(hourStr, 10);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 || 12;
+  return `${formattedHour}:${minute} ${suffix}`;
+};
+
 
 const TeamDetail = () => {
   const { teamId } = useParams<{ teamId: string }>();
@@ -318,7 +326,7 @@ useEffect(() => {
                         return (
                           <tr key={`${game.id}-set-${set.set_no}`} className={idx % 2 === 0 ? "bg-muted/10" : ""}>
                             <td className="px-4 py-2">{game.date}</td>
-                            <td className="px-4 py-2">{game.time}</td>
+                            <td className="px-4 py-2">{formatTime12H(game.time)}</td> {/* 👈 Formatted time */}
                             <td className="px-4 py-2 font-semibold">{game.opponent}</td>
                             <td className="px-4 py-2 text-center">{set.set_no}</td>
                             <td className="px-4 py-2 text-center text-green-700 font-bold">{set.points_for}</td>
