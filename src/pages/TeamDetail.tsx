@@ -66,108 +66,128 @@ const TeamDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchTeamData() {
-      setLoading(true);
-      setError(null);
+useEffect(() => {
+  async function fetchTeamData() {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const { data: teamData } = await supabase
-          .from("teams")
-          .select("*")
-          .eq("team_id", teamId)
-          .single();
+    try {
+      const { data: teamData } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("team_id", teamId)
+        .single();
 
-        setTeam(teamData);
+      setTeam(teamData);
 
-        const { data: playersData } = await supabase
-          .from("players")
-          .select("*")
-          .in("id", teamData?.player_ids ?? []);
-        setPlayers(playersData ?? []);
+      const { data: playersData } = await supabase
+        .from("players")
+        .select("*")
+        .in("id", teamData?.player_ids ?? []);
+      setPlayers(playersData ?? []);
 
-        const { data: gameData } = await supabase
-          .from("games")
-          .select(`
-            id,
-            date,
-            opponent,
-            team_id,
-            sets (
-              set_no,
-              points_for,
-              points_against,
-              vod_link
-            )
-          `)
-          .eq("team_id", teamId);
+      const { data: gameData, error: gameErr } = await supabase
+        .from("games")
+        .select(`
+          id,
+          date,
+          time,
+          opponent,
+          team_id,
+          sets (
+            set_no,
+            points_for,
+            points_against,
+            vod_link
+          )
+        `)
+        .eq("team_id", teamId)
+        .order("date", { ascending: false }) // newest games first
+        .order("time", { ascending: false, nullsFirst: false }) // optional
+        .order("set_no", { foreignTable: "sets", ascending: true }); // sets in order
+      if (gameErr) {
+        throw gameErr;
+      }
 
-        const playedGames = (gameData ?? [])
-          .filter((g) => g.sets && g.sets.length > 0)
-          .map((g) => {
-            const totalPF = g.sets.reduce((sum: number, s: Set) => sum + s.points_for, 0);
-            const totalPA = g.sets.reduce((sum: number, s: Set) => sum + s.points_against, 0);
-            const result: "W" | "L" | "T" = totalPF > totalPA ? "W" : totalPF < totalPA ? "L" : "T";
-
-            return {
-              id: g.id as string,
-              date: g.date as string,
-              opponent: g.opponent as string,
-              points_for: totalPF,
-              points_against: totalPA,
-              result,
-              sets: g.sets as Set[],
-            };
+      const playedGames = (gameData ?? [])
+        .filter((g) => g.sets && g.sets.length > 0)
+        .map((g) => {
+          const orderedSets = [...g.sets].sort((a, b) => {
+            const aNo = typeof a.set_no === "number" ? a.set_no : Number.MAX_SAFE_INTEGER;
+            const bNo = typeof b.set_no === "number" ? b.set_no : Number.MAX_SAFE_INTEGER;
+            return aNo - bNo;
           });
 
-        setGames(playedGames);
+          const totalPF = orderedSets.reduce((sum: number, s: any) => sum + s.points_for, 0);
+          const totalPA = orderedSets.reduce((sum: number, s: any) => sum + s.points_against, 0);
+          const result: "W" | "L" | "T" = totalPF > totalPA ? "W" : totalPF < totalPA ? "L" : "T";
 
-        const { data: tradesData } = await supabase
-          .from("trades")
-          .select("id, date, description")
-          .order("date", { ascending: false });
+          return {
+            id: String(g.id),
+            date: g.date as string,
+            opponent: g.opponent as string,
+            points_for: totalPF,
+            points_against: totalPA,
+            result,
+            sets: orderedSets,
+          };
+        })
+        .sort((a, b) => {
+          if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+          const aTime = (gameData?.find((g) => String(g.id) === a.id)?.time ?? "") as string;
+          const bTime = (gameData?.find((g) => String(g.id) === b.id)?.time ?? "") as string;
+          return aTime < bTime ? 1 : aTime > bTime ? -1 : 0;
+        });
 
-        const tradesWithPlayers = await Promise.all(
-          (tradesData ?? []).map(async (trade) => {
-            const { data: playersTradedData } = await supabase
-              .from("players_traded")
-              .select(`
-                from_team,
-                to_team,
-                player:player_id (
-                  id,
-                  name
-                )
-              `)
-              .eq("trade_id", trade.id);
+      setGames(playedGames);
 
-            return {
-              id: trade.id,
-              date: trade.date,
-              description: trade.description,
-              playersTraded: playersTradedData ?? [],
-            };
-          })
+      const { data: tradesData } = await supabase
+        .from("trades")
+        .select("id, date, description")
+        .order("date", { ascending: false });
+
+      const tradesWithPlayers = await Promise.all(
+        (tradesData ?? []).map(async (trade) => {
+          const { data: playersTradedData } = await supabase
+            .from("players_traded")
+            .select(`
+              from_team,
+              to_team,
+              player:player_id (
+                id,
+                name
+              )
+            `)
+            .eq("trade_id", trade.id);
+
+          return {
+            id: trade.id,
+            date: trade.date,
+            description: trade.description,
+            playersTraded: playersTradedData ?? [],
+          };
+        })
+      );
+
+      const teamTrades = tradesWithPlayers
+        .filter(Boolean)
+        .filter((trade) =>
+          trade.playersTraded.some(
+            (pt) => pt.toTeam === teamData?.name || pt.fromTeam === teamData?.name
+          )
         );
 
-        const teamTrades = tradesWithPlayers
-          .filter(Boolean)
-          .filter((trade) =>
-            trade.playersTraded.some(
-              (pt) => pt.toTeam === teamData?.name || pt.fromTeam === teamData?.name
-            )
-          );
-
-        setTrades(teamTrades);
-      } catch (err) {
-        setError("Unexpected error: " + (err as Error).message);
-      } finally {
-        setLoading(false);
-      }
+      setTrades(teamTrades);
+    } catch (err) {
+      setError("Unexpected error: " + (err as Error).message);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    fetchTeamData();
-  }, [teamId]);
+  fetchTeamData();
+}, [teamId]);
+
 
   if (loading)
     return (
