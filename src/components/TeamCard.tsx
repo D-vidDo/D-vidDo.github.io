@@ -13,13 +13,13 @@ interface TeamCardProps {
     captain: string;
     color: string;
     player_ids?: string[];
+    wins: number;
+    losses: number;
   };
 }
 
 const TeamCard = ({ team }: TeamCardProps) => {
   const [playerCount, setPlayerCount] = useState<number>(0);
-  const [wins, setWins] = useState<number>(0);
-  const [losses, setLosses] = useState<number>(0);
   const [pointsFor, setPointsFor] = useState<number>(0);
   const [pointsAgainst, setPointsAgainst] = useState<number>(0);
 
@@ -32,42 +32,37 @@ const TeamCard = ({ team }: TeamCardProps) => {
           .select("id")
           .in("id", team.player_ids);
         setPlayerCount(data?.length || 0);
+      } else {
+        setPlayerCount(0);
       }
 
-      // Fetch games and sets
-      const { data: games } = await supabase
-        .from("games")
-        .select(`
-          id,
-          team_id,
-          sets (
-            points_for,
-            points_against
-          )
-        `)
-        .eq("team_id", team.team_id);
+      // Fetch sets for this team
+      const { data: setsData, error: setsError } = await supabase
+        .from("sets")
+        .select("points_for, points_against, game_id")
+        .in(
+          "game_id",
+          (
+            await supabase
+              .from("games")
+              .select("id")
+              .eq("team_id", team.team_id)
+          ).data?.map((g) => g.id) ?? []
+        );
 
-      let w = 0, l = 0, pf = 0, pa = 0;
+      if (setsError) {
+        console.error("Error fetching sets:", setsError.message);
+        return;
+      }
 
-      (games ?? []).forEach((game) => {
-        const sets = game.sets ?? [];
-        let gamePF = 0;
-        let gamePA = 0;
+      let pf = 0;
+      let pa = 0;
 
-        sets.forEach((set) => {
-          gamePF += set.points_for;
-          gamePA += set.points_against;
-        });
-
-        pf += gamePF;
-        pa += gamePA;
-
-        if (gamePF > gamePA) w++;
-        else if (gamePF < gamePA) l++;
+      (setsData ?? []).forEach((set) => {
+        pf += set.points_for;
+        pa += set.points_against;
       });
 
-      setWins(w);
-      setLosses(l);
       setPointsFor(pf);
       setPointsAgainst(pa);
     }
@@ -76,7 +71,10 @@ const TeamCard = ({ team }: TeamCardProps) => {
   }, [team.team_id, team.player_ids]);
 
   const winPercentage =
-    wins + losses > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : "0.0";
+    team.wins + team.losses > 0
+      ? ((team.wins / (team.wins + team.losses)) * 100).toFixed(1)
+      : "0.0";
+
   const plusMinus = pointsFor - pointsAgainst;
 
   return (
@@ -108,11 +106,11 @@ const TeamCard = ({ team }: TeamCardProps) => {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="space-y-1">
-            <div className="text-2xl font-bold text-green-600">{wins}</div>
+            <div className="text-2xl font-bold text-green-600">{team.wins}</div>
             <div className="text-xs text-muted-foreground">Wins</div>
           </div>
           <div className="space-y-1">
-            <div className="text-2xl font-bold text-red-500">{losses}</div>
+            <div className="text-2xl font-bold text-red-500">{team.losses}</div>
             <div className="text-xs text-muted-foreground">Losses</div>
           </div>
           <div className="space-y-1">
