@@ -103,42 +103,43 @@ useEffect(() => {
           )
         `)
         .eq("team_id", teamId)
-        .order("date", { ascending: true }) // newest games first
+        .order("date", { ascending: true }) // newest games last
         .order("time", { ascending: false, nullsFirst: false }) // optional
         .order("set_no", { foreignTable: "sets", ascending: true }); // sets in order
       if (gameErr) {
         throw gameErr;
       }
 
-      const playedGames = (gameData ?? [])
-        .filter((g) => g.sets && g.sets.length > 0)
-        .map((g) => {
-          const orderedSets = [...g.sets].sort((a, b) => {
-            const aNo = typeof a.set_no === "number" ? a.set_no : Number.MAX_SAFE_INTEGER;
-            const bNo = typeof b.set_no === "number" ? b.set_no : Number.MAX_SAFE_INTEGER;
-            return aNo - bNo;
-          });
+   const playedGames = (gameData ?? [])
+  .filter((g) => g.sets && g.sets.length > 0)
+  .map((g) => {
+    const orderedSets = [...g.sets].sort((a, b) => {
+      const aNo = typeof a.set_no === "number" ? a.set_no : Number.MAX_SAFE_INTEGER;
+      const bNo = typeof b.set_no === "number" ? b.set_no : Number.MAX_SAFE_INTEGER;
+      return aNo - bNo;
+    });
 
-          const totalPF = orderedSets.reduce((sum: number, s: any) => sum + s.points_for, 0);
-          const totalPA = orderedSets.reduce((sum: number, s: any) => sum + s.points_against, 0);
-          const result: "W" | "L" | "T" = totalPF > totalPA ? "W" : totalPF < totalPA ? "L" : "T";
+    const totalPF = orderedSets.reduce((sum: number, s: any) => sum + s.points_for, 0);
+    const totalPA = orderedSets.reduce((sum: number, s: any) => sum + s.points_against, 0);
+    const result: "W" | "L" | "T" = totalPF > totalPA ? "W" : totalPF < totalPA ? "L" : "T";
 
-          return {
-            id: String(g.id),
-            date: g.date as string,
-            opponent: g.opponent as string,
-            points_for: totalPF,
-            points_against: totalPA,
-            result,
-            sets: orderedSets,
-          };
-        })
-        .sort((a, b) => {
-          if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-          const aTime = (gameData?.find((g) => String(g.id) === a.id)?.time ?? "") as string;
-          const bTime = (gameData?.find((g) => String(g.id) === b.id)?.time ?? "") as string;
-          return aTime < bTime ? 1 : aTime > bTime ? -1 : 0;
-        });
+    return {
+      id: String(g.id),
+      date: g.date as string,
+      time: g.time as string, // ✅ added time field
+      opponent: g.opponent as string,
+      points_for: totalPF,
+      points_against: totalPA,
+      result,
+      sets: orderedSets,
+    };
+  })
+  .sort((a, b) => {
+    const aDateTime = new Date(`${a.date}T${a.time}`);
+    const bDateTime = new Date(`${b.date}T${b.time}`);
+    return aDateTime.getTime() - bDateTime.getTime(); // ✅ oldest first
+  });
+
 
       setGames(playedGames);
 
