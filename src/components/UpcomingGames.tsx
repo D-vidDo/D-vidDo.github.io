@@ -131,9 +131,11 @@ function formatGameTime(time24) {
   >
     {formatGameTime(game.time)}
   </div>
-  <div className="text-sm text-muted-foreground w-16 text-right">
+  
+<Badge variant="secondary" className="w-20 text-center">
     Court {game.court}
-  </div>
+  </Badge>
+
 </div>
 
         </li>
