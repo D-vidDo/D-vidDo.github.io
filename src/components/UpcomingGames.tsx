@@ -124,19 +124,24 @@ function formatGameTime(time24) {
           </div>
 
           {/* Game Info */}
-<div className="flex items-center justify-between w-40">
+<div className="flex items-center space-x-3">
+  {/* Time Badge - team color */}
   <div
     className="px-2 py-1 rounded text-xs font-medium text-white text-center w-20"
     style={{ backgroundColor: game.teams?.color ?? "#666" }}
   >
     {formatGameTime(game.time)}
   </div>
-  
-<Badge variant="secondary" className="w-20 text-center">
-    Court {game.court}
-  </Badge>
 
+  {/* Court Badge - neutral, lighter style */}
+  <div
+    className="px-2 py-1 rounded text-xs font-medium text-card-foreground text-center w-20"
+    style={{ backgroundColor: "#e2e8f0" }} // Tailwind's slate-200 equivalent
+  >
+    Court {game.court}
+  </div>
 </div>
+
 
         </li>
       ))}
