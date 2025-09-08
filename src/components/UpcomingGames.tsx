@@ -132,16 +132,13 @@ function formatGameTime(time24) {
               })}
             </div> */}
             
-<div className="flex items-center space-x-6 text-sm text-muted-foreground">
-  <div
-    className="px-2 py-1 rounded text-xs font-medium text-white"
-    style={{ backgroundColor: game.teams?.color ?? "#666" }}
-  >
-    {formatGameTime(game.time)}
-  </div>
-  <div>Court {game.court}</div>
-</div>
+<div className="game-time">
+      {formatGameTime(game.time)}
+    </div>
 
+            <div>Court {game.court}</div>
+            
+          </div>
         </li>
       ))}
     </ul>
