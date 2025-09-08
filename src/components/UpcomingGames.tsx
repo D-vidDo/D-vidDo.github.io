@@ -77,12 +77,24 @@ function formatGameTime(time24) {
 
   return (
     <Card className="bg-gradient-card shadow-card">
-      <CardHeader className="flex items-center space-x-3">
-        <Calendar className="text-primary" />
-        <h2 className="text-xl font-bold text-card-foreground">Upcoming Games</h2>
-              <div className="warmup-note">Warm‑up starts 10 minutes before the first game</div>
+      <CardHeader className="flex items-center justify-between">
+  <div className="flex items-center space-x-3">
+    <Calendar className="text-primary" />
+    <h2 className="text-xl font-bold text-card-foreground">Upcoming Games</h2>
+  </div>
+  {games.length > 0 && (
+    <Badge variant="secondary">
+              {new Date(games[0].date).toLocaleDateString("en-CA", {
+                timeZone: "UTC",
+              month: "short",
+              day: "numeric",
+              year: "numeric"
+              }
+              )}
+            </Badge>
+  )}
+</CardHeader>
 
-      </CardHeader>
 
 <CardContent className="max-h-[500px] overflow-y-auto space-y-4 pr-2">
   {games.length === 0 ? (
@@ -120,21 +132,16 @@ function formatGameTime(time24) {
               })}
             </div> */}
             
-<div className="game-time">
-      {formatGameTime(game.time)}
-    </div>
+<div className="flex items-center space-x-6 text-sm text-muted-foreground">
+  <div
+    className="px-2 py-1 rounded text-xs font-medium text-white"
+    style={{ backgroundColor: game.teams?.color ?? "#666" }}
+  >
+    {formatGameTime(game.time)}
+  </div>
+  <div>Court {game.court}</div>
+</div>
 
-            <div>Court {game.court}</div>
-            <Badge variant="secondary">
-              {new Date(game.date).toLocaleDateString("en-CA", {
-                timeZone: "UTC",
-              month: "short",
-              day: "numeric",
-              year: "numeric"
-              }
-              )}
-            </Badge>
-          </div>
         </li>
       ))}
     </ul>
