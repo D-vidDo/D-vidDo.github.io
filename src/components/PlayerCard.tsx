@@ -74,24 +74,23 @@ const tooltipText = displayLabel
               <h3 className="font-semibold text-card-foreground">{player.name}</h3>
 
               {displayLabel && (
-                <TooltipProvider delayDuration={150}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span
-                        className="text-sm font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm cursor-help"
-                        aria-label={`Title: ${displayLabel}`}
-                      >
-                        {displayLabel}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" align="center" className="max-w-[240px]">
-                      <p className="text-xs leading-snug">
-                        Highest {displayLabel} score
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
+  <TooltipProvider delayDuration={150}>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          className="text-sm font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm cursor-help"
+          aria-label={`Title: ${displayLabel}`}
+        >
+          {displayLabel}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" align="center" className="max-w-[240px]">
+        <p className="text-xs leading-snug">{tooltipText}</p>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
+
             </div>
 
             {player.isCaptain && (
