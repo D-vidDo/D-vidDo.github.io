@@ -48,6 +48,17 @@ const Navigation = () => {
                 </Button>
               </Link>
             ))}
+
+            
+<Link to="/vod">
+    <Button
+      variant="outline"
+      className="text-white border-white hover:bg-white/10"
+    >
+      Upload VOD
+    </Button>
+  </Link>
+
           </div>
 
           {/* Mobile menu button */}
@@ -76,6 +87,16 @@ const Navigation = () => {
                   </Button>
                 </Link>
               ))}
+              
+<Link to="/vod" onClick={() => setIsMenuOpen(false)}>
+  <Button
+    variant="outline"
+    className="w-full justify-start text-white border-white hover:bg-white/10"
+  >
+    Upload VOD
+  </Button>
+</Link>
+
             </div>
           </div>
         )}
