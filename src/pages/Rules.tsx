@@ -1,19 +1,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Users, Repeat, CalendarDays, Trophy, ClipboardList, Star } from "lucide-react";
+import { Users, Repeat, CalendarDays, Trophy, ClipboardList, Star, Clock } from "lucide-react";
 
 const Rules = () => {
   return (
     <div className="min-h-screen bg-background px-4 py-12">
       <div className="max-w-4xl mx-auto space-y-8">
         <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
-            <CardTitle className="text-3xl flex items-center gap-2">
-              <ClipboardList className="h-6 w-6 text-primary" />
-              League Format
-            </CardTitle>
-          </CardHeader>
+          
+<CardHeader>
+  <CardTitle className="text-3xl flex items-center gap-2">
+    <ClipboardList className="h-6 w-6 text-primary" />
+    League Format
+  </CardTitle>
+  <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+    <Clock className="h-4 w-4" />
+    <span>Last updated on September 8, 2025</span>
+  </div>
+</CardHeader>
+
           <CardContent className="space-y-6">
             <section>
               <h2 className="text-xl font-semibold flex items-center gap-2">
