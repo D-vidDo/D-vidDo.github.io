@@ -14,46 +14,31 @@ interface Player {
   id: string;
   name: string;
   primary_position: string;
-  secondary_position?: string;
+  secondary_position: string;
   plus_minus: number;
   games_played: number;
   isCaptain?: boolean;
-  title?: string; // Assigned in DB; used only as a key here
+  title?: string; // Assigned in DB
   team: string;
   stats: Record<string, number>;
 }
 
+// Local mapping for tooltip labels
 
-/**
- * Map of (display) title -> tooltip message.
- * Only titles present here will render a badge + tooltip.
- */
 const TITLE_TOOLTIPS: Record<string, string> = {
   "Playmaker": "Highest Setting score",
+  "Luscious Lips": "Highest Communication score",
   "Iron Wall": "Highest Blocking score",
   "Ball Bender": "Highest Receiving score",
   "Floor Demon": "Highest Defensive Positioning score",
+  "Throat Goat": "Highest Stamina score",
   "Relentless": "Highest Hustle score",
   "Skywalker": "Highest Vertical Jump score",
   "Ace Machine": "Highest Serving score",
   "Certified Yammer": "Highest Hitting score",
-  "Luscious Lips": "Highest Communication score",
-  "Throat Goat": "Highest Stamina score",
 };
 
-/** Resolve the final display title and tooltip text from a DB-provided title. */
-function getDisplayTitleAndTooltip(rawTitle?: string): { displayTitle: string | null; tooltip: string | null } {
-  if (!rawTitle) return { displayTitle: null, tooltip: null };
 
-  // 1) Apply any safe-display renames/aliases
-  const displayTitle = TITLE_ALIASES[rawTitle] ?? rawTitle;
-
-  // 2) Look up the tooltip for the (possibly aliased) display title
-  const tooltip = TITLE_TOOLTIPS[displayTitle] ?? null;
-
-  // Render only if we have a tooltip in our local map
-  return tooltip ? { displayTitle, tooltip } : { displayTitle: null, tooltip: null };
-}
 
 const PlayerCard = ({ player, sortKey }: { player: Player; sortKey?: string }) => {
   const initials = player.name
@@ -67,7 +52,15 @@ const PlayerCard = ({ player, sortKey }: { player: Player; sortKey?: string }) =
     100
   );
 
-  const { displayTitle, tooltip } = getDisplayTitleAndTooltip(player.title);
+const displayLabel = player.title
+  ? STAT_LABELS[player.title] || player.title
+  : null;
+
+const tooltipText = player.title
+  ? TITLE_TOOLTIPS[player.title] || `Title: ${player.title}`
+  : null;
+
+
 
   return (
     <Card className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105">
@@ -78,29 +71,29 @@ const PlayerCard = ({ player, sortKey }: { player: Player; sortKey?: string }) =
               {initials}
             </AvatarFallback>
           </Avatar>
-
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-card-foreground">{player.name}</h3>
 
-              {/* Title badge + tooltip (only if title is recognized in our local map) */}
-              {displayTitle && tooltip && (
-                <TooltipProvider delayDuration={150}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span
-                        className="text-sm font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm cursor-help"
-                        aria-label={`Title: ${displayTitle}`}
-                      >
-                        {displayTitle}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" align="center" className="max-w-[240px]">
-                      <p className="text-xs leading-snug">{tooltip}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
+{player.title && tooltipText && (
+  <TooltipProvider delayDuration={150}>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          className="text-sm font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm cursor-help"
+          aria-label={`Title: ${player.title}`}
+        >
+          {player.title}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" align="center" className="max-w-[240px]">
+        <p className="text-xs leading-snug">{tooltipText}</p>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+)}
+
+
             </div>
 
             {player.isCaptain && (
@@ -127,7 +120,6 @@ const PlayerCard = ({ player, sortKey }: { player: Player; sortKey?: string }) =
           </div>
         </div>
       </CardHeader>
-
 
 
       <CardContent>
