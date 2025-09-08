@@ -51,9 +51,14 @@ const PlayerCard = ({ player, sortKey }: { player: Player; sortKey?: string }) =
     100
   );
 
-  const displayLabel = player.title
-    ? STAT_LABELS[player.title] || player.title
-    : null;
+const displayLabel = player.title
+  ? STAT_LABELS[player.title] || player.title
+  : null;
+
+const tooltipText = displayLabel
+  ? `Highest ${displayLabel} score`
+  : null;
+
 
   return (
     <Card className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105">
