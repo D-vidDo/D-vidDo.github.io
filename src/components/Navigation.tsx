@@ -91,7 +91,7 @@ const Navigation = () => {
 <Link to="/vod" onClick={() => setIsMenuOpen(false)}>
   <Button
     variant="ghost"
-    className="w-full justify-start text-white hover:bg-white hover:text-black border border
+    className="w-full justify-start text-white hover:bg-white hover:text-black border border"
   >
     Upload VOD
   </Button>
