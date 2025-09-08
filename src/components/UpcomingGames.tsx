@@ -127,7 +127,11 @@ function formatGameTime(time24) {
             <div>Court {game.court}</div>
             <Badge variant="secondary">
               {new Date(game.date).toLocaleDateString("en-CA", {
-                timeZone: "UTC" }
+                timeZone: "UTC",
+              month: "short",
+              day: "numeric",
+              year: "numeric"
+              }
               )}
             </Badge>
           </div>
