@@ -81,8 +81,8 @@ function formatGameTime(time24) {
   <div className="flex items-center space-x-3">
     <Calendar className="text-primary" />
     <h2 className="text-xl font-bold text-card-foreground">Upcoming Games</h2>
-    <div className="warmup-note">Warm‑up starts 10 minutes before the first game</div>
   </div>
+  <div className="warmup-note">Warm‑up starts 10 minutes before the first game</div>
   {games.length > 0 && (
     <Badge variant="secondary">
               {new Date(games[0].date).toLocaleDateString("en-CA", {
@@ -124,26 +124,18 @@ function formatGameTime(time24) {
           </div>
 
           {/* Game Info */}
-          <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-            {/* <div>
-              {new Date(`1970-01-01T${game.time}Z`).toLocaleTimeString([], {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-              })}
-            </div> */}
-            
-<div
-  className="px-2 py-1 rounded text-xs font-medium text-white"
-  style={{ backgroundColor: game.teams?.color ?? "#666" }}
->
-  {formatGameTime(game.time)}
+<div className="flex items-center justify-between w-40">
+  <div
+    className="px-2 py-1 rounded text-xs font-medium text-white text-center w-20"
+    style={{ backgroundColor: game.teams?.color ?? "#666" }}
+  >
+    {formatGameTime(game.time)}
+  </div>
+  <div className="text-sm text-muted-foreground w-16 text-right">
+    Court {game.court}
+  </div>
 </div>
 
-
-            <div>Court {game.court}</div>
-            
-          </div>
         </li>
       ))}
     </ul>
