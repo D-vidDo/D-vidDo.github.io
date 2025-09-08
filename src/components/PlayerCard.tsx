@@ -25,18 +25,19 @@ interface Player {
 
 // Local mapping for tooltip labels
 
-const STAT_LABELS: Record<string, string> = {
-  Hustle: "Hustle",
-  Hitting: "Hitting",
-  Serving: "Serving",
-  Setting: "Setting",
-  Stamina: "Stamina",
-  Blocking: "Blocking",
-  Receiving: "Receiving",
-  Communication: "Communication",
-  "Vertical Jump": "Vertical Jump",
-  "Defensive Positioning": "Defensive Positioning",
+const TITLE_TOOLTIPS: Record<string, string> = {
+  "Playmaker": "Highest Setting score",
+  "Luscious Lips": "Highest Communication score",
+  "Iron Wall": "Highest Blocking score",
+  "Ball Bender": "Highest Receiving score",
+  "Floor Demon": "Highest Defensive Positioning score",
+  "Throat Goat": "Highest Stamina score",
+  "Relentless": "Highest Hustle score",
+  "Skywalker": "Highest Vertical Jump score",
+  "Ace Machine": "Highest Serving score",
+  "Certified Yammer": "Highest Hitting score",
 };
+
 
 
 const PlayerCard = ({ player, sortKey }: { player: Player; sortKey?: string }) => {
@@ -55,9 +56,10 @@ const displayLabel = player.title
   ? STAT_LABELS[player.title] || player.title
   : null;
 
-const tooltipText = displayLabel
-  ? `Highest ${displayLabel} score`
+const tooltipText = player.title
+  ? TITLE_TOOLTIPS[player.title] || `Title: ${player.title}`
   : null;
+
 
 
   return (
@@ -73,15 +75,15 @@ const tooltipText = displayLabel
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-card-foreground">{player.name}</h3>
 
-              {displayLabel && (
+{player.title && tooltipText && (
   <TooltipProvider delayDuration={150}>
     <Tooltip>
       <TooltipTrigger asChild>
         <span
           className="text-sm font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm cursor-help"
-          aria-label={`Title: ${displayLabel}`}
+          aria-label={`Title: ${player.title}`}
         >
-          {displayLabel}
+          {player.title}
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" align="center" className="max-w-[240px]">
@@ -90,6 +92,7 @@ const tooltipText = displayLabel
     </Tooltip>
   </TooltipProvider>
 )}
+
 
             </div>
 
