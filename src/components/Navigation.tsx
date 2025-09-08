@@ -52,8 +52,8 @@ const Navigation = () => {
             
 <Link to="/vod">
     <Button
-      variant="outline"
-      className="text-black border-white hover:bg-white/10"
+      variant="ghost"
+      className="text-white hover:bg-white hover:text-black border border-white"
     >
       Upload VOD
     </Button>
@@ -90,8 +90,8 @@ const Navigation = () => {
               
 <Link to="/vod" onClick={() => setIsMenuOpen(false)}>
   <Button
-    variant="outline"
-    className="w-full justify-start text-black border-white hover:bg-white/10"
+    variant="ghost"
+    className="w-full justify-start text-white hover:bg-white hover:text-black border border
   >
     Upload VOD
   </Button>
