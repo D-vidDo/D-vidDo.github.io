@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Trophy } from "lucide-react";
+import { Menu, X, Trophy, Upload } from "lucide-react";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -91,11 +91,13 @@ const Navigation = () => {
 <Link to="/vod" onClick={() => setIsMenuOpen(false)}>
   <Button
     variant="ghost"
-    className="w-full justify-start text-white hover:bg-white hover:text-black border border"
+    className="w-full flex items-center justify-center text-white hover:bg-white hover:text-black border border-white"
   >
+    <Upload className="h-4 w-4 mr-2" />
     Upload VOD
   </Button>
 </Link>
+
 
             </div>
           </div>
