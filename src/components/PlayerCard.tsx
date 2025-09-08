@@ -1,14 +1,7 @@
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Award } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 interface Player {
   id: string;
@@ -18,28 +11,17 @@ interface Player {
   plus_minus: number;
   games_played: number;
   isCaptain?: boolean;
-  title?: string; // Assigned in DB
+  title: string;
   team: string;
   stats: Record<string, number>;
 }
 
-// Local mapping for tooltip labels
+interface PlayerCardProps {
+  player: Player;
+  sortKey?: string;
+}
 
-const STAT_LABELS: Record<string, string> = {
-  Hustle: "Hustle",
-  Hitting: "Hitting",
-  Serving: "Serving",
-  Setting: "Setting",
-  Stamina: "Stamina",
-  Blocking: "Blocking",
-  Receiving: "Receiving",
-  Communication: "Communication",
-  "Vertical Jump": "Vertical Jump",
-  "Defensive Positioning": "Defensive Positioning",
-};
-
-
-const PlayerCard = ({ player, sortKey }: { player: Player; sortKey?: string }) => {
+const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
   const initials = player.name
     .split(" ")
     .map((n) => n[0])
@@ -50,10 +32,6 @@ const PlayerCard = ({ player, sortKey }: { player: Player; sortKey?: string }) =
     Object.values(player.stats || {}).reduce((sum, val) => sum + val, 0) * 2,
     100
   );
-
-  const displayLabel = player.title
-    ? STAT_LABELS[player.title] || player.title
-    : null;
 
   return (
     <Card className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105">
@@ -66,35 +44,28 @@ const PlayerCard = ({ player, sortKey }: { player: Player; sortKey?: string }) =
           </Avatar>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-card-foreground">{player.name}</h3>
+              {/* <h3 className="font-semibold text-card-foreground">{player.name}</h3> */}
+              <div className="flex items-center gap-2">
+  <h3 className="font-semibold text-card-foreground">{player.name}</h3>
+  {player.title && (
+    <span className="text-sm font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm">
+      {player.title}
+    </span>
+  )}
+  {/* {player.isCaptain && (
+    <Badge variant="default" className="text-xs">
+      <Award className="h-3 w-3 mr-1" /> Captain
+    </Badge>
+  )} */}
+</div>
 
-              {displayLabel && (
-                <TooltipProvider delayDuration={150}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span
-                        className="text-sm font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm cursor-help"
-                        aria-label={`Title: ${displayLabel}`}
-                      >
-                        {displayLabel}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" align="center" className="max-w-[240px]">
-                      <p className="text-xs leading-snug">
-                        Highest {displayLabel} score
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+              
+              {player.isCaptain && (
+                <Badge variant="default" className="text-xs">
+                  <Award className="h-3 w-3 mr-1" /> Captain
+                </Badge>
               )}
             </div>
-
-            {player.isCaptain && (
-              <Badge variant="default" className="text-xs">
-                <Award className="h-3 w-3 mr-1" /> Captain
-              </Badge>
-            )}
-
             <p className="text-sm text-muted-foreground">
               {player.primary_position}
               {player.secondary_position && (
@@ -113,7 +84,6 @@ const PlayerCard = ({ player, sortKey }: { player: Player; sortKey?: string }) =
           </div>
         </div>
       </CardHeader>
-
 
       <CardContent>
         <div className="grid grid-cols-2 gap-4 text-center">
