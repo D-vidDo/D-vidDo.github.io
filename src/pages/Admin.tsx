@@ -275,17 +275,24 @@ useEffect(() => {
           <div>
             <label className="block mb-1 font-semibold">Select Game</label>
             <select
-              value={selectedGameId}
-              onChange={(e) => setSelectedGameId(e.target.value)}
-              className="w-full border rounded px-2 py-2"
-              disabled={loading}
-            >
-              {games.map((game) => (
-                <option key={game.id} value={game.id}>
-                  {game.label}
-                </option>
-              ))}
-            </select>
+  value={selectedGameId}
+  onChange={(e) => {
+    if (sets.length > 0) {
+      alert("Please finish or clear the sets for the current game before switching.");
+      return;
+    }
+    setSelectedGameId(e.target.value);
+  }}
+  className="w-full border rounded px-2 py-2"
+  disabled={loading}
+>
+  {games.map((game) => (
+    <option key={game.id} value={game.id}>
+      {game.label}
+    </option>
+  ))}
+</select>
+
           </div>
 
           {/* Sets Entry */}
