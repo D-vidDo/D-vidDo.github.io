@@ -15,7 +15,7 @@ interface Team {
   captain: string;
   color: string;
   player_ids: string[];
-  streak?: number; // added for current streak
+  streak?: number;
 }
 
 const Standings = () => {
@@ -34,38 +34,36 @@ const Standings = () => {
         return;
       }
 
-      const { data: gamesData, error: gamesError } = await supabase
-        .from("games")
-        .select("id, team_id");
-      if (gamesError) {
-        setError(gamesError.message);
-        setLoading(false);
-        return;
-      }
-
       const { data: setsData, error: setsError } = await supabase
         .from("sets")
         .select("game_id, result, id")
-        .order("id", { ascending: true }); // ordered chronologically
+        .order("id", { ascending: true }); // chronological order
+
       if (setsError) {
         setError(setsError.message);
         setLoading(false);
         return;
       }
 
-      // 🔹 Calculate CURRENT win streaks
+      // Calculate current win streak
       const streaks: Record<string, number> = {};
       for (const team of teamsData) {
-        const teamGames = gamesData?.filter((g) => g.team_id === team.id) || [];
+        const { data: teamGames, error: teamGamesError } = await supabase
+          .from("games")
+          .select("id")
+          .eq("team_id", team.id);
+
+        if (teamGamesError) continue;
+
         const gameIds = teamGames.map((g) => g.id);
         const teamSets = setsData?.filter((s) => gameIds.includes(s.game_id)) || [];
 
         let current = 0;
-        for (const s of teamSets) {
-          if (s.result === "win") {
+        for (let i = teamSets.length - 1; i >= 0; i--) {
+          if (teamSets[i].result === "W") {
             current++;
           } else {
-            current = 0; // reset on loss
+            break; // stop streak at first non-win
           }
         }
         streaks[team.id] = current;
@@ -86,12 +84,10 @@ const Standings = () => {
   if (loading) return <div className="text-center mt-20">Loading teams...</div>;
   if (error) return <div className="text-center mt-20 text-red-600">Error: {error}</div>;
 
-  // Sort & calculate stats
   const sortedTeams = teams
     .map((team) => ({
       ...team,
-      winPercentage:
-        team.wins + team.losses > 0 ? team.wins / (team.wins + team.losses) : 0,
+      winPercentage: team.wins + team.losses > 0 ? team.wins / (team.wins + team.losses) : 0,
       pointDifferential: team.points_for - team.points_against,
     }))
     .sort((a, b) => {
@@ -106,7 +102,7 @@ const Standings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header Section */}
+      {/* Header */}
       <section className="bg-gradient-hero py-16 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
@@ -133,7 +129,7 @@ const Standings = () => {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
-        {/* League Leader Highlight */}
+        {/* Leader Card */}
         {leaderTeam && (
           <Card className="bg-gradient-card shadow-primary border-primary/20">
             <CardHeader>
@@ -152,9 +148,7 @@ const Standings = () => {
                     {leaderTeam.name.substring(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-card-foreground">
-                      {leaderTeam.name}
-                    </h3>
+                    <h3 className="text-2xl font-bold text-card-foreground">{leaderTeam.name}</h3>
                     <p className="text-muted-foreground">Captain: {leaderTeam.captain}</p>
                   </div>
                 </div>
@@ -171,18 +165,16 @@ const Standings = () => {
 
         {/* Quick Stats */}
         <div className="grid md:grid-cols-3 gap-6">
-          {/* 🔹 Current Win Streak Card */}
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
               <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2" />
               <div className="text-2xl font-bold text-card-foreground">
-                {Math.max(...sortedTeams.map((t) => t.streak ?? 0))}
+                {Math.max(...teams.map((t) => t.streak || 0))}
               </div>
-              <div className="text-sm text-muted-foreground">Current Win Streak</div>
+              <div className="text-sm text-muted-foreground">Longest Win Streak</div>
               <div className="text-xs text-muted-foreground mt-1">
-                {sortedTeams.find(
-                  (t) => t.streak === Math.max(...sortedTeams.map((team) => team.streak ?? 0))
-                )?.name || "-"}
+                {teams.find((t) => t.streak === Math.max(...teams.map((team) => team.streak || 0)))
+                  ?.name || "-"}
               </div>
             </CardContent>
           </Card>
@@ -195,10 +187,8 @@ const Standings = () => {
               </div>
               <div className="text-sm text-muted-foreground">Highest Scoring</div>
               <div className="text-xs text-muted-foreground mt-1">
-                {sortedTeams.find(
-                  (t) =>
-                    t.points_for === Math.max(...sortedTeams.map((team) => team.points_for))
-                )?.name || "-"}
+                {sortedTeams.find((t) => t.points_for === Math.max(...sortedTeams.map((team) => team.points_for)))
+                  ?.name || "-"}
               </div>
             </CardContent>
           </Card>
@@ -211,11 +201,8 @@ const Standings = () => {
               </div>
               <div className="text-sm text-muted-foreground">Best Differential</div>
               <div className="text-xs text-muted-foreground mt-1">
-                {sortedTeams.find(
-                  (t) =>
-                    t.pointDifferential ===
-                    Math.max(...sortedTeams.map((team) => team.pointDifferential))
-                )?.name || "-"}
+                {sortedTeams.find((t) => t.pointDifferential === Math.max(...sortedTeams.map((team) => team.pointDifferential)))
+                  ?.name || "-"}
               </div>
             </CardContent>
           </Card>
