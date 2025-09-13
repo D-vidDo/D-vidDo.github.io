@@ -123,6 +123,7 @@ const AdminGameEntry = () => {
   };
 
   // Submit sets
+// Submit sets
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
@@ -133,6 +134,24 @@ const handleSubmit = async (e: React.FormEvent) => {
   if (sets.length === 0) {
     setMessage("Please add at least one set.");
     return;
+  }
+
+  // 🔎 Check if sets already exist for this game
+  const { data: existingSets, error: existingError } = await supabase
+    .from("sets")
+    .select("id, set_no")
+    .eq("game_id", selectedGameId);
+
+  if (existingError) {
+    setMessage(`Error checking existing sets: ${existingError.message}`);
+    return;
+  }
+
+  if (existingSets && existingSets.length > 0) {
+    setMessage(
+      `⚠️ Warning: This game already has ${existingSets.length} set(s) recorded. Adding more may cause duplicates.`
+    );
+    return; // stop submission unless you want to allow appending
   }
 
   const selectedGame = games.find((g) => g.id === selectedGameId);
@@ -150,6 +169,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   setMessage("");
 
   try {
+
     // Insert sets
     const setsPayload = sets.map((set) => ({
       game_id: selectedGameId,
