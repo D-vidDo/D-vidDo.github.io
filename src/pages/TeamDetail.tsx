@@ -309,6 +309,7 @@ useEffect(() => {
                       <th className="px-4 py-2 text-center">Set</th>
                       <th className="px-4 py-2 text-center">PF</th>
                       <th className="px-4 py-2 text-center">PA</th>
+                      <th className="px-4 py-2 text-center">Diff</th>
                       <th className="px-4 py-2 text-center">Result</th>
                       <th className="px-4 py-2 text-center">VOD</th> {/* 👈 new column */}
                     </tr>
@@ -331,6 +332,9 @@ useEffect(() => {
                             <td className="px-4 py-2 text-center">{set.set_no}</td>
                             <td className="px-4 py-2 text-center text-green-700 font-bold">{set.points_for}</td>
                             <td className="px-4 py-2 text-center text-red-600 font-bold">{set.points_against}</td>
+                            <td className="px-4 py-2 text-center font-semibold">
+  {set.points_for - set.points_against}
+</td>
                             <td className="px-4 py-2 text-center">
                               <Badge
                                 className={`px-2 py-1 rounded-full text-xs font-bold ${
