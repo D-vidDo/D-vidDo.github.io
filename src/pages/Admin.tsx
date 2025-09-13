@@ -30,36 +30,52 @@ const AdminGameEntry = () => {
     loadTeams();
   }, []);
 
-  useEffect(() => {
-    async function loadGamesForTeam() {
-      if (!teamId) return;
-      const { data, error } = await supabase
-        .from("games")
-        .select("id, opponent, date, time, court")
-        .eq("team_id", teamId);
+useEffect(() => {
+  async function loadGamesForTeam() {
+    if (!teamId) return;
 
-      if (error || !data) {
-        setGames([]);
-        return;
-      }
+    const { data, error } = await supabase
+      .from("games")
+      .select("id, opponent, date, time, court")
+      .eq("team_id", teamId);
 
-      const formattedGames = data.map((g) => {
-        const rawTime = g.time?.slice(0, 5) || "";
-        const [hourStr, minute] = rawTime.split(":");
-        let hour = parseInt(hourStr, 10);
-        const ampm = hour >= 12 ? "PM" : "AM";
-        hour = hour % 12 || 12;
-        const formattedTime = `${hour}:${minute} ${ampm}`;
-        const label = `${g.opponent} — ${g.date} ${formattedTime} (Court ${g.court ?? "?"})`;
-        return { id: g.id, label };
-      });
-
-      setGames(formattedGames);
-      if (formattedGames.length > 0) setSelectedGameId(formattedGames[0].id);
+    if (error || !data) {
+      setGames([]);
+      return;
     }
 
-    loadGamesForTeam();
-  }, [teamId]);
+    const now = new Date();
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(now.getDate() - 3);
+
+    // Keep games within the last 3 days OR in the future
+    const filteredGames = data.filter((g) => {
+      if (!g.date) return false;
+      const gameDateTime = new Date(`${g.date}T${g.time || "00:00"}`);
+      return gameDateTime >= threeDaysAgo;
+    });
+
+    const formattedGames = filteredGames.map((g) => {
+      const rawTime = g.time?.slice(0, 5) || "";
+      const [hourStr, minute] = rawTime.split(":");
+      let hour = parseInt(hourStr, 10);
+      const ampm = hour >= 12 ? "PM" : "AM";
+      hour = hour % 12 || 12;
+      const formattedTime = `${hour}:${minute} ${ampm}`;
+      const label = `${g.opponent} — ${g.date} ${formattedTime} (Court ${g.court ?? "?"})`;
+      return { id: g.id, label };
+    });
+
+    setGames(formattedGames);
+    if (formattedGames.length > 0) {
+      setSelectedGameId(formattedGames[0].id);
+    } else {
+      setSelectedGameId("");
+    }
+  }
+
+  loadGamesForTeam();
+}, [teamId]);
 
   const handleAddSet = () => {
     if (!set_no || !set_points_for || !set_points_against) {
