@@ -224,36 +224,46 @@ const handleSubmit = async (e: React.FormEvent) => {
     }
 
     // Update players’ plus-minus and games played
-    if (teamData.player_ids && teamData.player_ids.length > 0) {
-      const { data: playersData, error: playersError } = await supabase
-        .from("players")
-        .select("id, plus_minus, games_played")
-        .in("id", teamData.player_ids);
+// Update players’ plus-minus and games played PER SET
+if (teamData.player_ids && teamData.player_ids.length > 0) {
+  const { data: playersData, error: playersError } = await supabase
+    .from("players")
+    .select("id, plus_minus, games_played")
+    .in("id", teamData.player_ids);
 
-      if (playersError) {
-        setMessage(`Failed to fetch players: ${playersError.message}`);
-        setLoading(false);
-        return;
-      }
+  if (playersError) {
+    setMessage(`Failed to fetch players: ${playersError.message}`);
+    setLoading(false);
+    return;
+  }
 
-      for (const player of playersData) {
-        const updatedplus_minus = (player.plus_minus ?? 0) + matchPlusMinus;
-        const updatedGamesPlayed = (player.games_played ?? 0) + 1;
-        const { error: updatePlayerError } = await supabase
-          .from("players")
-          .update({
-            plus_minus: updatedplus_minus,
-            games_played: updatedGamesPlayed,
-          })
-          .eq("id", player.id);
+  for (const player of playersData) {
+    // Start from the player’s current values
+    let updatedPlusMinus = player.plus_minus ?? 0;
+    let updatedGamesPlayed = player.games_played ?? 0;
 
-        if (updatePlayerError) {
-          setMessage(`Failed to update player ${player.id}: ${updatePlayerError.message}`);
-          setLoading(false);
-          return;
-        }
-      }
+    // Increment once per set
+    sets.forEach((s) => {
+      updatedPlusMinus += s.points_for - s.points_against;
+      updatedGamesPlayed += 1;
+    });
+
+    const { error: updatePlayerError } = await supabase
+      .from("players")
+      .update({
+        plus_minus: updatedPlusMinus,
+        games_played: updatedGamesPlayed,
+      })
+      .eq("id", player.id);
+
+    if (updatePlayerError) {
+      setMessage(`Failed to update player ${player.id}: ${updatePlayerError.message}`);
+      setLoading(false);
+      return;
     }
+  }
+}
+
 
     // Update team stats per set
     const updatedTeamStats = {
