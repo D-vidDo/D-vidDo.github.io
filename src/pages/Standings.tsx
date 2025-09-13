@@ -23,83 +23,108 @@ const Standings = () => {
   const [error, setError] = useState<string | null>(null);
   const [longestStreakTeam, setLongestStreakTeam] = useState<{ name: string; streak: number } | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const { data: teamData, error: teamError } = await supabase.from<Team>("teams").select("*");
-        if (teamError) throw teamError;
-        if (!teamData) throw new Error("No teams returned");
+useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const { data: teamData, error: teamError } = await supabase
+        .from<Team>("teams")
+        .select("*");
 
-        setTeams(teamData);
+      if (teamError) throw teamError;
+      if (!teamData) throw new Error("No teams returned");
 
-        // Fetch all sets with game and team info
-        const { data: setsData, error: setsError } = await supabase
-          .from("sets")
-          .select(`
+      setTeams(teamData);
+
+      // Pull sets with their game info (team_id, date)
+      const { data: setsData, error: setsError } = await supabase
+        .from("sets")
+        .select(`
+          id,
+          set_no,
+          result,
+          game_id,
+          games (
             id,
-            set_no,
-            result,
-            game_id,
-            games (
-              id,
-              team_id,
-              date
-            )
-          `);
+            team_id,
+            date
+          )
+        `);
 
-        if (setsError) throw setsError;
-        if (!setsData) return;
+      if (setsError) throw setsError;
 
-        // Build a map of team_id -> chronological results array
-        const teamResultsMap: Record<number, string[]> = {};
-        setsData.forEach((set: any) => {
-          const teamId = set.games.team_id;
-          if (!teamResultsMap[teamId]) teamResultsMap[teamId] = [];
-          // Push each set's result (W/L) sorted by game date & set_no
-          teamResultsMap[teamId].push(`${set.games.date}-${set.set_no}-${set.result}`);
+      // If no sets yet, initialize with 0 streak
+      if (!setsData || setsData.length === 0) {
+        setLongestStreakTeam({ name: "-", streak: 0 });
+        return;
+      }
+
+      type SetRow = {
+        id: number;
+        set_no: number;
+        result: string; // "W" | "L"
+        games: { id: number; team_id: number; date: string | null } | null;
+      };
+
+      // Build Team -> chronological [{ date, set_no, result }]
+      const teamResultsMap: Record<number, { date: string; set_no: number; result: string }[]> = {};
+
+      for (const set of setsData as SetRow[]) {
+        const g = set.games;
+        if (!g || g.team_id == null || !g.date) continue; // defensive
+
+        if (!teamResultsMap[g.team_id]) teamResultsMap[g.team_id] = [];
+        teamResultsMap[g.team_id].push({
+          date: g.date,
+          set_no: Number(set.set_no) || 0,
+          result: (set.result || "").trim().toUpperCase(), // normalize
+        });
+      }
+
+      // Compute longest consecutive "W"
+      let maxStreak = 0;
+      let streakTeamName = "-";
+
+      for (const team of teamData) {
+        const results = teamResultsMap[team.team_id] ?? [];
+
+        // Sort by date then set_no
+        results.sort((a, b) => {
+          const da = Date.parse(a.date);
+          const db = Date.parse(b.date);
+          if (da === db) return a.set_no - b.set_no;
+          return da - db;
         });
 
-        // Sort each team's results chronologically and compute longest win streak
-        let maxStreak = 0;
-        let streakTeamName = "";
-        for (const team of teamData) {
-          const results = teamResultsMap[team.team_id] || [];
-          // Sort by date then set_no
-          const sortedResults = results.sort((a, b) => {
-            const [dateA, setA] = a.split("-").slice(0, 2);
-            const [dateB, setB] = b.split("-").slice(0, 2);
-            if (dateA === dateB) return Number(setA) - Number(setB);
-            return new Date(dateA).getTime() - new Date(dateB).getTime();
-          });
-          // Compute longest consecutive W
-          let currentStreak = 0;
-          let longestStreak = 0;
-          sortedResults.forEach((r) => {
-            const result = r.split("-")[2];
-            if (result === "W") {
-              currentStreak += 1;
-              if (currentStreak > longestStreak) longestStreak = currentStreak;
-            } else {
-              currentStreak = 0;
-            }
-          });
-          if (longestStreak > maxStreak) {
-            maxStreak = longestStreak;
-            streakTeamName = team.name;
+        let current = 0;
+        let longest = 0;
+
+        for (const r of results) {
+          if (r.result === "W") {
+            current += 1;
+            if (current > longest) longest = current;
+          } else {
+            current = 0;
           }
         }
 
-        setLongestStreakTeam({ name: streakTeamName, streak: maxStreak });
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+        if (longest > maxStreak) {
+          maxStreak = longest;
+          streakTeamName = team.name;
+        }
       }
-    };
 
-    fetchData();
-  }, []);
+      setLongestStreakTeam({ name: streakTeamName, streak: maxStreak });
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
+
 
   if (loading) return <div className="text-center mt-20">Loading teams...</div>;
   if (error) return <div className="text-center mt-20 text-red-600">Error: {error}</div>;
