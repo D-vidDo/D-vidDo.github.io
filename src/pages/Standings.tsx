@@ -6,7 +6,7 @@ import { Trophy, TrendingUp, Target } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Team {
-  id: string;
+  team_id: number;
   name: string;
   wins: number;
   losses: number;
@@ -15,70 +15,96 @@ interface Team {
   captain: string;
   color: string;
   player_ids: string[];
-  streak?: number; // added for current win streak
 }
 
 const Standings = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [longestStreakTeam, setLongestStreakTeam] = useState<{ name: string; streak: number } | null>(null);
 
   useEffect(() => {
-    const fetchTeams = async () => {
+    const fetchData = async () => {
       setLoading(true);
+      try {
+        const { data: teamData, error: teamError } = await supabase.from<Team>("teams").select("*");
+        if (teamError) throw teamError;
+        if (!teamData) throw new Error("No teams returned");
 
-      // 1️⃣ Fetch all teams
-      const { data: teamsData, error: teamsError } = await supabase.from<Team>("teams").select("*");
-      if (teamsError) {
-        setError(teamsError.message);
-        setLoading(false);
-        return;
-      }
+        setTeams(teamData);
 
-      // 2️⃣ Fetch all games
-      const { data: gamesData, error: gamesError } = await supabase.from("games").select("id, team_id");
-      if (gamesError) {
-        setError(gamesError.message);
-        setLoading(false);
-        return;
-      }
+        // Fetch all sets with game and team info
+        const { data: setsData, error: setsError } = await supabase
+          .from("sets")
+          .select(`
+            id,
+            set_no,
+            result,
+            game_id,
+            games (
+              id,
+              team_id,
+              date
+            )
+          `);
 
-      // 3️⃣ Fetch all sets ordered chronologically
-      const { data: setsData, error: setsError } = await supabase
-        .from("sets")
-        .select("game_id, result")
-        .order("id", { ascending: true });
-      if (setsError) {
-        setError(setsError.message);
-        setLoading(false);
-        return;
-      }
+        if (setsError) throw setsError;
+        if (!setsData) return;
 
-      // 4️⃣ Calculate current streak per team
-      const enrichedTeams = teamsData.map((team) => {
-        const teamGameIds = gamesData.filter((g) => g.team_id === team.id).map((g) => g.id);
-        const teamSets = setsData.filter((s) => teamGameIds.includes(s.game_id));
+        // Build a map of team_id -> chronological results array
+        const teamResultsMap: Record<number, string[]> = {};
+        setsData.forEach((set: any) => {
+          const teamId = set.games.team_id;
+          if (!teamResultsMap[teamId]) teamResultsMap[teamId] = [];
+          // Push each set's result (W/L) sorted by game date & set_no
+          teamResultsMap[teamId].push(`${set.games.date}-${set.set_no}-${set.result}`);
+        });
 
-        let streak = 0;
-        for (let i = teamSets.length - 1; i >= 0; i--) {
-          if (teamSets[i].result === "W") streak++;
-          else break;
+        // Sort each team's results chronologically and compute longest win streak
+        let maxStreak = 0;
+        let streakTeamName = "";
+        for (const team of teamData) {
+          const results = teamResultsMap[team.team_id] || [];
+          // Sort by date then set_no
+          const sortedResults = results.sort((a, b) => {
+            const [dateA, setA] = a.split("-").slice(0, 2);
+            const [dateB, setB] = b.split("-").slice(0, 2);
+            if (dateA === dateB) return Number(setA) - Number(setB);
+            return new Date(dateA).getTime() - new Date(dateB).getTime();
+          });
+          // Compute longest consecutive W
+          let currentStreak = 0;
+          let longestStreak = 0;
+          sortedResults.forEach((r) => {
+            const result = r.split("-")[2];
+            if (result === "W") {
+              currentStreak += 1;
+              if (currentStreak > longestStreak) longestStreak = currentStreak;
+            } else {
+              currentStreak = 0;
+            }
+          });
+          if (longestStreak > maxStreak) {
+            maxStreak = longestStreak;
+            streakTeamName = team.name;
+          }
         }
 
-        return { ...team, streak };
-      });
-
-      setTeams(enrichedTeams);
-      setLoading(false);
+        setLongestStreakTeam({ name: streakTeamName, streak: maxStreak });
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchTeams();
+    fetchData();
   }, []);
 
   if (loading) return <div className="text-center mt-20">Loading teams...</div>;
   if (error) return <div className="text-center mt-20 text-red-600">Error: {error}</div>;
 
-  // Sort teams by wins for leader highlight
+  // Calculate winPercentage and pointDifferential for sorting
   const sortedTeams = teams
     .map((team) => ({
       ...team,
@@ -159,16 +185,17 @@ const Standings = () => {
         )}
 
         {/* Quick Stats */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-4 gap-6">
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
               <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2" />
               <div className="text-2xl font-bold text-card-foreground">
-                {Math.max(...teams.map((t) => t.streak || 0))}
+                {Math.max(...sortedTeams.map((t) => t.wins))}
               </div>
-              <div className="text-sm text-muted-foreground">Current Win Streak</div>
+              <div className="text-sm text-muted-foreground">Most Wins</div>
               <div className="text-xs text-muted-foreground mt-1">
-                {teams.find((t) => t.streak === Math.max(...teams.map((team) => team.streak || 0)))?.name || "-"}
+                {sortedTeams.find((t) => t.wins === Math.max(...sortedTeams.map((team) => team.wins)))
+                  ?.name || "-"}
               </div>
             </CardContent>
           </Card>
@@ -200,6 +227,19 @@ const Standings = () => {
                   (t) =>
                     t.pointDifferential === Math.max(...sortedTeams.map((team) => team.pointDifferential))
                 )?.name || "-"}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-stats shadow-card">
+            <CardContent className="p-6 text-center">
+              <TrendingUp className="h-8 w-8 text-green-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-card-foreground">
+                {longestStreakTeam?.streak || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Longest Win Streak</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {longestStreakTeam?.name || "-"}
               </div>
             </CardContent>
           </Card>
