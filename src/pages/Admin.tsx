@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
+interface Game {
+  id: string;
+  label: string;
+  opponent: string | null;
+  date: string | null;
+  time: string | null;
+  court: number | null;
+}
+
 const AdminGameEntry = () => {
   const [teams, setTeams] = useState<any[]>([]);
   const [teamId, setTeamId] = useState<string>("");
-  const [games, setGames] = useState<{ id: string; label: string }[]>([]);
+  const [games, setGames] = useState<Game[]>([]);
   const [selectedGameId, setSelectedGameId] = useState<string>("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,12 +26,12 @@ const AdminGameEntry = () => {
   const [set_points_against, setSetPointsAgainst] = useState("");
   const [set_result, setSetResult] = useState<"W" | "L">("W");
 
+  // Load teams
   useEffect(() => {
     async function loadTeams() {
       const { data, error } = await supabase.from("teams").select("*");
-      if (error) {
-        setMessage(`Error loading teams: ${error.message}`);
-      } else {
+      if (error) setMessage(`Error loading teams: ${error.message}`);
+      else {
         setTeams(data ?? []);
         if (data && data.length > 0) setTeamId(data[0].team_id);
       }
@@ -30,64 +39,68 @@ const AdminGameEntry = () => {
     loadTeams();
   }, []);
 
-useEffect(() => {
-  async function loadGamesForTeam() {
-    if (!teamId) return;
+  // Load games for selected team (upcoming + last 3 days)
+  useEffect(() => {
+    async function loadGamesForTeam() {
+      if (!teamId) return;
 
-    const { data, error } = await supabase
-      .from("games")
-      .select("id, opponent, date, time, court")
-      .eq("team_id", teamId);
+      const { data, error } = await supabase
+        .from("games")
+        .select("id, opponent, date, time, court")
+        .eq("team_id", teamId);
 
-    if (error || !data) {
-      setGames([]);
-      return;
+      if (error || !data) {
+        setGames([]);
+        return;
+      }
+
+      const now = new Date();
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(now.getDate() - 3);
+
+      // Keep games within the last 3 days OR in the future
+      const filteredGames = data.filter((g) => {
+        if (!g.date) return false;
+        const gameDateTime = new Date(`${g.date}T${g.time || "00:00"}`);
+        return gameDateTime >= threeDaysAgo;
+      });
+
+      const formattedGames: Game[] = filteredGames.map((g) => {
+        const rawTime = g.time?.slice(0, 5) || "00:00";
+        const [hourStr, minute] = rawTime.split(":");
+        let hour = parseInt(hourStr, 10);
+        const ampm = hour >= 12 ? "PM" : "AM";
+        hour = hour % 12 || 12;
+        const formattedTime = `${hour}:${minute} ${ampm}`;
+        const label = `${g.opponent} — ${g.date} ${formattedTime} (Court ${g.court ?? "?"})`;
+
+        return {
+          id: g.id.toString(),
+          label,
+          opponent: g.opponent,
+          date: g.date,
+          time: formattedTime, // store formatted 12-hour time
+          court: g.court,
+        };
+      });
+
+      setGames(formattedGames);
+      setSelectedGameId(formattedGames.length > 0 ? formattedGames[0].id : "");
     }
 
-    const now = new Date();
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(now.getDate() - 3);
+    loadGamesForTeam();
+  }, [teamId]);
 
-    // Keep games within the last 3 days OR in the future
-    const filteredGames = data.filter((g) => {
-      if (!g.date) return false;
-      const gameDateTime = new Date(`${g.date}T${g.time || "00:00"}`);
-      return gameDateTime >= threeDaysAgo;
-    });
-
-    const formattedGames = filteredGames.map((g) => {
-      const rawTime = g.time?.slice(0, 5) || "";
-      const [hourStr, minute] = rawTime.split(":");
-      let hour = parseInt(hourStr, 10);
-      const ampm = hour >= 12 ? "PM" : "AM";
-      hour = hour % 12 || 12;
-      const formattedTime = `${hour}:${minute} ${ampm}`;
-      const label = `${g.opponent} — ${g.date} ${formattedTime} (Court ${g.court ?? "?"})`;
-      return { id: g.id, label };
-    });
-
-    setGames(formattedGames);
-    if (formattedGames.length > 0) {
-      setSelectedGameId(formattedGames[0].id);
-    } else {
-      setSelectedGameId("");
-    }
-  }
-
-  loadGamesForTeam();
-}, [teamId]);
-
+  // Add set
   const handleAddSet = () => {
     if (!set_no || !set_points_for || !set_points_against) {
       setMessage("Please fill out all set fields.");
       return;
     }
-
     if (sets.some((s) => s.set_no === set_no)) {
       setMessage(`Set ${set_no} already exists.`);
       return;
     }
-
     setSets([
       ...sets,
       {
@@ -104,45 +117,37 @@ useEffect(() => {
     setMessage("");
   };
 
+  // Remove set
   const handleRemoveSet = (idx: number) => {
     setSets(sets.filter((_, i) => i !== idx));
   };
 
+  // Submit sets
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!selectedGameId) {
-    setMessage("Please select a game.");
-    return;
-  }
+    if (!selectedGameId) {
+      setMessage("Please select a game.");
+      return;
+    }
+    if (sets.length === 0) {
+      setMessage("Please add at least one set.");
+      return;
+    }
 
-  if (sets.length === 0) {
-    setMessage("Please add at least one set.");
-    return;
-  }
+    const selectedGame = games.find((g) => g.id === selectedGameId);
+    const setsSummary = sets
+      .map((s) => `Set ${s.set_no}: ${s.points_for}-${s.points_against} (${s.result})`)
+      .join("\n");
 
-  // Find the selected game's label
-  const selectedGame = games.find((g) => g.id === selectedGameId);
+    // Confirmation popup
+    const confirmed = window.confirm(
+      `Add sets to this game?\n\nOpponent: ${selectedGame?.opponent}\nDate: ${selectedGame?.date}\nTime: ${selectedGame?.time}\nCourt: ${selectedGame?.court ?? "?"}\n\n${setsSummary}`
+    );
+    if (!confirmed) return;
 
-  // Build summary of all sets
-  const setsSummary = sets
-    .map(
-      (s) => `Set ${s.set_no}: ${s.points_for}-${s.points_against} (${s.result})`
-    )
-    .join("\n");
-
-  // Final confirmation with game + sets summary
-  const confirmed = window.confirm(
-    `Add sets to this game?\n\nGame: ${selectedGame?.label || "Unknown"}\n\n${setsSummary}`
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  setLoading(true);
-  setMessage("");
-
+    setLoading(true);
+    setMessage("");
 
     try {
       const setsPayload = sets.map((set) => ({
@@ -154,18 +159,18 @@ useEffect(() => {
       }));
 
       const { error: setError } = await supabase.from("sets").insert(setsPayload);
-
       if (setError) {
         setMessage(`Failed to add sets: ${setError.message}`);
         setLoading(false);
         return;
       }
 
-      let wins = 0;
-      let losses = 0;
-      let ties = 0;
-      let totalPF = 0;
-      let totalPA = 0;
+      // Update team/player stats
+      let wins = 0,
+        losses = 0,
+        ties = 0,
+        totalPF = 0,
+        totalPA = 0;
 
       sets.forEach((s) => {
         totalPF += s.points_for;
@@ -183,7 +188,6 @@ useEffect(() => {
         .select("player_ids, points_for, points_against, wins, losses")
         .eq("team_id", teamId)
         .single();
-
       if (teamError || !teamData) {
         setMessage(`Failed to fetch team info: ${teamError?.message || "No team returned"}`);
         setLoading(false);
@@ -195,17 +199,14 @@ useEffect(() => {
           .from("players")
           .select("id, plus_minus, games_played")
           .in("id", teamData.player_ids);
-
         if (playersError) {
           setMessage(`Failed to fetch players: ${playersError.message}`);
           setLoading(false);
           return;
         }
-
         for (const player of playersData) {
           const updatedplus_minus = (player.plus_minus ?? 0) + matchPlusMinus;
           const updatedGamesPlayed = (player.games_played ?? 0) + 1;
-
           const { error: updatePlayerError } = await supabase
             .from("players")
             .update({
@@ -213,7 +214,6 @@ useEffect(() => {
               games_played: updatedGamesPlayed,
             })
             .eq("id", player.id);
-
           if (updatePlayerError) {
             setMessage(`Failed to update player ${player.id}: ${updatePlayerError.message}`);
             setLoading(false);
@@ -233,7 +233,6 @@ useEffect(() => {
         .from("teams")
         .update(updatedTeamStats)
         .eq("team_id", teamId);
-
       if (updateTeamError) {
         setMessage(`Failed to update team stats: ${updateTeamError.message}`);
         setLoading(false);
@@ -277,7 +276,13 @@ useEffect(() => {
                     name="team"
                     value={team.team_id}
                     checked={teamId === team.team_id}
-                    onChange={() => setTeamId(team.team_id)}
+                    onChange={() => {
+                      if (sets.length > 0) {
+                        alert("Please finish or clear the sets for the current game before switching.");
+                        return;
+                      }
+                      setTeamId(team.team_id);
+                    }}
                     className="hidden"
                   />
                   <img
@@ -295,24 +300,23 @@ useEffect(() => {
           <div>
             <label className="block mb-1 font-semibold">Select Game</label>
             <select
-  value={selectedGameId}
-  onChange={(e) => {
-    if (sets.length > 0) {
-      alert("Please finish or clear the sets for the current game before switching.");
-      return;
-    }
-    setSelectedGameId(e.target.value);
-  }}
-  className="w-full border rounded px-2 py-2"
-  disabled={loading}
->
-  {games.map((game) => (
-    <option key={game.id} value={game.id}>
-      {game.label}
-    </option>
-  ))}
-</select>
-
+              value={selectedGameId}
+              onChange={(e) => {
+                if (sets.length > 0) {
+                  alert("Please finish or clear the sets for the current game before switching.");
+                  return;
+                }
+                setSelectedGameId(e.target.value);
+              }}
+              className="w-full border rounded px-2 py-2"
+              disabled={loading}
+            >
+              {games.map((game) => (
+                <option key={game.id} value={game.id}>
+                  {game.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Sets Entry */}
