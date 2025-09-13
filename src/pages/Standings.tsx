@@ -27,16 +27,15 @@ useEffect(() => {
   const fetchData = async () => {
     setLoading(true);
     try {
+      // 1) Load teams (used for names/colors and to ensure we iterate all)
       const { data: teamData, error: teamError } = await supabase
-        .from<Team>("teams")
+        .from("teams")
         .select("*");
-
       if (teamError) throw teamError;
       if (!teamData) throw new Error("No teams returned");
-
       setTeams(teamData);
 
-      // Pull sets with their game info (team_id, date)
+      // 2) Load sets joined to games, ORDERED chronologically
       const { data: setsData, error: setsError } = await supabase
         .from("sets")
         .select(`
@@ -49,72 +48,68 @@ useEffect(() => {
             team_id,
             date
           )
-        `);
-
+        `)
+        .order("date", { foreignTable: "games", ascending: true })
+        .order("set_no", { ascending: true })
+        .order("id", { ascending: true }); // tie-breaker
       if (setsError) throw setsError;
 
-      // If no sets yet, initialize with 0 streak
-      if (!setsData || setsData.length === 0) {
-        setLongestStreakTeam({ name: "-", streak: 0 });
-        return;
-      }
+      // Handle bigint ids safely
+      const keyOf = (v: unknown) => String(v ?? "");
 
-      type SetRow = {
+      type JoinedSet = {
         id: number;
-        set_no: number;
-        result: string; // "W" | "L"
-        games: { id: number; team_id: number; date: string | null } | null;
+        set_no: number | null;
+        result: string | null; // 'W'|'L'
+        games: { id: number; team_id: string | number | null; date: string | null } | null;
       };
 
-      // Build Team -> chronological [{ date, set_no, result }]
-      const teamResultsMap: Record<number, { date: string; set_no: number; result: string }[]> = {};
+      // 3) Build: teamKey -> chronological [{date,set_no,result}]
+      const teamResultsMap: Record<string, { date: string; set_no: number; result: "W"|"L" }[]> = {};
+      for (const row of (setsData ?? []) as JoinedSet[]) {
+        const g = row.games;
+        if (!g || g.team_id == null || !g.date) continue;
 
-      for (const set of setsData as SetRow[]) {
-        const g = set.games;
-        if (!g || g.team_id == null || !g.date) continue; // defensive
+        const teamKey = keyOf(g.team_id);
+        const res = (row.result ?? "").trim().toUpperCase();
+        if (res !== "W" && res !== "L") continue;
 
-        if (!teamResultsMap[g.team_id]) teamResultsMap[g.team_id] = [];
-        teamResultsMap[g.team_id].push({
-          date: g.date,
-          set_no: Number(set.set_no) || 0,
-          result: (set.result || "").trim().toUpperCase(), // normalize
+        (teamResultsMap[teamKey] ||= []).push({
+          date: g.date,                    // DATE type ('YYYY-MM-DD'); lexical order works
+          set_no: Number(row.set_no) || 0, // ensure numeric
+          result: res as "W" | "L",
         });
       }
 
-      // Compute longest consecutive "W"
+      // 4) Compute longest W streak per team
       let maxStreak = 0;
-      let streakTeamName = "-";
+      let streakTeamKey = "";
 
-      for (const team of teamData) {
-        const results = teamResultsMap[team.team_id] ?? [];
+      for (const t of teamData as any[]) {
+        const tKey = keyOf(t.team_id);
+        const results = (teamResultsMap[tKey] ?? []).slice();
 
-        // Sort by date then set_no
-        results.sort((a, b) => {
-          const da = Date.parse(a.date);
-          const db = Date.parse(b.date);
-          if (da === db) return a.set_no - b.set_no;
-          return da - db;
-        });
+        // Safety sort (already ordered by SQL, but fine to keep)
+        results.sort((a, b) => (a.date === b.date ? a.set_no - b.set_no : a.date.localeCompare(b.date)));
 
-        let current = 0;
-        let longest = 0;
-
+        let cur = 0, best = 0;
         for (const r of results) {
           if (r.result === "W") {
-            current += 1;
-            if (current > longest) longest = current;
+            cur += 1;
+            if (cur > best) best = cur;
           } else {
-            current = 0;
+            cur = 0;
           }
         }
 
-        if (longest > maxStreak) {
-          maxStreak = longest;
-          streakTeamName = team.name;
+        if (best > maxStreak) {
+          maxStreak = best;
+          streakTeamKey = tKey;
         }
       }
 
-      setLongestStreakTeam({ name: streakTeamName, streak: maxStreak });
+      const team = (teamData as any[]).find((t) => keyOf(t.team_id) === streakTeamKey);
+      setLongestStreakTeam({ name: team?.name ?? "-", streak: maxStreak });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -124,6 +119,7 @@ useEffect(() => {
 
   fetchData();
 }, []);
+
 
 
   if (loading) return <div className="text-center mt-20">Loading teams...</div>;
