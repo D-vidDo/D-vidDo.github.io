@@ -109,20 +109,40 @@ useEffect(() => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!selectedGameId) {
-      setMessage("Please select a game.");
-      return;
-    }
+  if (!selectedGameId) {
+    setMessage("Please select a game.");
+    return;
+  }
 
-    if (sets.length === 0) {
-      setMessage("Please add at least one set.");
-      return;
-    }
+  if (sets.length === 0) {
+    setMessage("Please add at least one set.");
+    return;
+  }
 
-    setLoading(true);
-    setMessage("");
+  // Find the selected game's label
+  const selectedGame = games.find((g) => g.id === selectedGameId);
+
+  // Build summary of all sets
+  const setsSummary = sets
+    .map(
+      (s) => `Set ${s.set_no}: ${s.points_for}-${s.points_against} (${s.result})`
+    )
+    .join("\n");
+
+  // Final confirmation with game + sets summary
+  const confirmed = window.confirm(
+    `Add sets to this game?\n\nGame: ${selectedGame?.label || "Unknown"}\n\n${setsSummary}`
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  setLoading(true);
+  setMessage("");
+
 
     try {
       const setsPayload = sets.map((set) => ({
