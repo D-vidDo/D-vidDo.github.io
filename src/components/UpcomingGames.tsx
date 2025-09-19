@@ -49,7 +49,8 @@ useEffect(() => {
       `)
       .gte("date", startOfWeek.toISOString().split("T")[0])
       .lte("date", endOfWeek.toISOString().split("T")[0])
-      .order("date", { ascending: true });
+      .order("date", { ascending: true })
+      .order("time", { ascending: true });
 
     if (error) {
       console.error("Error fetching games:", error.message);
