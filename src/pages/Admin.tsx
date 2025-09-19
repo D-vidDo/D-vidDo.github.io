@@ -47,7 +47,9 @@ const AdminGameEntry = () => {
       const { data, error } = await supabase
         .from("games")
         .select("id, opponent, date, time, court")
-        .eq("team_id", teamId);
+        .eq("team_id", teamId)
+        .order("date", { ascending: true })
+        .order("time", { ascending: true });
 
       if (error || !data) {
         setGames([]);
