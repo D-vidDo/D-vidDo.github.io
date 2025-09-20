@@ -284,64 +284,73 @@ const AdminGameEntry = () => {
     }
   };
 
-  return (
-    <div className="max-w-3xl mx-auto mt-12 p-4 sm:p-6 bg-card rounded-lg shadow space-y-8">
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Secret Admin: Add Sets to Game</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Team Selection */}
-          <div>
-            <label className="block mb-2 font-semibold">Select Team</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {teams.map((team) => (
-                <label
-                  key={team.team_id}
-                  className={`cursor-pointer border rounded-lg p-2 flex flex-col items-center justify-center transition ${
-                    teamId === team.team_id ? "border-primary ring-2 ring-primary" : "border-muted"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="team"
-                    value={team.team_id}
-                    checked={teamId === team.team_id}
-                    onChange={() => {
-                      if (sets.length > 0) {
-                        alert(
-                          "Please finish or clear the sets for the current game before switching."
-                        );
-                        return;
-                      }
-                      setTeamId(team.team_id);
-                    }}
-                    className="hidden"
-                  />
-                  <img
-                    src={`/logos/${team.team_id}.jpg`}
-                    alt={team.name}
-                    className="w-16 h-16 object-contain mb-2"
-                  />
-                  <span className="text-sm font-medium text-center">{team.name}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+return (
+  <div className="max-w-3xl mx-auto mt-10 px-4 sm:px-6">
+    <section className="bg-card border border-border/50 rounded-xl shadow-sm">
+      <div className="px-5 sm:px-6 py-5 border-b border-border/50">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+          Secret Admin: Add Sets to Game
+        </h2>
+      </div>
 
-          {/* Game Selection */}
-          <div>
-            <label className="block mb-1 font-semibold">Select Game</label>
+      <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-8">
+        {/* Team Selection */}
+        <div>
+          <label className="block mb-3 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+            Select Team
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {teams.map((team) => (
+              <label
+                key={team.team_id}
+                className={`cursor-pointer rounded-lg border transition-all select-none
+                  ${teamId === team.team_id
+                    ? "border-primary ring-2 ring-primary/50 shadow-sm"
+                    : "border-muted hover:shadow-sm"
+                  }
+                  flex flex-col items-center justify-center p-3 focus-within:ring-2 focus-within:ring-primary/60`}
+              >
+                <input
+                  type="radio"
+                  name="team"
+                  value={team.team_id}
+                  checked={teamId === team.team_id}
+                  onChange={() => {
+                    if (sets.length > 0) {
+                      alert("Please finish or clear the sets for the current game before switching.");
+                      return;
+                    }
+                    setTeamId(team.team_id);
+                  }}
+                  className="sr-only"
+                />
+                <img
+                  src={`/logos/${team.team_id}.jpg`}
+                  alt={team.name}
+                  className="w-16 h-16 object-contain mb-2 rounded"
+                />
+                <span className="text-sm font-medium text-center">{team.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Game Selection */}
+        <div>
+          <label className="block mb-2 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+            Select Game
+          </label>
+          <div className="relative">
             <select
               value={selectedGameId}
               onChange={(e) => {
                 if (sets.length > 0) {
-                  alert(
-                    "Please finish or clear the sets for the current game before switching."
-                  );
+                  alert("Please finish or clear the sets for the current game before switching.");
                   return;
                 }
                 setSelectedGameId(e.target.value);
               }}
-              className="w-full border rounded px-2 py-2"
+              className="w-full border rounded-lg px-3 py-2 pr-9 bg-background focus:outline-none focus:ring-2 focus:ring-primary/60 disabled:opacity-50"
               disabled={loading}
             >
               {games.map((game) => (
@@ -350,127 +359,205 @@ const AdminGameEntry = () => {
                 </option>
               ))}
             </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              ▾
+            </span>
           </div>
+        </div>
 
-          {/* Who needed a sub? */}
-          <div>
-            <label className="block mb-2 font-semibold">Who needed a sub?</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {players.map((player) => (
-                <label key={player.id} className="flex items-center space-x-2">
+        {/* Who needed a sub? */}
+        <div>
+          <label className="block mb-3 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+            Who needed a sub?
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {players.map((player) => {
+              const checked = subPlayers.includes(player.id);
+              return (
+                <label
+                  key={player.id}
+                  className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition
+                    ${checked
+                      ? "bg-muted/60 border-primary ring-1 ring-primary/30"
+                      : "bg-background border-muted hover:bg-muted/40"
+                    }
+                    focus-within:ring-2 focus-within:ring-primary/60`}
+                >
                   <input
                     type="checkbox"
-                    checked={subPlayers.includes(player.id)}
+                    checked={checked}
                     onChange={() => toggleSubPlayer(player.id)}
+                    className="h-4 w-4 rounded border-muted text-primary focus:ring-primary/60"
                   />
-                  <span>{player.name}</span>
+                  <span className="truncate">{player.name}</span>
                 </label>
-              ))}
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Sets Entry */}
+        <div>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <label className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+              Add Sets
+            </label>
+            {/* Live result preview pill */}
+            <span
+              className={`px-3 py-1 text-xs font-bold rounded-full shadow-sm
+                ${
+                  Number(set_points_for) > Number(set_points_against)
+                    ? "bg-green-500 text-white"
+                    : Number(set_points_for) < Number(set_points_against)
+                    ? "bg-red-500 text-white"
+                    : "bg-amber-500/90 text-white"
+                }`}
+            >
+              {Number(set_points_for) > Number(set_points_against)
+                ? "WIN"
+                : Number(set_points_for) < Number(set_points_against)
+                ? "LOSS"
+                : "DRAW"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 items-center mb-2">
+            {/* Set Number */}
+            <input
+              type="number"
+              value={set_no}
+              onChange={(e) => setSetNo(Number(e.target.value))}
+              min={1}
+              placeholder="Set #"
+              className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold bg-background focus:outline-none focus:ring-2 focus:ring-primary/60"
+            />
+
+            {/* PF */}
+            <input
+              type="number"
+              value={set_points_for}
+              onChange={(e) => setSetPointsFor(e.target.value)}
+              min={0}
+              placeholder="PF"
+              className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold
+                         bg-green-50 text-green-700 border-green-300
+                         placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+
+            {/* PA */}
+            <input
+              type="number"
+              value={set_points_against}
+              onChange={(e) => setSetPointsAgainst(e.target.value)}
+              min={0}
+              placeholder="PA"
+              className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold
+                         bg-red-50 text-red-700 border-red-300
+                         placeholder-red-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+
+            {/* Result Display (read-only pill mirrors the live result) */}
+            <div className="col-span-2 sm:col-span-2 flex justify-center sm:justify-start">
+              <span
+                className={`inline-flex items-center px-3 py-1 text-sm font-bold rounded-full shadow-sm
+                  ${
+                    Number(set_points_for) > Number(set_points_against)
+                      ? "bg-green-100 text-green-700"
+                      : Number(set_points_for) < Number(set_points_against)
+                      ? "bg-red-100 text-red-700"
+                      : "bg-amber-100 text-amber-700"
+                  }`}
+                aria-live="polite"
+              >
+                {Number(set_points_for) > Number(set_points_against)
+                  ? "Win"
+                  : Number(set_points_for) < Number(set_points_against)
+                  ? "Loss"
+                  : "Draw"}
+              </span>
+            </div>
+
+            {/* Add Set Button */}
+            <div className="col-span-2 sm:col-span-1">
+              <button
+                type="button"
+                onClick={handleAddSet}
+                className="w-full bg-primary text-primary-foreground py-2 rounded-lg font-bold
+                           hover:bg-primary/90 active:scale-[0.99] transition focus:outline-none focus:ring-2 focus:ring-primary/60"
+              >
+                Add Set
+              </button>
             </div>
           </div>
 
- {/* Sets Entry */}
-<div>
-  <label className="block mb-2 font-semibold">Add Sets</label>
-  <div className="flex flex-wrap gap-2 mb-2 items-center">
-    <input
-      type="number"
-      value={set_no}
-      onChange={(e) => setSetNo(Number(e.target.value))}
-      min={1}
-      placeholder="Set Number"
-      className="border rounded px-2 py-2 w-full sm:w-24"
-    />
-    <input
-      type="number"
-      value={set_points_for}
-      onChange={(e) => setSetPointsFor(e.target.value)}
-      min={0}
-      placeholder="PF"
-      className="border rounded px-2 py-2 w-full sm:w-24 bg-green-100"
-    />
-    <input
-      type="number"
-      value={set_points_against}
-      onChange={(e) => setSetPointsAgainst(e.target.value)}
-      min={0}
-      placeholder="PA"
-      className="border rounded px-2 py-2 w-full sm:w-24 bg-red-100"
-    />
-    {/* Display result automatically */}
-    <span
-      className={`px-2 py-1 font-bold rounded ${
-        Number(set_points_for) > Number(set_points_against)
-          ? "bg-green-500 text-white"
-          : Number(set_points_for) < Number(set_points_against)
-          ? "bg-red-500 text-white"
-          : "bg-gray-300 text-black"
-      }`}
-    >
-      {Number(set_points_for) > Number(set_points_against)
-        ? "Win"
-        : Number(set_points_for) < Number(set_points_against)
-        ? "Loss"
-        : "Draw"}
-    </span>
-    <button
-      type="button"
-      onClick={handleAddSet}
-      className="bg-primary text-primary-foreground py-2 px-4 rounded font-bold w-full sm:w-auto"
-    >
-      Add Set
-    </button>
-  </div>
-  <div>
-    {sets.map((set, idx) => (
-      <div key={idx} className="mb-1 flex items-center justify-between">
-        <span>
-          Set {set.set_no}: {set.points_for} - {set.points_against} (
-          {set.points_for > set.points_against
-            ? "Win"
-            : set.points_for < set.points_against
-            ? "Loss"
-            : "Draw"}
-          )
-        </span>
-        <button
-          type="button"
-          onClick={() => handleRemoveSet(idx)}
-          className="text-xs text-red-600 ml-2"
-        >
-          Remove
-        </button>
-      </div>
-    ))}
-  </div>
-</div>
+          {/* Sets List */}
+          <div className="mt-3 space-y-2">
+            {sets.map((set, idx) => {
+              const isWin = set.points_for > set.points_against;
+              const isLoss = set.points_for < set.points_against;
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between bg-muted/30 border border-muted rounded-lg px-3 py-2 shadow-sm"
+                >
+                  <span className="font-medium">
+                    Set {set.set_no}:{" "}
+                    <span className="text-green-700 font-semibold">{set.points_for}</span>
+                    {" - "}
+                    <span className="text-red-700 font-semibold">{set.points_against}</span>
+                  </span>
 
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2 py-1 text-xs font-bold rounded
+                        ${isWin ? "bg-green-100 text-green-700" : isLoss ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}
+                    >
+                      {isWin ? "WIN" : isLoss ? "LOSS" : "DRAW"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSet(idx)}
+                      className="text-xs font-semibold text-red-600 hover:text-red-700 hover:underline focus:outline-none focus:ring-2 focus:ring-red-500/40 rounded"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-          {/* Submit */}
+        {/* Submit */}
+        <div className="pt-2">
           <button
             type="submit"
-            className="w-full bg-primary text-primary-foreground py-2 rounded font-bold mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-bold
+                       hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed
+                       transition focus:outline-none focus:ring-2 focus:ring-primary/60"
             disabled={loading}
           >
             {loading ? "Submitting..." : "Submit Sets"}
           </button>
+        </div>
 
-          {/* Message */}
-          {message && (
-            <div
-              className={`mt-2 text-center font-semibold ${
-                message.toLowerCase().includes("failed") || message.toLowerCase().includes("error")
-                  ? "text-red-600"
-                  : "text-green-600"
-              }`}
-            >
-              {message}
-            </div>
-          )}
-        </form>
-      </section>
-    </div>
-  );
+        {/* Message */}
+        {message && (
+          <div
+            className={`mt-2 text-center font-semibold rounded-md px-3 py-2 ${
+              message.toLowerCase().includes("failed") || message.toLowerCase().includes("error")
+                ? "text-red-700 bg-red-50 border border-red-200"
+                : "text-green-700 bg-green-50 border border-green-200"
+            }`}
+          >
+            {message}
+          </div>
+        )}
+      </form>
+    </section>
+  </div>
+);
+
 };
 
 export default AdminGameEntry;
