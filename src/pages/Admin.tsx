@@ -464,13 +464,15 @@ return (
             {/* Add Set Button */}
             <div className="col-span-2 sm:col-span-1">
               <button
-                type="button"
-                onClick={handleAddSet}
-                className="w-full bg-primary text-primary-foreground py-2 rounded-lg font-bold
-                           hover:bg-primary/90 active:scale-[0.99] transition focus:outline-none focus:ring-2 focus:ring-primary/60"
-              >
-                Add Set
-              </button>
+  type="button"
+  onClick={handleAddSet}
+  className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-bold
+             hover:bg-gray-300 active:scale-[0.99] transition
+             focus:outline-none focus:ring-2 focus:ring-gray-400"
+>
+  Add Set
+</button>
+
             </div>
           </div>
 
@@ -515,14 +517,15 @@ return (
         {/* Submit */}
         <div className="pt-2">
           <button
-            type="submit"
-            className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-bold
-                       hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed
-                       transition focus:outline-none focus:ring-2 focus:ring-primary/60"
-            disabled={loading}
-          >
-            {loading ? "Submitting..." : "Submit Sets"}
-          </button>
+  type="submit"
+  className="w-full bg-gray-800 text-white py-2.5 rounded-lg font-bold
+             hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed
+             transition focus:outline-none focus:ring-2 focus:ring-gray-500"
+  disabled={loading}
+>
+  {loading ? "Submitting..." : "Submit Sets"}
+</button>
+
         </div>
 
         {/* Message */}
