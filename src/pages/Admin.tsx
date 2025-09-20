@@ -151,15 +151,12 @@ const AdminGameEntry = () => {
       setMessage(`Set ${set_no} already exists.`);
       return;
     }
-    setSets([
-      ...sets,
-      {
-        set_no: Number(set_no),
-        points_for: Number(set_points_for),
-        points_against: Number(set_points_against),
-        result: set_result,
-      },
-    ]);
+
+    const pf = Number(set_points_for);
+    const pa = Number(set_points_against);
+    const result: "W" | "L" = pf > pa ? "W" : "L";
+
+    setSets([...sets, { set_no, points_for: pf, points_against: pa, result }]);
     setSetNo(set_no + 1);
     setSetPointsFor("");
     setSetPointsAgainst("");
@@ -195,7 +192,7 @@ const AdminGameEntry = () => {
         points_for: set.points_for,
         points_against: set.points_against,
         result: set.result,
-        subbed_players: subPlayers, // NEW
+        subbed_players: subPlayers,
       }));
 
       const { error: setError } = await supabase.from("sets").insert(setsPayload);
@@ -310,7 +307,9 @@ const AdminGameEntry = () => {
                     checked={teamId === team.team_id}
                     onChange={() => {
                       if (sets.length > 0) {
-                        alert("Please finish or clear the sets for the current game before switching.");
+                        alert(
+                          "Please finish or clear the sets for the current game before switching."
+                        );
                         return;
                       }
                       setTeamId(team.team_id);
@@ -335,7 +334,9 @@ const AdminGameEntry = () => {
               value={selectedGameId}
               onChange={(e) => {
                 if (sets.length > 0) {
-                  alert("Please finish or clear the sets for the current game before switching.");
+                  alert(
+                    "Please finish or clear the sets for the current game before switching."
+                  );
                   return;
                 }
                 setSelectedGameId(e.target.value);
@@ -385,16 +386,16 @@ const AdminGameEntry = () => {
                 value={set_points_for}
                 onChange={(e) => setSetPointsFor(e.target.value)}
                 min={0}
-                placeholder="Points For"
-                className="border rounded px-2 py-2 w-full sm:w-24"
+                placeholder="PF"
+                className="border rounded px-2 py-2 w-full sm:w-24 bg-green-100"
               />
               <input
                 type="number"
                 value={set_points_against}
                 onChange={(e) => setSetPointsAgainst(e.target.value)}
                 min={0}
-                placeholder="Points Against"
-                className="border rounded px-2 py-2 w-full sm:w-24"
+                placeholder="PA"
+                className="border rounded px-2 py-2 w-full sm:w-24 bg-red-100"
               />
               <select
                 value={set_result}
@@ -411,12 +412,15 @@ const AdminGameEntry = () => {
               >
                 Add Set
               </button>
+           
             </div>
             <div>
               {sets.map((set, idx) => (
                 <div key={idx} className="mb-1 flex items-center justify-between">
                   <span>
-                    Set {set.set_no}: {set.points_for} - {set.points_against} ({set.result})
+                    Set {set.set_no}:{" "}
+                    <span className="font-bold text-green-700">{set.points_for}</span> -{" "}
+                    <span className="font-bold text-red-700">{set.points_against}</span> ({set.result})
                   </span>
                   <button
                     type="button"
