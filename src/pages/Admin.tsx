@@ -31,10 +31,16 @@ const AdminGameEntry = () => {
   const [set_no, setSetNo] = useState<number>(1);
   const [set_points_for, setSetPointsFor] = useState("");
   const [set_points_against, setSetPointsAgainst] = useState("");
+  // Keeping this state to avoid downstream changes; not used in UI directly
   const [set_result, setSetResult] = useState<"W" | "L">("W");
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [subPlayers, setSubPlayers] = useState<string[]>([]);
+
+  // NEW: Confirmation + duplicate tracking
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [dupSetNos, setDupSetNos] = useState<number[]>([]);
 
   // Load teams
   useEffect(() => {
@@ -136,9 +142,7 @@ const AdminGameEntry = () => {
 
   // Helpers
   const toggleSubPlayer = (id: string) => {
-    setSubPlayers((prev) =>
-      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
-    );
+    setSubPlayers((prev) => (prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]));
   };
 
   // Add set
@@ -168,20 +172,9 @@ const AdminGameEntry = () => {
     setSets(sets.filter((_, i) => i !== idx));
   };
 
-  // Submit sets
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!selectedGameId) {
-      setMessage("Please select a game.");
-      return;
-    }
-    if (sets.length === 0) {
-      setMessage("Please add at least one set.");
-      return;
-    }
-
-    setLoading(true);
+  // NEW: Extract DB submit work into its own function (runs after confirm)
+  const doSubmit = async () => {
+    setConfirming(true);
     setMessage("");
 
     try {
@@ -277,274 +270,417 @@ const AdminGameEntry = () => {
       setSetPointsFor("");
       setSetPointsAgainst("");
       setSetResult("W");
+      setShowConfirm(false);
     } catch (error) {
       setMessage("Unexpected error: " + (error as Error).message);
     } finally {
+      setConfirming(false);
       setLoading(false);
     }
   };
 
-return (
-  <div className="max-w-3xl mx-auto mt-10 px-4 sm:px-6">
-    <section className="bg-card border border-border/50 rounded-xl shadow-sm">
-      <div className="px-5 sm:px-6 py-5 border-b border-border/50">
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-          Secret Admin: Add Sets to Game
-        </h2>
-      </div>
+  // UPDATED: Preflight submit — server-side duplicate check + open confirm modal
+  const handleSubmit: React.FormEventHandler = async (e) => {
+    e.preventDefault();
 
-      <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-8">
-        {/* Team Selection */}
-        <div>
-          <label className="block mb-3 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-            Select Team
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {teams.map((team) => (
-              <label
-                key={team.team_id}
-                className={`cursor-pointer rounded-lg border transition-all select-none
-                  ${teamId === team.team_id
-                    ? "border-primary ring-2 ring-primary/50 shadow-sm"
-                    : "border-muted hover:shadow-sm"
-                  }
-                  flex flex-col items-center justify-center p-3 focus-within:ring-2 focus-within:ring-primary/60`}
-              >
-                <input
-                  type="radio"
-                  name="team"
-                  value={team.team_id}
-                  checked={teamId === team.team_id}
-                  onChange={() => {
-                    if (sets.length > 0) {
-                      alert("Please finish or clear the sets for the current game before switching.");
-                      return;
-                    }
-                    setTeamId(team.team_id);
-                  }}
-                  className="sr-only"
-                />
-                <img
-                  src={`/logos/${team.team_id}.jpg`}
-                  alt={team.name}
-                  className="w-16 h-16 object-contain mb-2 rounded"
-                />
-                <span className="text-sm font-medium text-center">{team.name}</span>
-              </label>
-            ))}
-          </div>
+    if (!selectedGameId) {
+      setMessage("Please select a game.");
+      return;
+    }
+    if (sets.length === 0) {
+      setMessage("Please add at least one set.");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
+    // Check for duplicate set numbers in DB for this game
+    const setNos = sets.map((s) => s.set_no);
+    const { data: existing, error } = await supabase
+      .from("sets")
+      .select("set_no")
+      .eq("game_id", selectedGameId)
+      .in("set_no", setNos);
+
+    if (error) {
+      setMessage(`Error checking duplicates: ${error.message}`);
+      setLoading(false);
+      return;
+    }
+
+    const dups = (existing ?? []).map((r: { set_no: number }) => r.set_no);
+    setDupSetNos(dups);
+
+    // Open confirmation modal (prevents submission if duplicates exist)
+    setShowConfirm(true);
+    setLoading(false);
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto mt-10 px-4 sm:px-6">
+      <section className="bg-card border border-border/50 rounded-xl shadow-sm">
+        <div className="px-5 sm:px-6 py-5 border-b border-border/50">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+            Secret Admin: Add Sets to Game
+          </h2>
         </div>
 
-        {/* Game Selection */}
-        <div>
-          <label className="block mb-2 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-            Select Game
-          </label>
-          <div className="relative">
-            <select
-              value={selectedGameId}
-              onChange={(e) => {
-                if (sets.length > 0) {
-                  alert("Please finish or clear the sets for the current game before switching.");
-                  return;
-                }
-                setSelectedGameId(e.target.value);
-              }}
-              className="w-full border rounded-lg px-3 py-2 pr-9 bg-background focus:outline-none focus:ring-2 focus:ring-primary/60 disabled:opacity-50"
-              disabled={loading}
-            >
-              {games.map((game) => (
-                <option key={game.id} value={game.id}>
-                  {game.label}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-              ▾
-            </span>
-          </div>
-        </div>
-
-        {/* Who needed a sub? */}
-        <div>
-          <label className="block mb-3 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-            Who needed a sub?
-          </label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {players.map((player) => {
-              const checked = subPlayers.includes(player.id);
-              return (
+        <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-8">
+          {/* Team Selection */}
+          <div>
+            <label className="block mb-3 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+              Select Team
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {teams.map((team) => (
                 <label
-                  key={player.id}
-                  className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition
-                    ${checked
-                      ? "bg-muted/60 border-primary ring-1 ring-primary/30"
-                      : "bg-background border-muted hover:bg-muted/40"
+                  key={team.team_id}
+                  className={`cursor-pointer rounded-lg border transition-all select-none
+                    ${
+                      teamId === team.team_id
+                        ? "border-primary ring-2 ring-primary/50 shadow-sm"
+                        : "border-muted hover:shadow-sm"
                     }
-                    focus-within:ring-2 focus-within:ring-primary/60`}
+                    flex flex-col items-center justify-center p-3 focus-within:ring-2 focus-within:ring-primary/60`}
                 >
                   <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleSubPlayer(player.id)}
-                    className="h-4 w-4 rounded border-muted text-primary focus:ring-primary/60"
+                    type="radio"
+                    name="team"
+                    value={team.team_id}
+                    checked={teamId === team.team_id}
+                    onChange={() => {
+                      if (sets.length > 0) {
+                        alert("Please finish or clear the sets for the current game before switching.");
+                        return;
+                      }
+                      setTeamId(team.team_id);
+                    }}
+                    className="sr-only"
                   />
-                  <span className="truncate">{player.name}</span>
+                  <img
+                    src={`/logos/${team.team_id}.jpg`}
+                    alt={team.name}
+                    className="w-16 h-16 object-contain mb-2 rounded"
+                  />
+                  <span className="text-sm font-medium text-center">{team.name}</span>
                 </label>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Sets Entry */}
-        <div>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <label className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-              Add Sets
+          {/* Game Selection */}
+          <div>
+            <label className="block mb-2 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+              Select Game
             </label>
-           
+            <div className="relative">
+              <select
+                value={selectedGameId}
+                onChange={(e) => {
+                  if (sets.length > 0) {
+                    alert("Please finish or clear the sets for the current game before switching.");
+                    return;
+                  }
+                  setSelectedGameId(e.target.value);
+                }}
+                className="w-full border rounded-lg px-3 py-2 pr-9 bg-background focus:outline-none focus:ring-2 focus:ring-primary/60 disabled:opacity-50"
+                disabled={loading}
+              >
+                {games.map((game) => (
+                  <option key={game.id} value={game.id}>
+                    {game.label}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                ▾
+              </span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 items-center mb-2">
-            {/* Set Number */}
-            <input
-              type="number"
-              value={set_no}
-              onChange={(e) => setSetNo(Number(e.target.value))}
-              min={1}
-              placeholder="Set #"
-              className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold bg-background focus:outline-none focus:ring-2 focus:ring-primary/60"
-            />
+          {/* Who needed a sub? */}
+          <div>
+            <label className="block mb-3 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+              Who needed a sub?
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {players.map((player) => {
+                const checked = subPlayers.includes(player.id);
+                return (
+                  <label
+                    key={player.id}
+                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition
+                      ${
+                        checked
+                          ? "bg-muted/60 border-primary ring-1 ring-primary/30"
+                          : "bg-background border-muted hover:bg-muted/40"
+                      }
+                      focus-within:ring-2 focus-within:ring-primary/60`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleSubPlayer(player.id)}
+                      className="h-4 w-4 rounded border-muted text-primary focus:ring-primary/60"
+                    />
+                    <span className="truncate">{player.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
 
-            {/* PF */}
-            <input
-              type="number"
-              value={set_points_for}
-              onChange={(e) => setSetPointsFor(e.target.value)}
-              min={0}
-              placeholder="PF"
-              className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold
-                         bg-green-50 text-green-700 border-green-300
-                         placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-
-            {/* PA */}
-            <input
-              type="number"
-              value={set_points_against}
-              onChange={(e) => setSetPointsAgainst(e.target.value)}
-              min={0}
-              placeholder="PA"
-              className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold
-                         bg-red-50 text-red-700 border-red-300
-                         placeholder-red-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-            />
-
-            {/* Result Display (read-only pill mirrors the live result) */}
-            <div className="col-span-2 sm:col-span-2 flex justify-center sm:justify-start">
+          {/* Sets Entry */}
+          <div>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <label className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+                Add Sets
+              </label>
+              {/* Single live result preview pill */}
               <span
-                className={`inline-flex items-center px-3 py-1 text-sm font-bold rounded-full shadow-sm
+                className={`px-3 py-1 text-xs font-bold rounded-full shadow-sm
                   ${
                     Number(set_points_for) > Number(set_points_against)
-                      ? "bg-green-100 text-green-700"
+                      ? "bg-green-500 text-white"
                       : Number(set_points_for) < Number(set_points_against)
-                      ? "bg-red-100 text-red-700"
-                      : "bg-amber-100 text-amber-700"
+                      ? "bg-red-500 text-white"
+                      : "bg-amber-500/90 text-white"
                   }`}
-                aria-live="polite"
               >
                 {Number(set_points_for) > Number(set_points_against)
-                  ? "Win"
+                  ? "WIN"
                   : Number(set_points_for) < Number(set_points_against)
-                  ? "Loss"
-                  : "Draw"}
+                  ? "LOSS"
+                  : "DRAW"}
               </span>
             </div>
 
-            {/* Add Set Button */}
-            <div className="col-span-2 sm:col-span-1">
-              <button
-  type="button"
-  onClick={handleAddSet}
-  className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-bold
-             hover:bg-gray-300 active:scale-[0.99] transition
-             focus:outline-none focus:ring-2 focus:ring-gray-400"
->
-  Add Set
-</button>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-center mb-2">
+              {/* Set Number */}
+              <input
+                type="number"
+                value={set_no}
+                onChange={(e) => setSetNo(Number(e.target.value))}
+                min={1}
+                placeholder="Set #"
+                className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold bg-background focus:outline-none focus:ring-2 focus:ring-primary/60"
+              />
 
+              {/* PF */}
+              <input
+                type="number"
+                value={set_points_for}
+                onChange={(e) => setSetPointsFor(e.target.value)}
+                min={0}
+                placeholder="PF"
+                className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold
+                           bg-green-50 text-green-700 border-green-300
+                           placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+
+              {/* PA */}
+              <input
+                type="number"
+                value={set_points_against}
+                onChange={(e) => setSetPointsAgainst(e.target.value)}
+                min={0}
+                placeholder="PA"
+                className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold
+                           bg-red-50 text-red-700 border-red-300
+                           placeholder-red-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+
+              {/* (Spacer for grid consistency on small screens) */}
+              <div className="hidden sm:block" />
+
+              {/* Add Set Button (neutral) */}
+              <div className="col-span-2 sm:col-span-1">
+                <button
+                  type="button"
+                  onClick={handleAddSet}
+                  className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-bold
+                             hover:bg-gray-300 active:scale-[0.99] transition
+                             focus:outline-none focus:ring-2 focus:ring-gray-400"
+                >
+                  Add Set
+                </button>
+              </div>
+            </div>
+
+            {/* Sets List */}
+            <div className="mt-3 space-y-2">
+              {sets.map((set, idx) => {
+                const isWin = set.points_for > set.points_against;
+                const isLoss = set.points_for < set.points_against;
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between bg-muted/30 border border-muted rounded-lg px-3 py-2 shadow-sm"
+                  >
+                    <span className="font-medium">
+                      Set {set.set_no}:{" "}
+                      <span className="text-green-700 font-semibold">{set.points_for}</span>
+                      {" - "}
+                      <span className="text-red-700 font-semibold">{set.points_against}</span>
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2 py-1 text-xs font-bold rounded
+                          ${
+                            isWin
+                              ? "bg-green-100 text-green-700"
+                              : isLoss
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                      >
+                        {isWin ? "WIN" : isLoss ? "LOSS" : "DRAW"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSet(idx)}
+                        className="text-xs font-semibold text-red-600 hover:text-red-700 hover:underline focus:outline-none focus:ring-2 focus:ring-red-500/40 rounded"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Sets List */}
-          <div className="mt-3 space-y-2">
-            {sets.map((set, idx) => {
-              const isWin = set.points_for > set.points_against;
-              const isLoss = set.points_for < set.points_against;
-              return (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between bg-muted/30 border border-muted rounded-lg px-3 py-2 shadow-sm"
-                >
+          {/* Submit */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              className="w-full bg-gray-800 text-white py-2.5 rounded-lg font-bold
+                         hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed
+                         transition focus:outline-none focus:ring-2 focus:ring-gray-500"
+              disabled={loading}
+            >
+              {loading ? "Checking..." : "Submit Sets"}
+            </button>
+          </div>
+
+          {/* Message */}
+          {message && (
+            <div
+              className={`mt-2 text-center font-semibold rounded-md px-3 py-2 ${
+                message.toLowerCase().includes("failed") || message.toLowerCase().includes("error")
+                  ? "text-red-700 bg-red-50 border border-red-200"
+                  : "text-green-700 bg-green-50 border border-green-200"
+              }`}
+            >
+              {message}
+            </div>
+          )}
+        </form>
+      </section>
+
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg bg-background border border-border/60 rounded-xl shadow-xl p-5 sm:p-6 space-y-4">
+            <h3 className="text-lg font-semibold">Confirm Submission</h3>
+
+            {/* Duplicate warning */}
+            {dupSetNos.length > 0 && (
+              <div className="rounded-md border border-red-200 bg-red-50 text-red-700 p-3 text-sm">
+                The following <span className="font-semibold">set numbers</span> already exist for this
+                game: <span className="font-semibold">{dupSetNos.join(", ")}</span>. Please remove or
+                renumber these sets. You cannot submit while duplicates exist.
+              </div>
+            )}
+
+            {/* Summary */}
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Game</span>
+                <span className="font-medium">
+                  {games.find((g) => g.id === selectedGameId)?.label ?? "Selected game"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Sets to add</span>
+                <span className="font-medium">{sets.length}</span>
+              </div>
+
+              <div className="rounded-md border border-muted bg-muted/30 p-2">
+                <ul className="space-y-1">
+                  {sets.map((s) => {
+                    const isWin = s.points_for > s.points_against;
+                    const isLoss = s.points_for < s.points_against;
+                    return (
+                      <li key={s.set_no} className="flex items-center justify-between text-sm">
+                        <span className="font-medium">
+                          Set {s.set_no}:{" "}
+                          <span className="text-green-700 font-semibold">{s.points_for}</span>
+                          {" - "}
+                          <span className="text-red-700 font-semibold">{s.points_against}</span>
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 text-[11px] font-bold rounded ${
+                            isWin
+                              ? "bg-green-100 text-green-700"
+                              : isLoss
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {isWin ? "WIN" : isLoss ? "LOSS" : "DRAW"}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <div className="text-sm">
+                <span className="text-muted-foreground">Subs skipped:</span>{" "}
+                {subPlayers.length === 0 ? (
+                  <span className="font-medium">None</span>
+                ) : (
                   <span className="font-medium">
-                    Set {set.set_no}:{" "}
-                    <span className="text-green-700 font-semibold">{set.points_for}</span>
-                    {" - "}
-                    <span className="text-red-700 font-semibold">{set.points_against}</span>
+                    {players
+                      .filter((p) => subPlayers.includes(p.id))
+                      .map((p) => p.name)
+                      .join(", ")}
                   </span>
+                )}
+              </div>
+            </div>
 
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-2 py-1 text-xs font-bold rounded
-                        ${isWin ? "bg-green-100 text-green-700" : isLoss ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}
-                    >
-                      {isWin ? "WIN" : isLoss ? "LOSS" : "DRAW"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveSet(idx)}
-                      className="text-xs font-semibold text-red-600 hover:text-red-700 hover:underline focus:outline-none focus:ring-2 focus:ring-red-500/40 rounded"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+            {/* Modal Actions */}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={doSubmit}
+                disabled={dupSetNos.length > 0 || confirming}
+                className={`px-4 py-2 rounded-lg font-bold text-white focus:outline-none focus:ring-2
+                  ${
+                    dupSetNos.length > 0 || confirming
+                      ? "bg-gray-400 cursor-not-allowed focus:ring-gray-400"
+                      : "bg-gray-800 hover:bg-gray-700 focus:ring-gray-500"
+                  }`}
+              >
+                {confirming ? "Submitting..." : "Confirm & Submit"}
+              </button>
+            </div>
           </div>
         </div>
-
-        {/* Submit */}
-        <div className="pt-2">
-          <button
-  type="submit"
-  className="w-full bg-gray-800 text-white py-2.5 rounded-lg font-bold
-             hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed
-             transition focus:outline-none focus:ring-2 focus:ring-gray-500"
-  disabled={loading}
->
-  {loading ? "Submitting..." : "Submit Sets"}
-</button>
-
-        </div>
-
-        {/* Message */}
-        {message && (
-          <div
-            className={`mt-2 text-center font-semibold rounded-md px-3 py-2 ${
-              message.toLowerCase().includes("failed") || message.toLowerCase().includes("error")
-                ? "text-red-700 bg-red-50 border border-red-200"
-                : "text-green-700 bg-green-50 border border-green-200"
-            }`}
-          >
-            {message}
-          </div>
-        )}
-      </form>
-    </section>
-  </div>
-);
-
+      )}
+    </div>
+  );
 };
 
 export default AdminGameEntry;
