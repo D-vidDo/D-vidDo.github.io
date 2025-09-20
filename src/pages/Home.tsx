@@ -27,8 +27,8 @@ type Player = {
 type Team = {
   team_id: string;
   name: string;
-  wins: number;
-  losses: number;
+  wins: number;            // kept for other UI, not used for sorting
+  losses: number;          // kept for other UI, not used for sorting
   points_for: number;
   points_against: number;
   captain: string;
@@ -37,11 +37,21 @@ type Team = {
   games: { id: string; date: string; opponent: string; pointsFor: number; pointsAgainst: number; result: string }[];
 };
 
+// Games with nested sets (for deriving match results)
+type GameRow = {
+  id: string;
+  team_id: string;
+  sets: { set_no: number; points_for: number; points_against: number }[] | null;
+};
+
 const Home = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Derived GAME-level wins/losses/ties by team
+  const [gameWLT, setGameWLT] = useState<Record<string, { w: number; l: number; t: number }>>({});
 
   useEffect(() => {
     async function fetchData() {
@@ -58,6 +68,11 @@ const Home = () => {
         .from("players")
         .select("*");
 
+      // Fetch games with nested sets (for match-level aggregation)
+      const { data: gamesData, error: gamesError } = await supabase
+        .from("games")
+        .select("id, team_id, sets ( set_no, points_for, points_against )");
+
       if (teamError) {
         setError(`Error loading teams: ${teamError.message}`);
         setLoading(false);
@@ -68,9 +83,44 @@ const Home = () => {
         setLoading(false);
         return;
       }
+      if (gamesError) {
+        setError(`Error loading games: ${gamesError.message}`);
+        setLoading(false);
+        return;
+      }
 
       setTeams(teamData ?? []);
       setPlayers(playerData ?? []);
+
+      // Build GAME-level W/L/T (same logic as StandingsTable)
+      const stats: Record<string, { w: number; l: number; t: number }> = {};
+
+      // initialize every team so they sort deterministically even with 0 games
+      for (const t of teamData ?? []) {
+        stats[t.team_id] = { w: 0, l: 0, t: 0 };
+      }
+
+      (gamesData as GameRow[] | null)?.forEach((g) => {
+        const sets = g.sets ?? [];
+        if (sets.length === 0) return;
+
+        let setWins = 0;
+        let setLosses = 0;
+
+        for (const s of sets) {
+          if (s.points_for > s.points_against) setWins += 1;
+          else if (s.points_for < s.points_against) setLosses += 1;
+          // per-set ties ignored; overall tie decided below
+        }
+
+        if (!stats[g.team_id]) stats[g.team_id] = { w: 0, l: 0, t: 0 };
+
+        if (setWins > setLosses) stats[g.team_id].w += 1;
+        else if (setLosses > setWins) stats[g.team_id].l += 1;
+        else stats[g.team_id].t += 1; // overall set tie -> match tie
+      });
+
+      setGameWLT(stats);
       setLoading(false);
     }
 
@@ -80,16 +130,25 @@ const Home = () => {
   if (loading) return <div>Loading...</div>;
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
-  // Calculate top teams by win percentage
+  // ---------- Standings order (matches StandingsTable) ----------
+  // 1) Game Wins (desc)
+  // 2) Point Differential (PF - PA) (desc)
+  // 3) Points For (desc)
   const topTeams = [...teams]
     .sort((a, b) => {
-      const winPctA = a.wins + a.losses === 0 ? 0 : a.wins / (a.wins + a.losses);
-      const winPctB = b.wins + b.losses === 0 ? 0 : b.wins / (b.wins + b.losses);
-      return winPctB - winPctA;
+      const winsA = gameWLT[a.team_id]?.w ?? 0;
+      const winsB = gameWLT[b.team_id]?.w ?? 0;
+      if (winsB !== winsA) return winsB - winsA;
+
+      const diffA = (a.points_for ?? 0) - (a.points_against ?? 0);
+      const diffB = (b.points_for ?? 0) - (b.points_against ?? 0);
+      if (diffB !== diffA) return diffB - diffA;
+
+      return (b.points_for ?? 0) - (a.points_for ?? 0);
     })
     .slice(0, 3);
 
-  // Helper to compute top performers by plus_minus and average
+  // Top performers (unchanged)
   function getTopPerformers() {
     const validPlayers = players.filter((p) => p.games_played > 0);
     const topplus_minus = [...players].sort((a, b) => b.plus_minus - a.plus_minus);
@@ -101,7 +160,7 @@ const Home = () => {
 
   const { topplus_minus, topAverage } = getTopPerformers();
 
-  // Total games played (each game counts for both teams, so divide by 2)
+  // Total games (left as-is from your original code)
   const totalGames = teams.reduce((sum, team) => sum + team.wins + team.losses, 0) ;
 
   return (
@@ -110,13 +169,9 @@ const Home = () => {
       <section className="bg-gradient-hero py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="flex flex-col items-center text-5xl md:text-6xl font-bold text-primary-foreground mb-6">
-  <img
-    src="/logo.png"  // or .svg if that's your file type
-    alt="NCL Logo"
-    className="h-24 w-24 md:h-32 md:w-32 mb-4" // Bigger logo + spacing below
-  />
-  <span>Northeast Community League</span>
-</h1>
+            /logo.png
+            <span>Northeast Community League</span>
+          </h1>
 
           <p className="text-xl text-primary-foreground/90 mb-8 max-w-3xl mx-auto">
             Welcome to the NCL hub. Track teams, players, standings, and statistics all in one place.
@@ -181,32 +236,31 @@ const Home = () => {
 
         <UpcomingGames/>
 
-        {/* Top Teams */}
-<section>
-  <div className="flex justify-between items-center mb-8">
-    <h2 className="text-3xl font-bold text-foreground">Standings</h2>
-    <Link to="/teams">
-      <Button variant="outline">View All Teams</Button>
-    </Link>
-  </div>
-  <div className="grid md:grid-cols-3 gap-6">
-    {topTeams.map((team, index) => (
-      <div key={team.team_id} className="relative">
-        {index === 0 && (
-          <Badge className="absolute -top-2 -right-2 z-10 bg-gradient-hero">🏆 #1</Badge>
-        )}
-        {index === 1 && (
-          <Badge className="absolute -top-2 -right-2 z-10 bg-yellow-400 text-black">🥈 #2</Badge>
-        )}
-        {index === 2 && (
-          <Badge className="absolute -top-2 -right-2 z-10 bg-orange-400 text-black">🥉 #3</Badge>
-        )}
-        <TeamCard team={team} />
-      </div>
-    ))}
-  </div>
-</section>
-
+        {/* Top Teams (Standings) */}
+        <section>
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold text-foreground">Standings</h2>
+            <Link to="/teams">
+              <Button variant="outline">View All Teams</Button>
+            </Link>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {topTeams.map((team, index) => (
+              <div key={team.team_id} className="relative">
+                {index === 0 && (
+                  <Badge className="absolute -top-2 -right-2 z-10 bg-gradient-hero">🏆 #1</Badge>
+                )}
+                {index === 1 && (
+                  <Badge className="absolute -top-2 -right-2 z-10 bg-yellow-400 text-black">🥈 #2</Badge>
+                )}
+                {index === 2 && (
+                  <Badge className="absolute -top-2 -right-2 z-10 bg-orange-400 text-black">🥉 #3</Badge>
+                )}
+                <TeamCard team={team} />
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Player Highlights */}
         <section className="grid md:grid-cols-2 gap-8">
@@ -300,7 +354,6 @@ const Home = () => {
       </div>
       <BillOfTheDay/>
     </div>
-    
   );
 };
 
