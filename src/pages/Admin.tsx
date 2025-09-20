@@ -369,70 +369,82 @@ const AdminGameEntry = () => {
             </div>
           </div>
 
-          {/* Sets Entry */}
-          <div>
-            <label className="block mb-2 font-semibold">Add Sets</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              <input
-                type="number"
-                value={set_no}
-                onChange={(e) => setSetNo(Number(e.target.value))}
-                min={1}
-                placeholder="Set Number"
-                className="border rounded px-2 py-2 w-full sm:w-24"
-              />
-              <input
-                type="number"
-                value={set_points_for}
-                onChange={(e) => setSetPointsFor(e.target.value)}
-                min={0}
-                placeholder="PF"
-                className="border rounded px-2 py-2 w-full sm:w-24 bg-green-100"
-              />
-              <input
-                type="number"
-                value={set_points_against}
-                onChange={(e) => setSetPointsAgainst(e.target.value)}
-                min={0}
-                placeholder="PA"
-                className="border rounded px-2 py-2 w-full sm:w-24 bg-red-100"
-              />
-              <select
-                value={set_result}
-                onChange={(e) => setSetResult(e.target.value as "W" | "L")}
-                className="border rounded px-2 py-2 w-full sm:w-24"
-              >
-                <option value="W">Win</option>
-                <option value="L">Loss</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleAddSet}
-                className="bg-primary text-primary-foreground py-2 px-4 rounded font-bold w-full sm:w-auto"
-              >
-                Add Set
-              </button>
-           
-            </div>
-            <div>
-              {sets.map((set, idx) => (
-                <div key={idx} className="mb-1 flex items-center justify-between">
-                  <span>
-                    Set {set.set_no}:{" "}
-                    <span className="font-bold text-green-700">{set.points_for}</span> -{" "}
-                    <span className="font-bold text-red-700">{set.points_against}</span> ({set.result})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSet(idx)}
-                    className="text-xs text-red-600 ml-2"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
+ {/* Sets Entry */}
+<div>
+  <label className="block mb-2 font-semibold">Add Sets</label>
+  <div className="flex flex-wrap gap-2 mb-2 items-center">
+    <input
+      type="number"
+      value={set_no}
+      onChange={(e) => setSetNo(Number(e.target.value))}
+      min={1}
+      placeholder="Set Number"
+      className="border rounded px-2 py-2 w-full sm:w-24"
+    />
+    <input
+      type="number"
+      value={set_points_for}
+      onChange={(e) => setSetPointsFor(e.target.value)}
+      min={0}
+      placeholder="PF"
+      className="border rounded px-2 py-2 w-full sm:w-24 bg-green-100"
+    />
+    <input
+      type="number"
+      value={set_points_against}
+      onChange={(e) => setSetPointsAgainst(e.target.value)}
+      min={0}
+      placeholder="PA"
+      className="border rounded px-2 py-2 w-full sm:w-24 bg-red-100"
+    />
+    {/* Display result automatically */}
+    <span
+      className={`px-2 py-1 font-bold rounded ${
+        Number(set_points_for) > Number(set_points_against)
+          ? "bg-green-500 text-white"
+          : Number(set_points_for) < Number(set_points_against)
+          ? "bg-red-500 text-white"
+          : "bg-gray-300 text-black"
+      }`}
+    >
+      {Number(set_points_for) > Number(set_points_against)
+        ? "Win"
+        : Number(set_points_for) < Number(set_points_against)
+        ? "Loss"
+        : "Draw"}
+    </span>
+    <button
+      type="button"
+      onClick={handleAddSet}
+      className="bg-primary text-primary-foreground py-2 px-4 rounded font-bold w-full sm:w-auto"
+    >
+      Add Set
+    </button>
+  </div>
+  <div>
+    {sets.map((set, idx) => (
+      <div key={idx} className="mb-1 flex items-center justify-between">
+        <span>
+          Set {set.set_no}: {set.points_for} - {set.points_against} (
+          {set.points_for > set.points_against
+            ? "Win"
+            : set.points_for < set.points_against
+            ? "Loss"
+            : "Draw"}
+          )
+        </span>
+        <button
+          type="button"
+          onClick={() => handleRemoveSet(idx)}
+          className="text-xs text-red-600 ml-2"
+        >
+          Remove
+        </button>
+      </div>
+    ))}
+  </div>
+</div>
+
 
           {/* Submit */}
           <button
