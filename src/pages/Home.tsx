@@ -169,7 +169,11 @@ const Home = () => {
       <section className="bg-gradient-hero py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="flex flex-col items-center text-5xl md:text-6xl font-bold text-primary-foreground mb-6">
-            /logo.png
+             <img
+    src="/logo.png"  // or .svg if that's your file type
+    alt="NCL Logo"
+    className="h-24 w-24 md:h-32 md:w-32 mb-4" // Bigger logo + spacing below
+  />
             <span>Northeast Community League</span>
           </h1>
 
