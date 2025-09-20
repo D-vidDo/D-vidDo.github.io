@@ -434,12 +434,13 @@ if (teamData.player_ids && teamData.player_ids.length > 0) {
 
           {/* Submit */}
           <button
-            type="submit"
-            className="w-full bg-primary text-primary-foreground py-2 rounded font-bold mt-2"
-            disabled={loading}
-          >
-            {loading ? "Submitting..." : "Submit Sets"}
-          </button>
+  type="submit"
+  className="w-full bg-primary text-primary-foreground py-2 rounded font-bold mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+  disabled={loading}
+>
+  {loading ? "Submitting..." : "Submit Sets"}
+</button>
+
 
           {/* Message */}
           {message && (
