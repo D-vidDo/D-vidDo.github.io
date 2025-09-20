@@ -385,7 +385,7 @@ const AdminGameEntry = () => {
                 value={set_points_for}
                 onChange={(e) => setSetPointsFor(e.target.value)}
                 min={0}
-                placeholder="Points For"
+                placeholder="PF"
                 className="border rounded px-2 py-2 w-full sm:w-24"
               />
               <input
@@ -393,7 +393,7 @@ const AdminGameEntry = () => {
                 value={set_points_against}
                 onChange={(e) => setSetPointsAgainst(e.target.value)}
                 min={0}
-                placeholder="Points Against"
+                placeholder="PA"
                 className="border rounded px-2 py-2 w-full sm:w-24"
               />
               <select
