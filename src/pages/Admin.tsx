@@ -402,23 +402,7 @@ return (
             <label className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
               Add Sets
             </label>
-            {/* Live result preview pill */}
-            <span
-              className={`px-3 py-1 text-xs font-bold rounded-full shadow-sm
-                ${
-                  Number(set_points_for) > Number(set_points_against)
-                    ? "bg-green-500 text-white"
-                    : Number(set_points_for) < Number(set_points_against)
-                    ? "bg-red-500 text-white"
-                    : "bg-amber-500/90 text-white"
-                }`}
-            >
-              {Number(set_points_for) > Number(set_points_against)
-                ? "WIN"
-                : Number(set_points_for) < Number(set_points_against)
-                ? "LOSS"
-                : "DRAW"}
-            </span>
+           
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 items-center mb-2">
