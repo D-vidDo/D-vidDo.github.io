@@ -1,12 +1,13 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { LayoutGrid, List } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import PlayerCard from "@/components/PlayerCard";
 import { supabase } from "@/lib/supabase";
+import { List, Grid } from "lucide-react";
 
 const statKeys = [
   "Overall Rating",
@@ -42,40 +43,102 @@ const Players = () => {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [selectedTeam, setSelectedTeam] = useState("All");
-
   const { data: allPlayers = [], isLoading, error } = useQuery({
     queryKey: ["players"],
     queryFn: fetchPlayers,
   });
 
-  // Extract unique teams for dropdown
-  const teams = useMemo(() => {
-    const teamNames = Array.from(new Set(allPlayers.map((p: any) => p.team).filter(Boolean)));
-    return ["All", ...teamNames];
-  }, [allPlayers]);
+  // Extract unique teams for filtering
+  const teams = ["All", ...new Set(allPlayers.map((p) => p.team).filter(Boolean))];
 
-  // Filter + search
-  const filteredPlayers = useMemo(() => {
-    return allPlayers.filter((player) => {
-      const matchesSearch = player.name.toLowerCase().includes(search.toLowerCase());
-      const matchesTeam = selectedTeam === "All" || player.team === selectedTeam;
-      return matchesSearch && matchesTeam;
-    });
-  }, [allPlayers, search, selectedTeam]);
+  const filteredPlayers = allPlayers.filter((player) => {
+    const matchesSearch = player.name.toLowerCase().includes(search.toLowerCase());
+    const matchesTeam = selectedTeam === "All" || player.team === selectedTeam;
+    return matchesSearch && matchesTeam;
+  });
 
-  // Sorting logic
-  const sortedPlayers = useMemo(() => {
-    return [...filteredPlayers].sort((a, b) => {
-      if (sortKey === "Overall Rating") return getOverallRating(b) - getOverallRating(a);
-      if (sortKey === "+/-") return (b.plus_minus || 0) - (a.plus_minus || 0);
-      if (sortKey === "Games Played") return (b.games_played || 0) - (a.games_played || 0);
-      return (b.stats?.[sortKey] || 0) - (a.stats?.[sortKey] || 0);
-    });
-  }, [filteredPlayers, sortKey]);
+  const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+    if (sortKey === "Overall Rating") return getOverallRating(b) - getOverallRating(a);
+    if (sortKey === "+/-") return (b.plus_minus || 0) - (a.plus_minus || 0);
+    if (sortKey === "Games Played") return (b.games_played || 0) - (a.games_played || 0);
+    return (b.stats?.[sortKey] || 0) - (a.stats?.[sortKey] || 0);
+  });
+
+  const renderListView = () => (
+    <div className="max-w-5xl mx-auto divide-y divide-border bg-card rounded-lg shadow-card overflow-hidden">
+      {sortedPlayers.map((player) => {
+        const initials = player.name
+          .split(" ")
+          .map((n: string) => n[0])
+          .join("")
+          .toUpperCase();
+        const overall = getOverallRating(player);
+        return (
+          <div
+            key={player.id}
+            className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors duration-200"
+          >
+            <div className="flex items-center gap-4">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-card-foreground">{player.name}</h3>
+                  {player.title && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm">
+                      {player.title}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {player.primary_position}
+                  {player.secondary_position && (
+                    <span className="ml-1 text-muted-foreground/70">
+                      / {player.secondary_position}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <div className="text-center">
+                <div
+                  className={`font-bold ${
+                    player.plus_minus > 0
+                      ? "text-green-600"
+                      : player.plus_minus < 0
+                      ? "text-red-500"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {player.plus_minus > 0 ? "+" : ""}
+                  {player.plus_minus}
+                </div>
+                <div className="text-[10px] text-muted-foreground">+/-</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-primary">{player.games_played}</div>
+                <div className="text-[10px] text-muted-foreground">Games</div>
+              </div>
+              <div className="text-center">
+                <Badge variant="secondary" className="text-sm px-2 py-1 font-bold">
+                  {overall}
+                </Badge>
+                <div className="text-[10px] text-muted-foreground">OVR</div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
       <section className="bg-gradient-hero py-12 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
@@ -90,61 +153,61 @@ const Players = () => {
         </div>
       </section>
 
-      {/* Search & Filters */}
-      <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col md:flex-row gap-4 items-center justify-center">
+      {/* Controls */}
+      <div className="max-w-7xl mx-auto px-4 py-6 flex flex-wrap gap-4 justify-center items-center">
         <Input
           type="text"
           placeholder="Search for a player..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-md"
+          className="max-w-xs"
         />
-
-        {/* Team Filter Dropdown */}
-        <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter by Team" />
-          </SelectTrigger>
-          <SelectContent>
-            {teams.map((team) => (
-              <SelectItem key={team} value={team}>
-                {team}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Sort + View Toggle */}
-      <div className="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="font-medium text-primary mr-2">Sort By:</span>
-          {statKeys.map((key) => (
-            <Button
-              key={key}
-              variant={sortKey === key ? "secondary" : "ghost"}
-              className="text-xs px-3 py-1"
-              onClick={() => setSortKey(key)}
-            >
-              {key}
-            </Button>
-          ))}
-        </div>
 
         <div className="flex gap-2">
           <Button
-            variant={viewMode === "card" ? "default" : "outline"}
+            variant={viewMode === "card" ? "secondary" : "ghost"}
             onClick={() => setViewMode("card")}
+            size="icon"
           >
-            <LayoutGrid className="w-4 h-4 mr-1" /> Card View
+            <Grid className="h-4 w-4" />
           </Button>
           <Button
-            variant={viewMode === "list" ? "default" : "outline"}
+            variant={viewMode === "list" ? "secondary" : "ghost"}
             onClick={() => setViewMode("list")}
+            size="icon"
           >
-            <List className="w-4 h-4 mr-1" /> List View
+            <List className="h-4 w-4" />
           </Button>
         </div>
+
+        <div className="flex gap-2 items-center">
+          <span className="font-medium text-primary">Team:</span>
+          {teams.map((team) => (
+            <Button
+              key={team}
+              variant={selectedTeam === team ? "secondary" : "ghost"}
+              className="text-xs px-3 py-1"
+              onClick={() => setSelectedTeam(team)}
+            >
+              {team}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Sort Buttons */}
+      <div className="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center gap-2 justify-center">
+        <span className="font-medium text-primary mr-2">Sort By:</span>
+        {statKeys.map((key) => (
+          <Button
+            key={key}
+            variant={sortKey === key ? "secondary" : "ghost"}
+            className="text-xs px-3 py-1"
+            onClick={() => setSortKey(key)}
+          >
+            {key}
+          </Button>
+        ))}
       </div>
 
       {/* Player Display */}
@@ -160,35 +223,7 @@ const Players = () => {
             ))}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-700 rounded-md text-gray-200">
-              <thead className="bg-gray-900 text-gray-400">
-                <tr>
-                  <th className="p-2 text-left">Name</th>
-                  <th className="p-2 text-left">Team</th>
-                  <th className="p-2 text-left">Position</th>
-                  <th className="p-2 text-left">+/-</th>
-                  <th className="p-2 text-left">Games Played</th>
-                  <th className="p-2 text-left">Overall</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedPlayers.map((player) => (
-                  <tr
-                    key={player.id}
-                    className="border-t border-gray-800 hover:bg-gray-800 transition-colors"
-                  >
-                    <td className="p-2">{player.name}</td>
-                    <td className="p-2">{player.team}</td>
-                    <td className="p-2">{player.position}</td>
-                    <td className="p-2">{player.plus_minus ?? 0}</td>
-                    <td className="p-2">{player.games_played ?? 0}</td>
-                    <td className="p-2">{getOverallRating(player)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          renderListView()
         )}
       </div>
     </div>
