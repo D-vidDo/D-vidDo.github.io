@@ -174,13 +174,18 @@ const Players = () => {
                 <div className="text-[10px] text-muted-foreground">{statAbbreviations["Overall Rating"]}</div>
               </div>
               {statKeys
-                .filter((s) => !["Overall Rating", "+/-", "Games Played"].includes(s))
-                .map((stat) => (
-                  <div key={stat}>
-                    <div className="font-bold text-primary">{player.stats?.[stat]}</div>
-                    <div className="text-[10px] text-muted-foreground">{statAbbreviations[stat]}</div>
-                  </div>
-                ))}
+  .filter((s) => !["Overall Rating", "+/-", "Games Played"].includes(s))
+  .map((stat) => (
+    <div key={stat}>
+      <div
+        className={`font-bold ${stat === sortKey ? "text-yellow-400" : "text-primary"}`}
+      >
+        {player.stats?.[stat]}
+      </div>
+      <div className="text-[10px] text-muted-foreground">{statAbbreviations[stat]}</div>
+    </div>
+  ))}
+
             </div>
           </div>
         );
@@ -231,31 +236,32 @@ const Players = () => {
           </Button>
         </div>
 
-        {/* Team Dropdown */}
-        <select
-          value={selectedTeam}
-          onChange={(e) => setSelectedTeam(e.target.value)}
-          className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition"
-        >
-          {teams.map((team) => (
-            <option key={team} value={team}>
-              {team}
-            </option>
-          ))}
-        </select>
+{/* Team Dropdown */}
+<select
+  value={selectedTeam}
+  onChange={(e) => setSelectedTeam(e.target.value)}
+  className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition font-sans"
+>
+  {teams.map((team) => (
+    <option key={team} value={team}>
+      {team}
+    </option>
+  ))}
+</select>
 
-        {/* Sort Dropdown */}
-        <select
-          value={sortKey}
-          onChange={(e) => setSortKey(e.target.value)}
-          className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition"
-        >
-          {statKeys.map((key) => (
-            <option key={key} value={key}>
-              {key}
-            </option>
-          ))}
-        </select>
+{/* Sort Dropdown */}
+<select
+  value={sortKey}
+  onChange={(e) => setSortKey(e.target.value)}
+  className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition font-sans"
+>
+  {statKeys.map((key) => (
+    <option key={key} value={key}>
+      {key}
+    </option>
+  ))}
+</select>
+
       </div>
 
       {/* Player Display */}
