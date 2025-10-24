@@ -19,6 +19,8 @@ const statKeys = [
   "Stamina",
   "Vertical Jump",
   "Communication",
+  "+/-",
+  "Games Played",
 ];
 
 const getOverallRating = (player: any) => {
@@ -50,6 +52,12 @@ const Players = () => {
     if (sortKey === "Overall Rating") {
       return getOverallRating(b) - getOverallRating(a);
     }
+    if (sortKey === "+/-") {
+      return (b.plus_minus || 0) - (a.plus_minus || 0);
+    }
+    if (sortKey === "Games Played") {
+      return (b.games_played || 0) - (a.games_played || 0);
+    }
     return (b.stats?.[sortKey] || 0) - (a.stats?.[sortKey] || 0);
   });
 
@@ -69,6 +77,7 @@ const Players = () => {
         </div>
       </section>
 
+      {/* Search Bar */}
       <div className="max-w-7xl mx-auto px-4 py-4 flex justify-center">
         <Input
           type="text"
@@ -79,6 +88,7 @@ const Players = () => {
         />
       </div>
 
+      {/* Sort Buttons */}
       <div className="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center gap-2 justify-center bg-background">
         <span className="font-medium text-primary mr-2">Sort By:</span>
         {statKeys.map((key) => (
@@ -93,6 +103,7 @@ const Players = () => {
         ))}
       </div>
 
+      {/* Player Cards */}
       <div className="max-w-7xl mx-auto px-4 py-12">
         {isLoading ? (
           <p className="text-center">Loading players...</p>
@@ -111,103 +122,3 @@ const Players = () => {
 };
 
 export default Players;
-
-
-
-// import React, { useState } from "react";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { Badge } from "@/components/ui/badge";
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import PlayerCard from "@/components/PlayerCard";
-// import { allPlayers } from "@/data/mockData";
-
-// const statKeys = [
-//   "Overall Rating",
-//   "Serving",
-//   "Receiving",
-//   "Defensive Positioning",
-//   "Setting",
-//   "Blocking",
-//   "Hitting",
-//   "Hustle",
-//   "Stamina",
-//   "Vertical Jump",
-//   "Communication",
-// ];
-
-// const getOverallRating = (player) =>
-//   Math.min(
-//     Object.values(player.stats).reduce((sum, val) => sum + val, 0) * 2,
-//     100
-//   );
-
-// const Players = () => {
-//   const [sortKey, setSortKey] = useState("Overall Rating");
-//   const [search, setSearch] = useState("");
-
-//   const filteredPlayers = allPlayers.filter((player) =>
-//     player.name.toLowerCase().includes(search.toLowerCase())
-//   );
-
-//   const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-//     if (sortKey === "Overall Rating") {
-//       return getOverallRating(b) - getOverallRating(a);
-//     }
-//     return b.stats[sortKey] - a.stats[sortKey];
-//   });
-
-//   return (
-//     <div className="min-h-screen bg-background">
-//       <section className="bg-gradient-hero py-12 px-4">
-//         <div className="max-w-6xl mx-auto text-center">
-//           <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
-//             All Players
-//           </h1>
-//           <p className="text-lg text-primary-foreground/90 mb-6">
-//             Complete roster and individual stats for every player in the league.
-//           </p>
-//           <Badge variant="secondary" className="text-lg px-4 py-2">
-//             {allPlayers.length} Players
-//           </Badge>
-//         </div>
-//       </section>
-
-//       {/* Search bar */}
-//       <div className="max-w-7xl mx-auto px-4 py-4 flex justify-center">
-//         <Input
-//           type="text"
-//           placeholder="Search for a player..."
-//           value={search}
-//           onChange={(e) => setSearch(e.target.value)}
-//           className="max-w-md"
-//         />
-//       </div>
-
-//       {/* Sort buttons in white space */}
-//       <div className="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center gap-2 justify-center bg-background">
-//         <span className="font-medium text-primary mr-2">Sort By:</span>
-//         {statKeys.map((key) => (
-//           <Button
-//             key={key}
-//             variant={sortKey === key ? "secondary" : "ghost"}
-//             className="text-xs px-3 py-1"
-//             onClick={() => setSortKey(key)}
-//           >
-//             {key}
-//           </Button>
-//         ))}
-//       </div>
-
-//       <div className="max-w-7xl mx-auto px-4 py-12">
-//         <div className="grid md:grid-cols-3 gap-6">
-//           {sortedPlayers.map((player) => (
-//             <PlayerCard key={player.id} player={player} sortKey={sortKey} />
-//           ))}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Players;
