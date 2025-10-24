@@ -50,7 +50,7 @@ const fetchPlayersAndTeams = async () => {
 
   const playersWithTeam = players.map((player: any) => {
     const team = playerTeamMap[player.id];
-    return { ...player, teamName: team?.name || "Free Agent" };
+    return { ...player, teamName: team?.name || "Free Agent", teamColor: team?.color || "#ccc" };
   });
 
   return { players: playersWithTeam, teams };
@@ -86,7 +86,7 @@ const Players = () => {
   });
 
   const renderListView = () => (
-    <div className="max-w-6xl mx-auto divide-y divide-border bg-card rounded-lg shadow-card overflow-hidden">
+    <div className="max-w-5xl mx-auto divide-y divide-border bg-card rounded-lg shadow-card overflow-hidden">
       {sortedPlayers.map((player) => {
         const initials = player.name
           .split(" ")
@@ -100,7 +100,7 @@ const Players = () => {
             key={player.id}
             className="flex flex-col md:flex-row items-center justify-between p-4 hover:bg-muted/50 transition-colors duration-200 gap-4"
           >
-            {/* Player Info */}
+            {/* Player info and team */}
             <div className="flex items-center gap-4 flex-1">
               <Avatar className="h-10 w-10">
                 <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
@@ -119,58 +119,46 @@ const Players = () => {
                 <p className="text-xs text-muted-foreground">
                   {player.primary_position}
                   {player.secondary_position && <span className="ml-1">/ {player.secondary_position}</span>}
-                  {player.teamName && <span className="ml-2 font-medium">{player.teamName}</span>}
                 </p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: player.teamColor }}
+                  ></span>
+                  <span className="text-xs font-medium">{player.teamName}</span>
+                </div>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="mt-3 md:mt-0 grid grid-cols-2 md:grid-cols-4 gap-2 w-full md:w-auto text-xs">
-              <div
-                className={`flex justify-between items-center rounded px-2 py-1 ${
-                  sortKey === "Overall Rating" ? "bg-yellow-100 font-bold" : "bg-muted/30"
-                }`}
-              >
-                <span className="font-medium">Overall Rating</span>
-                <span className="text-primary">{overall}</span>
+            <div className="flex gap-4 mt-3 md:mt-0 flex-wrap md:flex-nowrap text-xs">
+              <div className="text-center">
+                <div className="font-bold text-primary">{overall}</div>
+                <div className="text-[10px] text-muted-foreground">OVR</div>
               </div>
-              <div
-                className={`flex justify-between items-center rounded px-2 py-1 ${
-                  sortKey === "+/-" ? "bg-yellow-100 font-bold" : "bg-muted/30"
-                }`}
-              >
-                <span className="font-medium">+/-</span>
-                <span
-                  className={`${
+              <div className="text-center">
+                <div
+                  className={`font-bold ${
                     player.plus_minus > 0
                       ? "text-green-600"
                       : player.plus_minus < 0
                       ? "text-red-500"
-                      : ""
+                      : "text-muted-foreground"
                   }`}
                 >
                   {player.plus_minus > 0 ? "+" : ""}
                   {player.plus_minus}
-                </span>
+                </div>
+                <div className="text-[10px] text-muted-foreground">+/-</div>
               </div>
-              <div
-                className={`flex justify-between items-center rounded px-2 py-1 ${
-                  sortKey === "Games Played" ? "bg-yellow-100 font-bold" : "bg-muted/30"
-                }`}
-              >
-                <span className="font-medium">Games</span>
-                <span className="text-primary">{player.games_played}</span>
+              <div className="text-center">
+                <div className="font-bold text-primary">{player.games_played}</div>
+                <div className="text-[10px] text-muted-foreground">Games</div>
               </div>
-
               {Object.entries(player.stats || {}).map(([stat, value]) => (
-                <div
-                  key={stat}
-                  className={`flex justify-between items-center rounded px-2 py-1 ${
-                    sortKey === stat ? "bg-yellow-100 font-bold" : "bg-muted/30"
-                  }`}
-                >
-                  <span className="font-medium">{stat}</span>
-                  <span className="text-primary">{value}</span>
+                <div key={stat} className="text-center">
+                  <div className="font-bold text-primary">{value}</div>
+                  <div className="text-[10px] text-muted-foreground">{stat}</div>
                 </div>
               ))}
             </div>
