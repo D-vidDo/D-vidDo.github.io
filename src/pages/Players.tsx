@@ -25,6 +25,22 @@ const statKeys = [
   "Games Played",
 ];
 
+const statAbbreviations: Record<string, string> = {
+  "Hustle": "HUS",
+  "Hitting": "HIT",
+  "Serving": "SER",
+  "Setting": "SET",
+  "Stamina": "STA",
+  "Blocking": "BLO",
+  "Receiving": "REC",
+  "Communication": "COM",
+  "Vertical Jump": "VER",
+  "Defensive Positioning": "DEF",
+  "+/-": "+/-",
+  "Games Played": "GP",
+  "Overall Rating": "OVR",
+};
+
 const getOverallRating = (player: any) => {
   if (!player.stats) return 0;
   const values = Object.values(player.stats);
@@ -32,28 +48,16 @@ const getOverallRating = (player: any) => {
   return Math.min(total * 2, 100);
 };
 
-const fetchPlayersAndTeams = async () => {
-  const { data: players, error: playerError } = await supabase.from("players").select("*");
-  if (playerError) throw new Error(playerError.message);
+const fetchPlayers = async () => {
+  const { data, error } = await supabase.from("players").select("*");
+  if (error) throw new Error(error.message);
+  return data;
+};
 
-  const { data: teams, error: teamError } = await supabase.from("teams").select("*");
-  if (teamError) throw new Error(teamError.message);
-
-  const playerTeamMap: Record<number, any> = {};
-  teams.forEach((team) => {
-    if (team.player_ids) {
-      team.player_ids.forEach((pid: number) => {
-        playerTeamMap[pid] = team;
-      });
-    }
-  });
-
-  const playersWithTeam = players.map((player: any) => {
-    const team = playerTeamMap[player.id];
-    return { ...player, teamName: team?.name || "Free Agent", teamColor: team?.color || "#ccc" };
-  });
-
-  return { players: playersWithTeam, teams };
+const fetchTeams = async () => {
+  const { data, error } = await supabase.from("teams").select("*");
+  if (error) throw new Error(error.message);
+  return data;
 };
 
 const Players = () => {
@@ -62,19 +66,31 @@ const Players = () => {
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [selectedTeam, setSelectedTeam] = useState("All");
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["playersAndTeams"],
-    queryFn: fetchPlayersAndTeams,
+  const { data: allPlayers = [], isLoading: loadingPlayers, error: errorPlayers } = useQuery({
+    queryKey: ["players"],
+    queryFn: fetchPlayers,
   });
 
-  const allPlayers = data?.players || [];
-  const allTeams = data?.teams || [];
+  const { data: allTeams = [] } = useQuery({
+    queryKey: ["teams"],
+    queryFn: fetchTeams,
+  });
 
-  const teams = ["All", ...new Set(allPlayers.map((p) => p.teamName).filter(Boolean))];
+  const teams = ["All", ...allTeams.map((t: any) => t.name)];
 
-  const filteredPlayers = allPlayers.filter((player) => {
+  // Map player.team from teams table
+  const playersWithTeam = allPlayers.map((p) => {
+    const team = allTeams.find((t: any) => (t.player_ids || []).includes(p.id)) || null;
+    return {
+      ...p,
+      team: team ? team.name : "Free Agent",
+      teamColor: team?.color || "#999",
+    };
+  });
+
+  const filteredPlayers = playersWithTeam.filter((player) => {
     const matchesSearch = player.name.toLowerCase().includes(search.toLowerCase());
-    const matchesTeam = selectedTeam === "All" || player.teamName === selectedTeam;
+    const matchesTeam = selectedTeam === "All" || player.team === selectedTeam;
     return matchesSearch && matchesTeam;
   });
 
@@ -85,88 +101,96 @@ const Players = () => {
     return (b.stats?.[sortKey] || 0) - (a.stats?.[sortKey] || 0);
   });
 
-  const renderListView = () => (
-    <div className="max-w-5xl mx-auto divide-y divide-border bg-card rounded-lg shadow-card overflow-hidden">
-      {sortedPlayers.map((player) => {
-        const initials = player.name
-          .split(" ")
-          .map((n: string) => n[0])
-          .join("")
-          .toUpperCase();
-        const overall = getOverallRating(player);
+const renderListView = () => (
+  <div className="max-w-5xl mx-auto divide-y divide-border bg-card rounded-lg shadow-card overflow-hidden">
+    {sortedPlayers.map((player) => {
+      const initials = player.name
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase();
+      const overall = getOverallRating(player);
 
-        return (
-          <div
-            key={player.id}
-            className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 hover:bg-muted/50 transition-colors duration-200 gap-4"
-          >
-            {/* Player info */}
-            <div className="flex items-start md:items-center gap-4 flex-1">
-              <Avatar className="h-10 w-10 flex-shrink-0">
-                <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-card-foreground">{player.name}</h3>
-                  {player.title && (
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm">
-                      {player.title}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {player.primary_position}
-                  {player.secondary_position && <span className="ml-1">/ {player.secondary_position}</span>}
-                </p>
-                <div className="mt-1 flex items-center gap-2">
-                  <span
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: player.teamColor }}
-                  ></span>
-                  <span className="text-xs font-medium">{player.teamName}</span>
-                </div>
+      return (
+        <div
+          key={player.id}
+          className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-muted/50 transition-colors duration-200 gap-2 sm:gap-4"
+        >
+          {/* Left: Avatar + Name + Position + Team */}
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+            <Avatar className="h-10 w-10 flex-shrink-0">
+              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-semibold text-card-foreground truncate">{player.name}</h3>
+                {player.title && (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm">
+                    {player.title}
+                  </span>
+                )}
               </div>
-            </div>
-
-            {/* Stats */}
-            <div className="flex flex-wrap gap-3 mt-3 md:mt-0 items-center">
-              <div className="text-center">
-                <div className="font-bold text-primary">{overall}</div>
-                <div className="text-[10px] text-muted-foreground">OVR</div>
-              </div>
-              <div className="text-center">
-                <div
-                  className={`font-bold ${
-                    player.plus_minus > 0
-                      ? "text-green-600"
-                      : player.plus_minus < 0
-                      ? "text-red-500"
-                      : "text-muted-foreground"
-                  }`}
+              <p className="text-xs text-muted-foreground truncate">
+                {player.primary_position}
+                {player.secondary_position && (
+                  <span className="ml-1 text-muted-foreground/70">
+                    / {player.secondary_position}
+                  </span>
+                )}
+                <span
+                  className="ml-2 font-semibold truncate"
+                  style={{ color: player.teamColor }}
                 >
-                  {player.plus_minus > 0 ? "+" : ""}
-                  {player.plus_minus}
-                </div>
-                <div className="text-[10px] text-muted-foreground">+/-</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-primary">{player.games_played}</div>
-                <div className="text-[10px] text-muted-foreground">Games</div>
-              </div>
-              {Object.entries(player.stats || {}).map(([stat, value]) => (
-                <div key={stat} className="text-center">
-                  <div className="font-bold text-primary">{value}</div>
-                  <div className="text-[10px] text-muted-foreground">{stat}</div>
-                </div>
-              ))}
+                  {player.team}
+                </span>
+              </p>
             </div>
           </div>
-        );
-      })}
-    </div>
-  );
+
+          {/* Right: Stats */}
+          <div className="flex flex-wrap sm:flex-nowrap gap-3 justify-center text-center mt-2 sm:mt-0">
+            <div>
+              <div
+                className={`font-bold ${
+                  player.plus_minus > 0
+                    ? "text-green-600"
+                    : player.plus_minus < 0
+                    ? "text-red-500"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {player.plus_minus > 0 ? "+" : ""}
+                {player.plus_minus}
+              </div>
+              <div className="text-[10px] text-muted-foreground">{statAbbreviations["+/-"]}</div>
+            </div>
+            <div>
+              <div className="font-bold text-primary">{player.games_played}</div>
+              <div className="text-[10px] text-muted-foreground">{statAbbreviations["Games Played"]}</div>
+            </div>
+            <div>
+              <Badge variant="secondary" className="text-sm px-2 py-1 font-bold">
+                {overall}
+              </Badge>
+              <div className="text-[10px] text-muted-foreground">{statAbbreviations["Overall Rating"]}</div>
+            </div>
+            {statKeys
+              .filter((s) => !["Overall Rating", "+/-", "Games Played"].includes(s))
+              .map((stat) => (
+                <div key={stat}>
+                  <div className="font-bold text-primary">{player.stats?.[stat]}</div>
+                  <div className="text-[10px] text-muted-foreground">{statAbbreviations[stat]}</div>
+                </div>
+              ))}
+          </div>
+        </div>
+      );
+    })}
+  </div>
+);
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -194,7 +218,6 @@ const Players = () => {
           className="max-w-xs"
         />
 
-        {/* View toggle */}
         <div className="flex gap-2">
           <Button
             variant={viewMode === "card" ? "secondary" : "ghost"}
@@ -212,7 +235,6 @@ const Players = () => {
           </Button>
         </div>
 
-        {/* Team filter */}
         <div className="flex gap-2 items-center flex-wrap">
           <span className="font-medium text-primary">Team:</span>
           {teams.map((team) => (
@@ -245,10 +267,10 @@ const Players = () => {
 
       {/* Player Display */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {isLoading ? (
+        {loadingPlayers ? (
           <p className="text-center">Loading players...</p>
-        ) : error ? (
-          <p className="text-center text-red-500">Error: {error.message}</p>
+        ) : errorPlayers ? (
+          <p className="text-center text-red-500">Error: {errorPlayers.message}</p>
         ) : viewMode === "card" ? (
           <div className="grid md:grid-cols-3 gap-6">
             {sortedPlayers.map((player) => (
