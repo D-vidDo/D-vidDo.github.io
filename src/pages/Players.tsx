@@ -10,6 +10,8 @@ import { supabase } from "@/lib/supabase";
 import { List, Grid } from "lucide-react";
 
 const statKeys = [
+  "+/-",
+  "Games Played",
   "Overall Rating",
   "Serving",
   "Receiving",
@@ -21,8 +23,7 @@ const statKeys = [
   "Stamina",
   "Vertical Jump",
   "Communication",
-  "+/-",
-  "Games Played",
+  
 ];
 
 const statAbbreviations: Record<string, string> = {
