@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import PlayerCard from "@/components/PlayerCard"
-import { supabase } from "@/lib/supabase"
-import { List, Grid } from "lucide-react"
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import PlayerCard from "@/components/PlayerCard";
+import { supabase } from "@/lib/supabase";
+import { List, Grid } from "lucide-react";
 
 const statKeys = [
   "Overall Rating",
@@ -23,75 +23,69 @@ const statKeys = [
   "Communication",
   "+/-",
   "Games Played",
-]
+];
 
 const getOverallRating = (player: any) => {
-  if (!player.stats) return 0
-  const values = Object.values(player.stats)
-  const total = values.reduce((sum: number, val: number) => sum + val, 0)
-  return Math.min(total * 2, 100)
-}
+  if (!player.stats) return 0;
+  const values = Object.values(player.stats);
+  const total = values.reduce((sum: number, val: number) => sum + val, 0);
+  return Math.min(total * 2, 100);
+};
 
-const fetchPlayers = async () => {
-  const { data, error } = await supabase.from("players").select("*")
-  if (error) throw new Error(error.message)
-  return data
-}
+const fetchPlayersAndTeams = async () => {
+  const { data: players, error: playerError } = await supabase.from("players").select("*");
+  if (playerError) throw new Error(playerError.message);
 
-const fetchTeams = async () => {
-  const { data, error } = await supabase.from("teams").select("team_id, name, color")
-  if (error) throw new Error(error.message)
-  return data || []
-}
+  const { data: teams, error: teamError } = await supabase.from("teams").select("*");
+  if (teamError) throw new Error(teamError.message);
+
+  // Map player IDs to team
+  const playerTeamMap: Record<number, any> = {};
+  teams.forEach((team) => {
+    if (team.player_ids) {
+      team.player_ids.forEach((pid: number) => {
+        playerTeamMap[pid] = team;
+      });
+    }
+  });
+
+  // Attach team info to players
+  const playersWithTeam = players.map((player: any) => {
+    const team = playerTeamMap[player.id];
+    return { ...player, teamName: team?.name || "Free Agent", teamColor: team?.color };
+  });
+
+  return { players: playersWithTeam, teams };
+};
 
 const Players = () => {
-  const [sortKey, setSortKey] = useState("Overall Rating")
-  const [search, setSearch] = useState("")
-  const [viewMode, setViewMode] = useState<"card" | "list">("card")
-  const [selectedTeam, setSelectedTeam] = useState("All")
+  const [sortKey, setSortKey] = useState("Overall Rating");
+  const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<"card" | "list">("card");
+  const [selectedTeam, setSelectedTeam] = useState("All");
 
-  const { data: allPlayers = [], isLoading, error } = useQuery({
-    queryKey: ["players"],
-    queryFn: fetchPlayers,
-  })
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["playersAndTeams"],
+    queryFn: fetchPlayersAndTeams,
+  });
 
-  const { data: allTeams = [] } = useQuery({
-    queryKey: ["teams"],
-    queryFn: fetchTeams,
-  })
+  const allPlayers = data?.players || [];
+  const allTeams = data?.teams || [];
 
-  // Map team_id → { name, color }
-  const teamMap = useMemo(() => {
-    const map: Record<string, { name: string; color?: string }> = {}
-    allTeams.forEach((t) => {
-      if (t.team_id && t.name) map[t.team_id] = { name: t.name, color: t.color }
-    })
-    return map
-  }, [allTeams])
+  const teams = ["All", ...new Set(allPlayers.map((p) => p.teamName).filter(Boolean))];
 
-  // Filter teams
-  const teams = useMemo(() => ["All", ...allTeams.map((t) => t.name)], [allTeams])
+  const filteredPlayers = allPlayers.filter((player) => {
+    const matchesSearch = player.name.toLowerCase().includes(search.toLowerCase());
+    const matchesTeam = selectedTeam === "All" || player.teamName === selectedTeam;
+    return matchesSearch && matchesTeam;
+  });
 
-  const filteredPlayers = useMemo(() => {
-    return allPlayers.filter((player) => {
-      const matchesSearch = player.name.toLowerCase().includes(search.toLowerCase())
-
-      const playerTeam = teamMap[player.team_id]?.name || player.team || "Free Agent"
-
-      const matchesTeam = selectedTeam === "All" || playerTeam === selectedTeam
-
-      return matchesSearch && matchesTeam
-    })
-  }, [allPlayers, search, selectedTeam, teamMap])
-
-  const sortedPlayers = useMemo(() => {
-    return [...filteredPlayers].sort((a, b) => {
-      if (sortKey === "Overall Rating") return getOverallRating(b) - getOverallRating(a)
-      if (sortKey === "+/-") return (b.plus_minus || 0) - (a.plus_minus || 0)
-      if (sortKey === "Games Played") return (b.games_played || 0) - (a.games_played || 0)
-      return (b.stats?.[sortKey] || 0) - (a.stats?.[sortKey] || 0)
-    })
-  }, [filteredPlayers, sortKey])
+  const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+    if (sortKey === "Overall Rating") return getOverallRating(b) - getOverallRating(a);
+    if (sortKey === "+/-") return (b.plus_minus || 0) - (a.plus_minus || 0);
+    if (sortKey === "Games Played") return (b.games_played || 0) - (a.games_played || 0);
+    return (b.stats?.[sortKey] || 0) - (a.stats?.[sortKey] || 0);
+  });
 
   const renderListView = () => (
     <div className="max-w-6xl mx-auto divide-y divide-border bg-card rounded-lg shadow-card overflow-hidden">
@@ -100,18 +94,19 @@ const Players = () => {
           .split(" ")
           .map((n: string) => n[0])
           .join("")
-          .toUpperCase()
-        const overall = getOverallRating(player)
-        const teamData = teamMap[player.team_id] || { name: player.team || "Free Agent", color: undefined }
-
+          .toUpperCase();
+        const overall = getOverallRating(player);
         return (
           <div
             key={player.id}
-            className="flex flex-col md:flex-row items-center justify-between p-4 hover:bg-muted/50 transition-colors duration-200 gap-4 md:gap-0"
+            className="flex flex-col md:flex-row items-center justify-between p-4 hover:bg-muted/50 transition-colors duration-200 gap-4"
           >
-            <div className="flex items-center gap-4 md:flex-1">
+            {/* Player Info */}
+            <div className="flex items-center gap-4 flex-1">
               <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-primary text-primary-foreground font-semibold">{initials}</AvatarFallback>
+                <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                  {initials}
+                </AvatarFallback>
               </Avatar>
               <div>
                 <div className="flex items-center gap-2">
@@ -125,52 +120,67 @@ const Players = () => {
                 <p className="text-xs text-muted-foreground">
                   {player.primary_position}
                   {player.secondary_position && <span className="ml-1">/ {player.secondary_position}</span>}
-                  <span className="ml-2 font-medium" style={{ color: teamData.color }}>{teamData.name}</span>
+                  {player.teamName && (
+                    <span className="ml-2 font-medium" style={{ color: player.teamColor || undefined }}>
+                      {player.teamName}
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap items-center gap-4 md:gap-6 justify-center md:justify-end">
-              {/* Core stats */}
-              <div className="text-center">
-                <div className={`font-bold ${player.plus_minus > 0 ? "text-green-600" : player.plus_minus < 0 ? "text-red-500" : "text-muted-foreground"}`}>
-                  {player.plus_minus > 0 ? "+" : ""}{player.plus_minus}
-                </div>
-                <div className="text-[10px] text-muted-foreground">+/-</div>
-              </div>
-              <div className="text-center">
-                <div className="font-bold text-primary">{player.games_played}</div>
-                <div className="text-[10px] text-muted-foreground">Games</div>
-              </div>
-              <div className="text-center">
-                <Badge variant="secondary" className="text-sm px-2 py-1 font-bold">{overall}</Badge>
-                <div className="text-[10px] text-muted-foreground">OVR</div>
-              </div>
-
-              {/* All stats */}
+            <div className="flex flex-wrap gap-2 mt-2 md:mt-0 md:gap-4 items-center justify-end">
+              <Badge
+                variant={sortKey === "Overall Rating" ? "secondary" : "default"}
+                className="text-sm px-2 py-1 font-bold"
+              >
+                OVR: {overall}
+              </Badge>
+              <Badge
+                variant={sortKey === "+/-" ? "secondary" : "default"}
+                className={`text-sm px-2 py-1 font-bold ${
+                  player.plus_minus > 0 ? "text-green-600" : player.plus_minus < 0 ? "text-red-500" : ""
+                }`}
+              >
+                +/-: {player.plus_minus > 0 ? "+" : ""}
+                {player.plus_minus}
+              </Badge>
+              <Badge
+                variant={sortKey === "Games Played" ? "secondary" : "default"}
+                className="text-sm px-2 py-1 font-bold text-primary"
+              >
+                Games: {player.games_played}
+              </Badge>
               {Object.entries(player.stats || {}).map(([stat, value]) => (
-                <div key={stat} className="text-center">
-                  <div className="font-semibold text-primary">{value}</div>
-                  <div className="text-[10px] text-muted-foreground">{stat}</div>
-                </div>
+                <Badge
+                  key={stat}
+                  variant={sortKey === stat ? "secondary" : "default"}
+                  className="text-sm px-2 py-1 font-bold"
+                >
+                  {stat}: {value}
+                </Badge>
               ))}
             </div>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 
   return (
     <div className="min-h-screen bg-background">
       <section className="bg-gradient-hero py-12 px-4">
         <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">All Players</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
+            All Players
+          </h1>
           <p className="text-lg text-primary-foreground/90 mb-6">
             Complete roster and individual stats for every player in the league.
           </p>
-          <Badge variant="secondary" className="text-lg px-4 py-2">{allPlayers.length} Players</Badge>
+          <Badge variant="secondary" className="text-lg px-4 py-2">
+            {allPlayers.length} Players
+          </Badge>
         </div>
       </section>
 
@@ -184,37 +194,50 @@ const Players = () => {
           className="max-w-xs"
         />
 
+        {/* View toggle */}
         <div className="flex gap-2">
-          <Button variant={viewMode === "card" ? "secondary" : "ghost"} onClick={() => setViewMode("card")} size="icon"><Grid className="h-4 w-4" /></Button>
-          <Button variant={viewMode === "list" ? "secondary" : "ghost"} onClick={() => setViewMode("list")} size="icon"><List className="h-4 w-4" /></Button>
+          <Button
+            variant={viewMode === "card" ? "secondary" : "ghost"}
+            onClick={() => setViewMode("card")}
+            size="icon"
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "secondary" : "ghost"}
+            onClick={() => setViewMode("list")}
+            size="icon"
+          >
+            <List className="h-4 w-4" />
+          </Button>
         </div>
 
-        {/* Team filter with colors */}
-        <div className="flex gap-2 items-center flex-wrap justify-center">
+        {/* Team filter */}
+        <div className="flex gap-2 items-center flex-wrap">
           <span className="font-medium text-primary">Team:</span>
-          {teams.map((teamName) => {
-            const team = allTeams.find((t) => t.name === teamName)
-            const color = team?.color
-            return (
-              <Button
-                key={teamName}
-                variant={selectedTeam === teamName ? "secondary" : "ghost"}
-                className="text-xs px-3 py-1"
-                style={selectedTeam === teamName && color ? { backgroundColor: color, color: "#fff" } : {}}
-                onClick={() => setSelectedTeam(teamName)}
-              >
-                {teamName}
-              </Button>
-            )
-          })}
+          {teams.map((team) => (
+            <Button
+              key={team}
+              variant={selectedTeam === team ? "secondary" : "ghost"}
+              className="text-xs px-3 py-1"
+              onClick={() => setSelectedTeam(team)}
+            >
+              {team}
+            </Button>
+          ))}
         </div>
       </div>
 
-      {/* Sort buttons */}
+      {/* Sort Buttons */}
       <div className="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center gap-2 justify-center">
         <span className="font-medium text-primary mr-2">Sort By:</span>
         {statKeys.map((key) => (
-          <Button key={key} variant={sortKey === key ? "secondary" : "ghost"} className="text-xs px-3 py-1" onClick={() => setSortKey(key)}>
+          <Button
+            key={key}
+            variant={sortKey === key ? "secondary" : "ghost"}
+            className="text-xs px-3 py-1"
+            onClick={() => setSortKey(key)}
+          >
             {key}
           </Button>
         ))}
@@ -237,7 +260,7 @@ const Players = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Players
+export default Players;
