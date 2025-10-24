@@ -98,17 +98,17 @@ const Players = () => {
         return (
           <div
             key={player.id}
-            className="flex flex-col md:flex-row items-center justify-between p-4 hover:bg-muted/50 transition-colors duration-200 gap-4"
+            className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 hover:bg-muted/50 transition-colors duration-200 gap-4"
           >
-            {/* Player info and team */}
-            <div className="flex items-center gap-4 flex-1">
-              <Avatar className="h-10 w-10">
+            {/* Player info */}
+            <div className="flex items-start md:items-center gap-4 flex-1">
+              <Avatar className="h-10 w-10 flex-shrink-0">
                 <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold text-card-foreground">{player.name}</h3>
                   {player.title && (
                     <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm">
@@ -122,7 +122,7 @@ const Players = () => {
                 </p>
                 <div className="mt-1 flex items-center gap-2">
                   <span
-                    className="w-3 h-3 rounded-full"
+                    className="w-3 h-3 rounded-full flex-shrink-0"
                     style={{ backgroundColor: player.teamColor }}
                   ></span>
                   <span className="text-xs font-medium">{player.teamName}</span>
@@ -131,7 +131,7 @@ const Players = () => {
             </div>
 
             {/* Stats */}
-            <div className="flex gap-4 mt-3 md:mt-0 flex-wrap md:flex-nowrap text-xs">
+            <div className="flex flex-wrap gap-3 mt-3 md:mt-0 items-center">
               <div className="text-center">
                 <div className="font-bold text-primary">{overall}</div>
                 <div className="text-[10px] text-muted-foreground">OVR</div>
