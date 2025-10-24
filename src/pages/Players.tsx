@@ -39,7 +39,6 @@ const fetchPlayersAndTeams = async () => {
   const { data: teams, error: teamError } = await supabase.from("teams").select("*");
   if (teamError) throw new Error(teamError.message);
 
-  // Map player IDs to team
   const playerTeamMap: Record<number, any> = {};
   teams.forEach((team) => {
     if (team.player_ids) {
@@ -49,10 +48,9 @@ const fetchPlayersAndTeams = async () => {
     }
   });
 
-  // Attach team info to players
   const playersWithTeam = players.map((player: any) => {
     const team = playerTeamMap[player.id];
-    return { ...player, teamName: team?.name || "Free Agent", teamColor: team?.color };
+    return { ...player, teamName: team?.name || "Free Agent" };
   });
 
   return { players: playersWithTeam, teams };
@@ -96,6 +94,7 @@ const Players = () => {
           .join("")
           .toUpperCase();
         const overall = getOverallRating(player);
+
         return (
           <div
             key={player.id}
@@ -120,46 +119,59 @@ const Players = () => {
                 <p className="text-xs text-muted-foreground">
                   {player.primary_position}
                   {player.secondary_position && <span className="ml-1">/ {player.secondary_position}</span>}
-                  {player.teamName && (
-                    <span className="ml-2 font-medium" style={{ color: player.teamColor || undefined }}>
-                      {player.teamName}
-                    </span>
-                  )}
+                  {player.teamName && <span className="ml-2 font-medium">{player.teamName}</span>}
                 </p>
               </div>
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap gap-2 mt-2 md:mt-0 md:gap-4 items-center justify-end">
-              <Badge
-                variant={sortKey === "Overall Rating" ? "secondary" : "default"}
-                className="text-sm px-2 py-1 font-bold"
-              >
-                OVR: {overall}
-              </Badge>
-              <Badge
-                variant={sortKey === "+/-" ? "secondary" : "default"}
-                className={`text-sm px-2 py-1 font-bold ${
-                  player.plus_minus > 0 ? "text-green-600" : player.plus_minus < 0 ? "text-red-500" : ""
+            <div className="mt-3 md:mt-0 grid grid-cols-2 md:grid-cols-4 gap-2 w-full md:w-auto text-xs">
+              <div
+                className={`flex justify-between items-center rounded px-2 py-1 ${
+                  sortKey === "Overall Rating" ? "bg-yellow-100 font-bold" : "bg-muted/30"
                 }`}
               >
-                +/-: {player.plus_minus > 0 ? "+" : ""}
-                {player.plus_minus}
-              </Badge>
-              <Badge
-                variant={sortKey === "Games Played" ? "secondary" : "default"}
-                className="text-sm px-2 py-1 font-bold text-primary"
+                <span className="font-medium">Overall Rating</span>
+                <span className="text-primary">{overall}</span>
+              </div>
+              <div
+                className={`flex justify-between items-center rounded px-2 py-1 ${
+                  sortKey === "+/-" ? "bg-yellow-100 font-bold" : "bg-muted/30"
+                }`}
               >
-                Games: {player.games_played}
-              </Badge>
-              {Object.entries(player.stats || {}).map(([stat, value]) => (
-                <Badge
-                  key={stat}
-                  variant={sortKey === stat ? "secondary" : "default"}
-                  className="text-sm px-2 py-1 font-bold"
+                <span className="font-medium">+/-</span>
+                <span
+                  className={`${
+                    player.plus_minus > 0
+                      ? "text-green-600"
+                      : player.plus_minus < 0
+                      ? "text-red-500"
+                      : ""
+                  }`}
                 >
-                  {stat}: {value}
-                </Badge>
+                  {player.plus_minus > 0 ? "+" : ""}
+                  {player.plus_minus}
+                </span>
+              </div>
+              <div
+                className={`flex justify-between items-center rounded px-2 py-1 ${
+                  sortKey === "Games Played" ? "bg-yellow-100 font-bold" : "bg-muted/30"
+                }`}
+              >
+                <span className="font-medium">Games</span>
+                <span className="text-primary">{player.games_played}</span>
+              </div>
+
+              {Object.entries(player.stats || {}).map(([stat, value]) => (
+                <div
+                  key={stat}
+                  className={`flex justify-between items-center rounded px-2 py-1 ${
+                    sortKey === stat ? "bg-yellow-100 font-bold" : "bg-muted/30"
+                  }`}
+                >
+                  <span className="font-medium">{stat}</span>
+                  <span className="text-primary">{value}</span>
+                </div>
               ))}
             </div>
           </div>
