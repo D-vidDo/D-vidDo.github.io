@@ -36,10 +36,10 @@ const AdminGameEntry = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [subPlayers, setSubPlayers] = useState<string[]>([]);
 
-  // NEW: Stand-in modal state
-  const [standIns, setStandIns] = useState<Record<string, string | null>>({});
-  const [activeSub, setActiveSub] = useState<string | null>(null);
-  const [allPlayers, setAllPlayers] = useState<Player[]>([]); // all players in DB
+  // NEW: Sub/stand-in modal states
+  const [standIns, setStandIns] = useState<{ [playerId: string]: string | null }>({});
+  const [showSubModal, setShowSubModal] = useState(false);
+  const [currentSubPlayer, setCurrentSubPlayer] = useState<string | null>(null);
 
   // NEW: Confirmation + duplicate tracking
   const [showConfirm, setShowConfirm] = useState(false);
@@ -138,36 +138,25 @@ const AdminGameEntry = () => {
       }
 
       setPlayers(playersData ?? []);
+      setSubPlayers([]);
+      setStandIns({});
     }
 
     loadPlayersForTeam();
-    setSubPlayers([]);
-    setStandIns({});
   }, [teamId]);
 
-  // Load all players from DB for stand-in selection
-  useEffect(() => {
-    async function loadAllPlayers() {
-      const { data, error } = await supabase.from("players").select("id, name");
-      if (!error) setAllPlayers(data ?? []);
-    }
-    loadAllPlayers();
-  }, []);
-
-  // Helpers
-  const toggleSubPlayer = (id: string) => {
-    if (subPlayers.includes(id)) {
-      // Remove sub
+  // Toggle sub logic → open modal if newly checked
+  const handleSubToggle = (id: string) => {
+    if (!subPlayers.includes(id)) {
+      setCurrentSubPlayer(id);
+      setShowSubModal(true);
+    } else {
       setSubPlayers((prev) => prev.filter((pid) => pid !== id));
       setStandIns((prev) => {
         const copy = { ...prev };
         delete copy[id];
         return copy;
       });
-    } else {
-      // Add sub & open modal
-      setSubPlayers((prev) => [...prev, id]);
-      setActiveSub(id);
     }
   };
 
@@ -198,6 +187,7 @@ const AdminGameEntry = () => {
     setSets(sets.filter((_, i) => i !== idx));
   };
 
+  // Submit logic
   const doSubmit = async () => {
     setConfirming(true);
     setMessage("");
@@ -209,10 +199,8 @@ const AdminGameEntry = () => {
         points_for: set.points_for,
         points_against: set.points_against,
         result: set.result,
-        subbed_players: subPlayers.map((id) => ({
-          player_id: id,
-          stand_in_id: standIns[id] || null,
-        })),
+        subbed_players: subPlayers,
+        stand_ins: standIns,
       }));
 
       const { error: setError } = await supabase.from("sets").insert(setsPayload);
@@ -229,13 +217,9 @@ const AdminGameEntry = () => {
         totalPF += s.points_for;
         totalPA += s.points_against;
 
-        if (s.points_for === s.points_against) {
-          totalTies += 1;
-        } else if (s.result === "W") {
-          totalWins += 1;
-        } else {
-          totalLosses += 1;
-        }
+        if (s.points_for === s.points_against) totalTies += 1;
+        else if (s.result === "W") totalWins += 1;
+        else totalLosses += 1;
       });
 
       const matchResult =
@@ -287,6 +271,7 @@ const AdminGameEntry = () => {
 
       if (updateTeamError) throw updateTeamError;
 
+      // Reset form
       setMessage(
         `Sets added! Match result: ${matchResult} (${totalWins}W - ${totalLosses}L - ${totalTies}T)`
       );
@@ -375,9 +360,7 @@ const AdminGameEntry = () => {
                     checked={teamId === team.team_id}
                     onChange={() => {
                       if (sets.length > 0) {
-                        alert(
-                          "Please finish or clear the sets for the current game before switching."
-                        );
+                        alert("Please finish or clear the sets for the current game before switching.");
                         return;
                       }
                       setTeamId(team.team_id);
@@ -405,9 +388,7 @@ const AdminGameEntry = () => {
                 value={selectedGameId}
                 onChange={(e) => {
                   if (sets.length > 0) {
-                    alert(
-                      "Please finish or clear the sets for the current game before switching."
-                    );
+                    alert("Please finish or clear the sets for the current game before switching.");
                     return;
                   }
                   setSelectedGameId(e.target.value);
@@ -435,10 +416,6 @@ const AdminGameEntry = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {players.map((player) => {
                 const checked = subPlayers.includes(player.id);
-                const standInId = standIns[player.id];
-                const standInName = standInId
-                  ? allPlayers.find((p) => p.id === standInId)?.name
-                  : null;
                 return (
                   <label
                     key={player.id}
@@ -453,18 +430,19 @@ const AdminGameEntry = () => {
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={() => toggleSubPlayer(player.id)}
+                      onChange={() => handleSubToggle(player.id)}
                       className="h-4 w-4 rounded border-muted text-primary focus:ring-primary/60"
                     />
-                    <span className="truncate">
-  <span className={standIns[player.id] ? "line-through text-gray-400" : ""}>
-    {player.name}
-  </span>
-  {standIns[player.id] && (
-    <> ({allPlayers.find((p) => p.id === standIns[player.id])?.name})</>
-  )}
-</span>
-
+                    <span
+                      className={`truncate ${
+                        checked ? "line-through text-muted-foreground" : ""
+                      }`}
+                    >
+                      {player.name}
+                    </span>
+                    {standIns[player.id] && !checked && (
+                      <span className="truncate">({standIns[player.id]})</span>
+                    )}
                   </label>
                 );
               })}
@@ -477,6 +455,7 @@ const AdminGameEntry = () => {
               <label className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
                 Add Sets
               </label>
+              {/* Single live result preview pill */}
               <span
                 className={`px-3 py-1 text-xs font-bold rounded-full shadow-sm
                   ${
@@ -496,6 +475,7 @@ const AdminGameEntry = () => {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-center mb-2">
+              {/* Set Number */}
               <input
                 type="number"
                 value={set_no}
@@ -504,6 +484,8 @@ const AdminGameEntry = () => {
                 placeholder="Set #"
                 className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold bg-background focus:outline-none focus:ring-2 focus:ring-primary/60"
               />
+
+              {/* PF */}
               <input
                 type="number"
                 value={set_points_for}
@@ -514,6 +496,8 @@ const AdminGameEntry = () => {
                            bg-green-50 text-green-700 border-green-300
                            placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500"
               />
+
+              {/* PA */}
               <input
                 type="number"
                 value={set_points_against}
@@ -524,95 +508,239 @@ const AdminGameEntry = () => {
                            bg-red-50 text-red-700 border-red-300
                            placeholder-red-400 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
-              <select
-                value={set_result}
-                onChange={(e) => setSetResult(e.target.value as "W" | "L")}
-                className="col-span-1 border rounded-lg px-3 py-2 text-center bg-background focus:outline-none focus:ring-2 focus:ring-primary/60"
-              >
-                <option value="W">W</option>
-                <option value="L">L</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleAddSet}
-                className="col-span-1 bg-primary text-white rounded-lg px-3 py-2 hover:bg-primary/80"
-              >
-                Add
-              </button>
+
+              {/* (Spacer for grid consistency on small screens) */}
+              <div className="hidden sm:block" />
+
+              {/* Add Set Button (neutral) */}
+              <div className="col-span-2 sm:col-span-1">
+                <button
+                  type="button"
+                  onClick={handleAddSet}
+                  className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-bold
+                             hover:bg-gray-300 active:scale-[0.99] transition
+                             focus:outline-none focus:ring-2 focus:ring-gray-400"
+                >
+                  Add Set
+                </button>
+              </div>
             </div>
 
-            <ul className="space-y-1">
-              {sets.map((s, idx) => (
-                <li key={idx} className="flex justify-between bg-muted/20 rounded px-3 py-1">
-                  <span>
-                    Set {s.set_no}: {s.points_for}-{s.points_against} ({s.result})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSet(idx)}
-                    className="text-red-500 hover:underline"
+            {/* Sets List */}
+            <div className="mt-3 space-y-2">
+              {sets.map((set, idx) => {
+                const isWin = set.points_for > set.points_against;
+                const isLoss = set.points_for < set.points_against;
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between bg-muted/30 border border-muted rounded-lg px-3 py-2 shadow-sm"
                   >
-                    Remove
-                  </button>
-                </li>
-              ))}
-            </ul>
+                    <span className="font-medium">
+                      Set {set.set_no}:{" "}
+                      <span className="text-green-700 font-semibold">{set.points_for}</span>
+                      {" - "}
+                      <span className="text-red-700 font-semibold">{set.points_against}</span>
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2 py-1 text-xs font-bold rounded
+                          ${
+                            isWin
+                              ? "bg-green-100 text-green-700"
+                              : isLoss
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                      >
+                        {isWin ? "WIN" : isLoss ? "LOSS" : "DRAW"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSet(idx)}
+                        className="text-xs font-semibold text-red-600 hover:text-red-700 hover:underline focus:outline-none focus:ring-2 focus:ring-red-500/40 rounded"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Submit */}
-          <div className="flex items-center gap-3">
+          <div className="pt-2">
             <button
               type="submit"
+              className="w-full bg-gray-800 text-white py-2.5 rounded-lg font-bold
+                         hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed
+                         transition focus:outline-none focus:ring-2 focus:ring-gray-500"
               disabled={loading}
-              className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/80"
             >
-              {loading ? "Submitting..." : "Submit Sets"}
+              {loading ? "Checking..." : "Submit Sets"}
             </button>
-            {message && <span className="text-sm text-muted-foreground">{message}</span>}
           </div>
+
+          {/* Message */}
+          {message && (
+            <div
+              className={`mt-2 text-center font-semibold rounded-md px-3 py-2 ${
+                message.toLowerCase().includes("failed") || message.toLowerCase().includes("error")
+                  ? "text-red-700 bg-red-50 border border-red-200"
+                  : "text-green-700 bg-green-50 border border-green-200"
+              }`}
+            >
+              {message}
+            </div>
+          )}
         </form>
       </section>
 
-      {/* Stand-in Modal */}
-      {activeSub && (
+      {/* Sub Modal */}
+      {showSubModal && currentSubPlayer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md bg-background border border-border/60 rounded-xl shadow-xl p-5 space-y-4">
-            <h3 className="text-lg font-semibold">
-              Select Stand-In for {players.find((p) => p.id === activeSub)?.name}
-            </h3>
-
-            <ul className="space-y-2 max-h-60 overflow-y-auto">
-              <li
-                key="none"
-                className="cursor-pointer px-3 py-2 border rounded hover:bg-gray-200"
+          <div className="w-full max-w-md bg-background border border-border/60 rounded-xl shadow-xl p-5 sm:p-6 space-y-4">
+            <h3 className="text-lg font-semibold">Select Stand-In</h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              <button
+                className="w-full text-left px-3 py-2 rounded hover:bg-muted/50"
                 onClick={() => {
-                  setStandIns((prev) => ({ ...prev, [activeSub]: null }));
-                  setActiveSub(null);
+                  setStandIns((prev) => ({ ...prev, [currentSubPlayer]: null }));
+                  setSubPlayers((prev) => [...prev, currentSubPlayer]);
+                  setShowSubModal(false);
+                  setCurrentSubPlayer(null);
                 }}
               >
-                No stand-in
-              </li>
-              {allPlayers.map((p) => (
-                <li
-                  key={p.id}
-                  className="cursor-pointer px-3 py-2 border rounded hover:bg-gray-200"
-                  onClick={() => {
-                    setStandIns((prev) => ({ ...prev, [activeSub]: p.id }));
-                    setActiveSub(null);
-                  }}
-                >
-                  {p.name}
-                </li>
-              ))}
-            </ul>
+                None
+              </button>
+              {players
+                .filter((p) => p.id !== currentSubPlayer)
+                .map((p) => (
+                  <button
+                    key={p.id}
+                    className="w-full text-left px-3 py-2 rounded hover:bg-muted/50"
+                    onClick={() => {
+                      setStandIns((prev) => ({ ...prev, [currentSubPlayer]: p.name }));
+                      setSubPlayers((prev) => [...prev, currentSubPlayer]);
+                      setShowSubModal(false);
+                      setCurrentSubPlayer(null);
+                    }}
+                  >
+                    {p.name}
+                  </button>
+                ))}
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                onClick={() => {
+                  setShowSubModal(false);
+                  setCurrentSubPlayer(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-            <button
-              type="button"
-              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-              onClick={() => setActiveSub(null)}
-            >
-              Cancel
-            </button>
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg bg-background border border-border/60 rounded-xl shadow-xl p-5 sm:p-6 space-y-4">
+            <h3 className="text-lg font-semibold">Confirm Submission</h3>
+
+            {dupSetNos.length > 0 && (
+              <div className="rounded-md border border-red-200 bg-red-50 text-red-700 p-3 text-sm">
+                The following <span className="font-semibold">set numbers</span> already exist for this
+                game: <span className="font-semibold">{dupSetNos.join(", ")}</span>. Please remove or
+                renumber these sets. You cannot submit while duplicates exist.
+              </div>
+            )}
+
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Game</span>
+                <span className="font-medium">
+                  {games.find((g) => g.id === selectedGameId)?.label ?? "Selected game"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Sets to add</span>
+                <span className="font-medium">{sets.length}</span>
+              </div>
+
+              <div className="rounded-md border border-muted bg-muted/30 p-2">
+                <ul className="space-y-1">
+                  {sets.map((s) => {
+                    const isWin = s.points_for > s.points_against;
+                    const isLoss = s.points_for < s.points_against;
+                    return (
+                      <li key={s.set_no} className="flex items-center justify-between text-sm">
+                        <span className="font-medium">
+                          Set {s.set_no}:{" "}
+                          <span className="text-green-700 font-semibold">{s.points_for}</span>
+                          {" - "}
+                          <span className="text-red-700 font-semibold">{s.points_against}</span>
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 text-[11px] font-bold rounded ${
+                            isWin
+                              ? "bg-green-100 text-green-700"
+                              : isLoss
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {isWin ? "WIN" : isLoss ? "LOSS" : "DRAW"}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <div className="text-sm">
+                <span className="text-muted-foreground">Subs skipped:</span>{" "}
+                {subPlayers.length === 0 ? (
+                  <span className="font-medium">None</span>
+                ) : (
+                  <span className="font-medium">
+                    {players
+                      .filter((p) => subPlayers.includes(p.id))
+                      .map((p) => p.name)
+                      .join(", ")}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={doSubmit}
+                disabled={dupSetNos.length > 0 || confirming}
+                className={`px-4 py-2 rounded-lg font-bold text-white focus:outline-none focus:ring-2
+                  ${
+                    dupSetNos.length > 0
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-primary hover:bg-primary/90 focus:ring-primary/50"
+                  }`}
+              >
+                {confirming ? "Submitting..." : "Confirm"}
+              </button>
+            </div>
           </div>
         </div>
       )}
