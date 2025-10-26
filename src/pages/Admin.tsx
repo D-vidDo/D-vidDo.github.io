@@ -437,32 +437,35 @@ const AdminGameEntry = () => {
                 const checked = subPlayers.includes(player.id);
                 return (
                   <label
-                    key={player.id}
-                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition
-                      ${
-                        checked
-                          ? "bg-muted/60 border-primary ring-1 ring-primary/30"
-                          : "bg-background border-muted hover:bg-muted/40"
-                      }
-                      focus-within:ring-2 focus-within:ring-primary/60`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => handleSubToggle(player.id)}
-                      className="h-4 w-4 rounded border-muted text-primary focus:ring-primary/60"
-                    />
-                    <span
-                      className={`truncate ${
-                        checked ? "line-through text-muted-foreground" : ""
-                      }`}
-                    >
-                      {player.name}
-                    </span>
-                    {standIns[player.id] && !checked && (
-                      <span className="truncate">({standIns[player.id]})</span>
-                    )}
-                  </label>
+  key={player.id}
+  className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition
+    ${
+      checked
+        ? "bg-muted/60 border-primary ring-1 ring-primary/30"
+        : "bg-background border-muted hover:bg-muted/40"
+    }
+    focus-within:ring-2 focus-within:ring-primary/60`}
+>
+  <input
+    type="checkbox"
+    checked={checked}
+    onChange={() => handleSubToggle(player.id)}
+    className="h-4 w-4 rounded border-muted text-primary focus:ring-primary/60"
+  />
+  <span
+    className={`truncate ${
+      checked ? "line-through text-muted-foreground" : ""
+    }`}
+  >
+    {player.name}
+  </span>
+  {standIns[player.id] && (
+    <span className="truncate ml-1 text-muted-foreground">
+      ({standIns[player.id]})
+    </span>
+  )}
+</label>
+
                 );
               })}
             </div>
