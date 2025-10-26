@@ -457,7 +457,7 @@ const AdminGameEntry = () => {
                       className="h-4 w-4 rounded border-muted text-primary focus:ring-primary/60"
                     />
                     <span className="truncate">
-                      {player.name} {standInName && `(Stand-in: ${standInName})`}
+                      {player.name} {standInName && `${standInName})`}
                     </span>
                   </label>
                 );
