@@ -456,9 +456,14 @@ const AdminGameEntry = () => {
                       onChange={() => toggleSubPlayer(player.id)}
                       className="h-4 w-4 rounded border-muted text-primary focus:ring-primary/60"
                     />
-                    <span className="truncate">
-                      {player.name} {standInName && `(${standInName})`}
-                    </span>
+                    <span
+  className={`truncate ${
+    standIns[player.id] ? "line-through text-gray-400" : ""
+  }`}
+>
+  {player.name} {standIns[player.id] ? `(${allPlayers.find(p => p.id === standIns[player.id])?.name})` : ""}
+</span>
+
                   </label>
                 );
               })}
