@@ -115,8 +115,36 @@ const Rules = () => {
               <ul className="list-disc list-inside mt-2 text-muted-foreground space-y-1">
                 <li>The retained players stay with the captain for the next schedule</li>
                 <li>Players can only be retained for 2 consecutive schedules, then must re-enter the draft pool</li>
+                <li>First pick cannot use their first pick on the player as their last split first pick. (This is considered retaining for 2 consecutive schedules.)</li>
               </ul>
             </section>
+
+            <Separator />
+
+            <section>
+  <h2 className="text-xl font-semibold flex items-center gap-2">
+    <ClipboardList className="h-5 w-5 text-muted-foreground" />
+    Score Weighting
+  </h2>
+  <ul className="list-disc list-inside mt-2 text-muted-foreground space-y-1">
+    <li>
+      To make stats fair between players with different numbers of games, we use a <strong>weighted +/-</strong> system.
+    </li>
+    <li>
+      The formula is: <code>Weighted +/- = Total +/- × √(Games Played)</code>
+    </li>
+    <li>
+      This gives a small boost to players who have played more games while keeping averages from short-term players from being too inflated.
+    </li>
+    <li>
+      Example: A player with +12 over 9 games scores <code>12 × √9 = 36</code>, while another with +12 over 4 games scores <code>12 × √4 = 24</code>.
+    </li>
+    <li>
+      This helps reward consistency and participation, not just one lucky game.
+    </li>
+  </ul>
+</section>
+
 
             <Separator />
 
