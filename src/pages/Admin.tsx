@@ -274,8 +274,8 @@ const AdminGameEntry = () => {
             .eq("id", fillInId)
             .single();
 
-          let updatedPlusMinus = (subData?.plus_minus ?? 0);
-          let updatedGamesPlayed = (subData?.games_played ?? 0);
+          let updatedPlusMinus = subData?.plus_minus ?? 0;
+          let updatedGamesPlayed = subData?.games_played ?? 0;
 
           sets.forEach((s) => {
             updatedPlusMinus += s.points_for - s.points_against;
@@ -376,8 +376,83 @@ const AdminGameEntry = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-8">
-          {/* Team selection, game selection, sets, and sub UI stays the same */}
-          {/* Replace the sub toggle section with this */}
+          {/* Team & game selection */}
+          <div className="flex flex-col gap-3">
+            <label>Team</label>
+            <select
+              value={teamId}
+              onChange={(e) => setTeamId(e.target.value)}
+              className="border rounded px-2 py-1"
+            >
+              {teams.map((t) => (
+                <option key={t.team_id} value={t.team_id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <label>Game</label>
+            <select
+              value={selectedGameId}
+              onChange={(e) => setSelectedGameId(e.target.value)}
+              className="border rounded px-2 py-1"
+            >
+              {games.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Sets */}
+          <div className="space-y-2">
+            <h3 className="font-semibold">Add Set</h3>
+            <div className="flex gap-2 items-center">
+              <input
+                type="number"
+                placeholder="Set #"
+                value={set_no}
+                onChange={(e) => setSetNo(Number(e.target.value))}
+                className="border px-2 py-1 rounded w-20"
+              />
+              <input
+                type="number"
+                placeholder="Points For"
+                value={set_points_for}
+                onChange={(e) => setSetPointsFor(e.target.value)}
+                className="border px-2 py-1 rounded w-24"
+              />
+              <input
+                type="number"
+                placeholder="Points Against"
+                value={set_points_against}
+                onChange={(e) => setSetPointsAgainst(e.target.value)}
+                className="border px-2 py-1 rounded w-24"
+              />
+              <button
+                type="button"
+                onClick={handleAddSet}
+                className="px-3 py-1 bg-primary text-white rounded"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Current sets */}
+          <div>
+            {sets.map((s, idx) => (
+              <div key={idx} className="flex justify-between items-center border-b py-1">
+                <span>Set {s.set_no}: {s.points_for}-{s.points_against} ({s.result})</span>
+                <button type="button" onClick={() => handleRemoveSet(idx)} className="text-red-500">Remove</button>
+              </div>
+            ))}
+          </div>
+
+          {/* Subs */}
           <div>
             <label className="block mb-3 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
               Who needed a sub?
@@ -389,11 +464,7 @@ const AdminGameEntry = () => {
                   <label
                     key={player.id}
                     className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition
-                      ${
-                        checked
-                          ? "bg-muted/60 border-primary ring-1 ring-primary/30"
-                          : "bg-background border-muted hover:bg-muted/40"
-                      }
+                      ${checked ? "bg-muted/60 border-primary ring-1 ring-primary/30" : "bg-background border-muted hover:bg-muted/40"}
                       focus-within:ring-2 focus-within:ring-primary/60`}
                   >
                     <input
@@ -409,7 +480,13 @@ const AdminGameEntry = () => {
             </div>
           </div>
 
-          {/* Submit button, sets entry, messages remain the same */}
+          <div>
+            <button type="submit" className="px-4 py-2 bg-primary text-white rounded">
+              Submit
+            </button>
+          </div>
+
+          {message && <p className="text-red-600">{message}</p>}
         </form>
       </section>
 
