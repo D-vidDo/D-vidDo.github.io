@@ -160,7 +160,8 @@ const Rules = () => {
                   <li>Defensive Player of the Year</li>
                   <li>Most Improved Player</li>
                   <li>Best Sportsmanship</li>
-                  <li>Best Plus Minus</li>
+                  <li>Best Raw Plus Minus</li>
+                  <li>Best Weighted Plus Minus</li>
                 </ul>
               </ul>
             </section>
