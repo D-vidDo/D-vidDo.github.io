@@ -31,20 +31,16 @@ const AdminGameEntry = () => {
   const [set_no, setSetNo] = useState<number>(1);
   const [set_points_for, setSetPointsFor] = useState("");
   const [set_points_against, setSetPointsAgainst] = useState("");
+  // Keeping this state to avoid downstream changes; not used in UI directly
   const [set_result, setSetResult] = useState<"W" | "L">("W");
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [subPlayers, setSubPlayers] = useState<string[]>([]);
 
+  // NEW: Confirmation + duplicate tracking
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [dupSetNos, setDupSetNos] = useState<number[]>([]);
-
-  // NEW: fill-in modal states
-  const [showSubModal, setShowSubModal] = useState(false);
-  const [selectedMissingPlayer, setSelectedMissingPlayer] = useState<Player | null>(null);
-  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
-  const [subFillIns, setSubFillIns] = useState<{ [playerId: string]: string[] }>({});
 
   // Load teams
   useEffect(() => {
@@ -57,15 +53,6 @@ const AdminGameEntry = () => {
       }
     }
     loadTeams();
-  }, []);
-
-  // Load all players (for free agents and cross-team fill-ins)
-  useEffect(() => {
-    async function loadAllPlayers() {
-      const { data, error } = await supabase.from("players").select("id, name, plus_minus, games_played");
-      if (!error && data) setAllPlayers(data);
-    }
-    loadAllPlayers();
   }, []);
 
   // Load games for selected team
@@ -147,38 +134,18 @@ const AdminGameEntry = () => {
       }
 
       setPlayers(playersData ?? []);
-      setSubPlayers([]); // reset subs when team changes
-      setSubFillIns({});
     }
 
     loadPlayersForTeam();
+    setSubPlayers([]); // reset subs when team changes
   }, [teamId]);
 
-  // Handle sub selection
-  const toggleSubPlayer = (player: Player) => {
-    const already = subPlayers.includes(player.id);
-    if (already) {
-      setSubPlayers(subPlayers.filter((id) => id !== player.id));
-      const { [player.id]: _, ...rest } = subFillIns;
-      setSubFillIns(rest);
-    } else {
-      setSubPlayers([...subPlayers, player.id]);
-      setSelectedMissingPlayer(player);
-      setShowSubModal(true);
-    }
+  // Helpers
+  const toggleSubPlayer = (id: string) => {
+    setSubPlayers((prev) => (prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]));
   };
 
-  const toggleSubFillIn = (missingPlayerId: string, fillInId: string) => {
-    setSubFillIns((prev) => {
-      const current = prev[missingPlayerId] ?? [];
-      const exists = current.includes(fillInId);
-      return {
-        ...prev,
-        [missingPlayerId]: exists ? current.filter((id) => id !== fillInId) : [...current, fillInId],
-      };
-    });
-  };
-
+  // Add set
   const handleAddSet = () => {
     if (!set_no || !set_points_for || !set_points_against) {
       setMessage("Please fill out all set fields.");
@@ -205,12 +172,13 @@ const AdminGameEntry = () => {
     setSets(sets.filter((_, i) => i !== idx));
   };
 
-  // Submit logic
+  // NEW: Extract DB submit work into its own function (runs after confirm)
   const doSubmit = async () => {
     setConfirming(true);
     setMessage("");
 
     try {
+      // Insert sets
       const setsPayload = sets.map((set) => ({
         game_id: selectedGameId,
         set_no: set.set_no,
@@ -223,6 +191,7 @@ const AdminGameEntry = () => {
       const { error: setError } = await supabase.from("sets").insert(setsPayload);
       if (setError) throw setError;
 
+      // Totals
       let totalPF = 0;
       let totalPA = 0;
       let totalWins = 0;
@@ -233,15 +202,19 @@ const AdminGameEntry = () => {
         totalPF += s.points_for;
         totalPA += s.points_against;
 
-        if (s.points_for === s.points_against) totalTies += 1;
-        else if (s.result === "W") totalWins += 1;
-        else totalLosses += 1;
+        if (s.points_for === s.points_against) {
+          totalTies += 1;
+        } else if (s.result === "W") {
+          totalWins += 1;
+        } else {
+          totalLosses += 1;
+        }
       });
 
       const matchResult =
         totalWins > totalLosses ? "Win" : totalLosses > totalWins ? "Loss" : "Draw";
 
-      // Update non-sub players
+      // Update players (skip subs)
       for (const player of players) {
         if (subPlayers.includes(player.id)) continue;
 
@@ -262,33 +235,6 @@ const AdminGameEntry = () => {
           .eq("id", player.id);
 
         if (updatePlayerError) throw updatePlayerError;
-      }
-
-      // Update sub fill-in players
-      for (const missingPlayerId in subFillIns) {
-        const fillIns = subFillIns[missingPlayerId];
-        for (const fillInId of fillIns) {
-          const { data: subData } = await supabase
-            .from("players")
-            .select("plus_minus, games_played")
-            .eq("id", fillInId)
-            .single();
-
-          let updatedPlusMinus = (subData?.plus_minus ?? 0);
-          let updatedGamesPlayed = (subData?.games_played ?? 0);
-
-          sets.forEach((s) => {
-            updatedPlusMinus += s.points_for - s.points_against;
-            updatedGamesPlayed += 1;
-          });
-
-          const { error: updateError } = await supabase
-            .from("players")
-            .update({ plus_minus: updatedPlusMinus, games_played: updatedGamesPlayed })
-            .eq("id", fillInId);
-
-          if (updateError) throw updateError;
-        }
       }
 
       // Update team totals
@@ -314,10 +260,12 @@ const AdminGameEntry = () => {
 
       if (updateTeamError) throw updateTeamError;
 
-      setMessage(`Sets added! Match result: ${matchResult} (${totalWins}W - ${totalLosses}L - ${totalTies}T)`);
+      // Reset form
+      setMessage(
+        `Sets added! Match result: ${matchResult} (${totalWins}W - ${totalLosses}L - ${totalTies}T)`
+      );
       setSets([]);
       setSubPlayers([]);
-      setSubFillIns({});
       setSetNo(1);
       setSetPointsFor("");
       setSetPointsAgainst("");
@@ -331,6 +279,7 @@ const AdminGameEntry = () => {
     }
   };
 
+  // UPDATED: Preflight submit — server-side duplicate check + open confirm modal
   const handleSubmit: React.FormEventHandler = async (e) => {
     e.preventDefault();
 
@@ -346,6 +295,7 @@ const AdminGameEntry = () => {
     setLoading(true);
     setMessage("");
 
+    // Check for duplicate set numbers in DB for this game
     const setNos = sets.map((s) => s.set_no);
     const { data: existing, error } = await supabase
       .from("sets")
@@ -362,6 +312,7 @@ const AdminGameEntry = () => {
     const dups = (existing ?? []).map((r: { set_no: number }) => r.set_no);
     setDupSetNos(dups);
 
+    // Open confirmation modal (prevents submission if duplicates exist)
     setShowConfirm(true);
     setLoading(false);
   };
@@ -376,8 +327,79 @@ const AdminGameEntry = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-8">
-          {/* Team selection, game selection, sets, and sub UI stays the same */}
-          {/* Replace the sub toggle section with this */}
+          {/* Team Selection */}
+          <div>
+            <label className="block mb-3 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+              Select Team
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {teams.map((team) => (
+                <label
+                  key={team.team_id}
+                  className={`cursor-pointer rounded-lg border transition-all select-none
+                    ${
+                      teamId === team.team_id
+                        ? "border-primary ring-2 ring-primary/50 shadow-sm"
+                        : "border-muted hover:shadow-sm"
+                    }
+                    flex flex-col items-center justify-center p-3 focus-within:ring-2 focus-within:ring-primary/60`}
+                >
+                  <input
+                    type="radio"
+                    name="team"
+                    value={team.team_id}
+                    checked={teamId === team.team_id}
+                    onChange={() => {
+                      if (sets.length > 0) {
+                        alert("Please finish or clear the sets for the current game before switching.");
+                        return;
+                      }
+                      setTeamId(team.team_id);
+                    }}
+                    className="sr-only"
+                  />
+                  <img
+                    src={`/logos/${team.team_id}.jpg`}
+                    alt={team.name}
+                    className="w-16 h-16 object-contain mb-2 rounded"
+                  />
+                  <span className="text-sm font-medium text-center">{team.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Game Selection */}
+          <div>
+            <label className="block mb-2 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+              Select Game
+            </label>
+            <div className="relative">
+              <select
+                value={selectedGameId}
+                onChange={(e) => {
+                  if (sets.length > 0) {
+                    alert("Please finish or clear the sets for the current game before switching.");
+                    return;
+                  }
+                  setSelectedGameId(e.target.value);
+                }}
+                className="w-full border rounded-lg px-3 py-2 pr-9 bg-background focus:outline-none focus:ring-2 focus:ring-primary/60 disabled:opacity-50"
+                disabled={loading}
+              >
+                {games.map((game) => (
+                  <option key={game.id} value={game.id}>
+                    {game.label}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                ▾
+              </span>
+            </div>
+          </div>
+
+          {/* Who needed a sub? */}
           <div>
             <label className="block mb-3 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
               Who needed a sub?
@@ -399,7 +421,7 @@ const AdminGameEntry = () => {
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={() => toggleSubPlayer(player)}
+                      onChange={() => toggleSubPlayer(player.id)}
                       className="h-4 w-4 rounded border-muted text-primary focus:ring-primary/60"
                     />
                     <span className="truncate">{player.name}</span>
@@ -409,48 +431,249 @@ const AdminGameEntry = () => {
             </div>
           </div>
 
-          {/* Submit button, sets entry, messages remain the same */}
+          {/* Sets Entry */}
+          <div>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <label className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+                Add Sets
+              </label>
+              {/* Single live result preview pill */}
+              <span
+                className={`px-3 py-1 text-xs font-bold rounded-full shadow-sm
+                  ${
+                    Number(set_points_for) > Number(set_points_against)
+                      ? "bg-green-500 text-white"
+                      : Number(set_points_for) < Number(set_points_against)
+                      ? "bg-red-500 text-white"
+                      : "bg-amber-500/90 text-white"
+                  }`}
+              >
+                {Number(set_points_for) > Number(set_points_against)
+                  ? "WIN"
+                  : Number(set_points_for) < Number(set_points_against)
+                  ? "LOSS"
+                  : "DRAW"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-center mb-2">
+              {/* Set Number */}
+              <input
+                type="number"
+                value={set_no}
+                onChange={(e) => setSetNo(Number(e.target.value))}
+                min={1}
+                placeholder="Set #"
+                className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold bg-background focus:outline-none focus:ring-2 focus:ring-primary/60"
+              />
+
+              {/* PF */}
+              <input
+                type="number"
+                value={set_points_for}
+                onChange={(e) => setSetPointsFor(e.target.value)}
+                min={0}
+                placeholder="PF"
+                className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold
+                           bg-green-50 text-green-700 border-green-300
+                           placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+
+              {/* PA */}
+              <input
+                type="number"
+                value={set_points_against}
+                onChange={(e) => setSetPointsAgainst(e.target.value)}
+                min={0}
+                placeholder="PA"
+                className="col-span-1 border rounded-lg px-3 py-2 text-center font-semibold
+                           bg-red-50 text-red-700 border-red-300
+                           placeholder-red-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+
+              {/* (Spacer for grid consistency on small screens) */}
+              <div className="hidden sm:block" />
+
+              {/* Add Set Button (neutral) */}
+              <div className="col-span-2 sm:col-span-1">
+                <button
+                  type="button"
+                  onClick={handleAddSet}
+                  className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-bold
+                             hover:bg-gray-300 active:scale-[0.99] transition
+                             focus:outline-none focus:ring-2 focus:ring-gray-400"
+                >
+                  Add Set
+                </button>
+              </div>
+            </div>
+
+            {/* Sets List */}
+            <div className="mt-3 space-y-2">
+              {sets.map((set, idx) => {
+                const isWin = set.points_for > set.points_against;
+                const isLoss = set.points_for < set.points_against;
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between bg-muted/30 border border-muted rounded-lg px-3 py-2 shadow-sm"
+                  >
+                    <span className="font-medium">
+                      Set {set.set_no}:{" "}
+                      <span className="text-green-700 font-semibold">{set.points_for}</span>
+                      {" - "}
+                      <span className="text-red-700 font-semibold">{set.points_against}</span>
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2 py-1 text-xs font-bold rounded
+                          ${
+                            isWin
+                              ? "bg-green-100 text-green-700"
+                              : isLoss
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                      >
+                        {isWin ? "WIN" : isLoss ? "LOSS" : "DRAW"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSet(idx)}
+                        className="text-xs font-semibold text-red-600 hover:text-red-700 hover:underline focus:outline-none focus:ring-2 focus:ring-red-500/40 rounded"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Submit */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              className="w-full bg-gray-800 text-white py-2.5 rounded-lg font-bold
+                         hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed
+                         transition focus:outline-none focus:ring-2 focus:ring-gray-500"
+              disabled={loading}
+            >
+              {loading ? "Checking..." : "Submit Sets"}
+            </button>
+          </div>
+
+          {/* Message */}
+          {message && (
+            <div
+              className={`mt-2 text-center font-semibold rounded-md px-3 py-2 ${
+                message.toLowerCase().includes("failed") || message.toLowerCase().includes("error")
+                  ? "text-red-700 bg-red-50 border border-red-200"
+                  : "text-green-700 bg-green-50 border border-green-200"
+              }`}
+            >
+              {message}
+            </div>
+          )}
         </form>
       </section>
 
-      {/* Sub modal */}
-      {showSubModal && selectedMissingPlayer && (
+      {/* Confirmation Modal */}
+      {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg bg-background border border-border/60 rounded-xl shadow-xl p-5 sm:p-6 space-y-4">
-            <h3 className="text-lg font-semibold">
-              Fill-in for {selectedMissingPlayer.name}
-            </h3>
+            <h3 className="text-lg font-semibold">Confirm Submission</h3>
 
-            <div className="max-h-60 overflow-y-auto">
-              {allPlayers
-                .filter((p) => p.id !== selectedMissingPlayer.id)
-                .map((p) => {
-                  const selected = subFillIns[selectedMissingPlayer.id]?.includes(p.id) ?? false;
-                  return (
-                    <label
-                      key={p.id}
-                      className={`flex items-center gap-2 p-2 rounded cursor-pointer border transition
-                        ${selected ? "bg-primary/20 border-primary" : "border-muted hover:bg-muted/20"}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() => toggleSubFillIn(selectedMissingPlayer.id, p.id)}
-                        className="h-4 w-4 rounded border-muted text-primary focus:ring-primary/60"
-                      />
-                      {p.name}
-                    </label>
-                  );
-                })}
+            {/* Duplicate warning */}
+            {dupSetNos.length > 0 && (
+              <div className="rounded-md border border-red-200 bg-red-50 text-red-700 p-3 text-sm">
+                The following <span className="font-semibold">set numbers</span> already exist for this
+                game: <span className="font-semibold">{dupSetNos.join(", ")}</span>. Please remove or
+                renumber these sets. You cannot submit while duplicates exist.
+              </div>
+            )}
+
+            {/* Summary */}
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Game</span>
+                <span className="font-medium">
+                  {games.find((g) => g.id === selectedGameId)?.label ?? "Selected game"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Sets to add</span>
+                <span className="font-medium">{sets.length}</span>
+              </div>
+
+              <div className="rounded-md border border-muted bg-muted/30 p-2">
+                <ul className="space-y-1">
+                  {sets.map((s) => {
+                    const isWin = s.points_for > s.points_against;
+                    const isLoss = s.points_for < s.points_against;
+                    return (
+                      <li key={s.set_no} className="flex items-center justify-between text-sm">
+                        <span className="font-medium">
+                          Set {s.set_no}:{" "}
+                          <span className="text-green-700 font-semibold">{s.points_for}</span>
+                          {" - "}
+                          <span className="text-red-700 font-semibold">{s.points_against}</span>
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 text-[11px] font-bold rounded ${
+                            isWin
+                              ? "bg-green-100 text-green-700"
+                              : isLoss
+                              ? "bg-red-100 text-red-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {isWin ? "WIN" : isLoss ? "LOSS" : "DRAW"}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <div className="text-sm">
+                <span className="text-muted-foreground">Subs skipped:</span>{" "}
+                {subPlayers.length === 0 ? (
+                  <span className="font-medium">None</span>
+                ) : (
+                  <span className="font-medium">
+                    {players
+                      .filter((p) => subPlayers.includes(p.id))
+                      .map((p) => p.name)
+                      .join(", ")}
+                  </span>
+                )}
+              </div>
             </div>
 
+            {/* Modal Actions */}
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
-                onClick={() => setShowSubModal(false)}
+                onClick={() => setShowConfirm(false)}
                 className="px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
               >
-                Done
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={doSubmit}
+                disabled={dupSetNos.length > 0 || confirming}
+                className={`px-4 py-2 rounded-lg font-bold text-white focus:outline-none focus:ring-2
+                  ${
+                    dupSetNos.length > 0 || confirming
+                      ? "bg-gray-400 cursor-not-allowed focus:ring-gray-400"
+                      : "bg-gray-800 hover:bg-gray-700 focus:ring-gray-500"
+                  }`}
+              >
+                {confirming ? "Submitting..." : "Confirm & Submit"}
               </button>
             </div>
           </div>
