@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Trophy, Users, BarChart3 } from "lucide-react";
+import { TrendingUp, Trophy, Users, Scale } from "lucide-react";
 import PlayerCard from "@/components/PlayerCard";
 import { supabase } from "@/lib/supabase";
 
@@ -15,43 +15,59 @@ interface Player {
 }
 
 const Stats = () => {
-  const [activeTab, setActiveTab] = useState<"plus_minus" | "average" | "per_game">("plus_minus");
+  const [activeTab, setActiveTab] = useState<"plus_minus" | "average" | "adjusted">("plus_minus");
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchPlayers() {
       setLoading(true);
-      const { data, error } = await supabase.from<Player>("players").select("*");
-      if (error) console.error("Error loading players:", error);
-      else if (data) setPlayers(data);
+      const { data, error } = await supabase
+        .from<Player>("players")
+        .select("*");
+      if (error) {
+        console.error("Error loading players:", error);
+      } else if (data) {
+        setPlayers(data);
+      }
       setLoading(false);
     }
+
     fetchPlayers();
   }, []);
 
-  // 🔹 Compute top lists
-  const topplus_minus = [...players].sort((a, b) => b.plus_minus - a.plus_minus).slice(0, 18);
+  // Helper: league average per game
+  const leagueAvgPerGame = players.reduce((sum, p) => sum + (p.plus_minus || 0), 0) /
+    (players.reduce((sum, p) => sum + (p.games_played || 0), 0) || 1);
+
+  const priorGames = 5; // weight for the Bayesian adjustment
+
+  // Helper: adjusted per game (Bayesian shrinkage)
+  const adjustedPerGame = (p: Player) => {
+    const pm = p.plus_minus || 0;
+    const gp = p.games_played || 0;
+    return (pm + priorGames * leagueAvgPerGame) / (gp + priorGames);
+  };
+
+  // Top performers
+  const topplus_minus = [...players]
+    .sort((a, b) => b.plus_minus - a.plus_minus)
+    .slice(0, 18);
 
   const topAverage = [...players]
-    .filter((p) => p.games_played > 0)
-    .sort((a, b) => b.plus_minus / b.games_played - a.plus_minus / a.games_played)
+    .filter(p => p.games_played > 0)
+    .sort((a, b) => (b.plus_minus / b.games_played) - (a.plus_minus / a.games_played))
     .slice(0, 18);
 
-  const topPerGame = [...players]
-    .filter((p) => p.games_played > 0)
-    .map((p) => ({
-      ...p,
-      plus_minus_per_game: p.plus_minus / p.games_played,
-    }))
-    .sort((a, b) => b.plus_minus_per_game - a.plus_minus_per_game)
+  const topAdjusted = [...players]
+    .filter(p => p.games_played > 0 || p.plus_minus !== 0)
+    .sort((a, b) => adjustedPerGame(b) - adjustedPerGame(a))
     .slice(0, 18);
 
-  // 🔹 Tabs for each metric
   const tabs = [
     { id: "plus_minus", label: "Top +/-", icon: TrendingUp, data: topplus_minus },
-    { id: "average", label: "Best Average", icon: Trophy, data: topAverage },
-    { id: "per_game", label: "+/- per Game", icon: BarChart3, data: topPerGame },
+    { id: "average", label: "Best Avg/Game", icon: Trophy, data: topAverage },
+    { id: "adjusted", label: "Adjusted Avg (Fair)", icon: Scale, data: topAdjusted },
   ];
 
   const currentTab = tabs.find((tab) => tab.id === activeTab);
@@ -72,7 +88,7 @@ const Stats = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header Section */}
+      {/* Header */}
       <section className="bg-gradient-hero py-16 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
@@ -88,23 +104,14 @@ const Stats = () => {
         </div>
       </section>
 
+      {/* League totals */}
       <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
-        {/* League Totals */}
         <div className="grid md:grid-cols-3 gap-6">
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
               <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div
-                className={`text-3xl font-bold ${
-                  totalplus_minus > 0
-                    ? "text-green-600"
-                    : totalplus_minus < 0
-                    ? "text-red-500"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {totalplus_minus > 0 ? "+" : ""}
-                {totalplus_minus}
+              <div className={`text-3xl font-bold ${totalplus_minus > 0 ? 'text-green-600' : totalplus_minus < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                {totalplus_minus > 0 ? '+' : ''}{totalplus_minus}
               </div>
               <div className="text-sm text-muted-foreground">Total +/-</div>
             </CardContent>
@@ -121,17 +128,8 @@ const Stats = () => {
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
               <Users className="h-8 w-8 text-accent mx-auto mb-2" />
-              <div
-                className={`text-3xl font-bold ${
-                  averagePerGame > 0
-                    ? "text-green-600"
-                    : averagePerGame < 0
-                    ? "text-red-500"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {averagePerGame > 0 ? "+" : ""}
-                {averagePerGame.toFixed(1)}
+              <div className={`text-3xl font-bold ${averagePerGame > 0 ? 'text-green-600' : averagePerGame < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                {averagePerGame > 0 ? '+' : ''}{averagePerGame.toFixed(1)}
               </div>
               <div className="text-sm text-muted-foreground">League Avg</div>
             </CardContent>
@@ -148,9 +146,7 @@ const Stats = () => {
                   <Button
                     key={tab.id}
                     variant={activeTab === tab.id ? "default" : "outline"}
-                    onClick={() =>
-                      setActiveTab(tab.id as "plus_minus" | "average" | "per_game")
-                    }
+                    onClick={() => setActiveTab(tab.id as any)}
                     className="flex items-center gap-2"
                   >
                     <TabIcon className="h-4 w-4" />
@@ -163,7 +159,7 @@ const Stats = () => {
 
           <CardContent>
             <div className="space-y-6">
-              {/* Player Rankings */}
+              {/* Rankings */}
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold flex items-center gap-2">
                   <Icon className="h-5 w-5 text-primary" />
@@ -172,17 +168,11 @@ const Stats = () => {
 
                 <div className="space-y-2">
                   {currentTab?.data.map((player, index) => {
-                    const plusMinusPerGame =
-                      player.games_played > 0
-                        ? player.plus_minus / player.games_played
-                        : 0;
-
+                    const raw = player.games_played > 0 ? player.plus_minus / player.games_played : 0;
+                    const adjusted = adjustedPerGame(player);
                     const statValue =
-                      activeTab === "per_game"
-                        ? plusMinusPerGame
-                        : activeTab === "average"
-                        ? plusMinusPerGame
-                        : player.plus_minus;
+                      activeTab === "plus_minus" ? player.plus_minus :
+                      activeTab === "average" ? raw : adjusted;
 
                     return (
                       <div
@@ -197,40 +187,27 @@ const Stats = () => {
                             {index + 1}
                           </Badge>
                           <div>
-                            <div className="font-semibold text-card-foreground">
-                              {player.name}
-                            </div>
+                            <div className="font-semibold text-card-foreground">{player.name}</div>
                             <div className="text-sm text-muted-foreground">
                               {player.primary_position}
-                            </div>
-                            {/* 🔹 Added extra info */}
-                            <div className="text-xs text-muted-foreground">
-                              GP: {player.games_played} | +/-:{" "}
-                              {player.plus_minus > 0 ? "+" : ""}
-                              {player.plus_minus} | Per Game:{" "}
-                              {plusMinusPerGame.toFixed(1)}
+                              {player.games_played < priorGames && (
+                                <Badge variant="outline" className="ml-2 text-xs">
+                                  Low Sample
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div
-                            className={`text-xl font-bold ${
-                              statValue > 0
-                                ? "text-green-600"
-                                : statValue < 0
-                                ? "text-red-500"
-                                : "text-muted-foreground"
-                            }`}
-                          >
-                            {statValue > 0 ? "+" : ""}
-                            {statValue.toFixed(1)}
+                          <div className={`text-xl font-bold ${statValue > 0 ? 'text-green-600' : statValue < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                            {statValue > 0 ? '+' : ''}{statValue.toFixed(2)}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {activeTab === "per_game"
-                              ? "+/- per game"
+                            {activeTab === "plus_minus"
+                              ? "+/-"
                               : activeTab === "average"
-                              ? "avg"
-                              : "+/-"}
+                              ? "per game"
+                              : "adjusted"}
                           </div>
                         </div>
                       </div>
