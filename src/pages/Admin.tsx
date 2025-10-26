@@ -36,6 +36,9 @@ const AdminGameEntry = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [subPlayers, setSubPlayers] = useState<string[]>([]);
 
+  // NEW: All players for stand-in modal
+  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
+
   // NEW: Sub/stand-in modal states
   const [standIns, setStandIns] = useState<{ [playerId: string]: string | null }>({});
   const [showSubModal, setShowSubModal] = useState(false);
@@ -57,6 +60,22 @@ const AdminGameEntry = () => {
       }
     }
     loadTeams();
+  }, []);
+
+  // Load all players for stand-in modal
+  useEffect(() => {
+    async function loadAllPlayers() {
+      const { data, error } = await supabase
+        .from("players")
+        .select("id, name, plus_minus, games_played");
+      if (error) {
+        console.error("Error loading all players:", error.message);
+        setAllPlayers([]);
+      } else {
+        setAllPlayers(data ?? []);
+      }
+    }
+    loadAllPlayers();
   }, []);
 
   // Load games for selected team
@@ -598,7 +617,7 @@ const AdminGameEntry = () => {
         </form>
       </section>
 
-      {/* Sub Modal */}
+       {/* Sub Modal */}
       {showSubModal && currentSubPlayer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md bg-background border border-border/60 rounded-xl shadow-xl p-5 sm:p-6 space-y-4">
@@ -615,7 +634,7 @@ const AdminGameEntry = () => {
               >
                 None
               </button>
-              {players
+              {allPlayers
                 .filter((p) => p.id !== currentSubPlayer)
                 .map((p) => (
                   <button
