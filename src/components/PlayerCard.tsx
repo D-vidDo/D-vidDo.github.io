@@ -221,6 +221,10 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   }}
 >
 {/* PLAYER IMAGE */}
+<div
+  className="relative w-32 h-40 sm:w-40 sm:h-52 overflow-hidden bg-transparent flex items-end justify-center"
+  // items-end pushes the content to the bottom
+>
 <Avatar className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
   {player.imageUrl ? (
     <AvatarImage
@@ -236,6 +240,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     <User className="w-16 h-16 text-white/80" />
   </AvatarFallback>
 </Avatar>
+</div>
 
 
 
