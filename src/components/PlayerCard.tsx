@@ -227,16 +227,16 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
       src={player.imageUrl}
       alt={player.name}
       onError={(e) => {
-        // hide broken image and show fallback
+        // Hide broken image to show fallback
         (e.currentTarget as HTMLImageElement).style.display = "none";
       }}
     />
-  ) : (
-    <AvatarFallback>
-      <User className="w-16 h-16 text-white/80" />
-    </AvatarFallback>
-  )}
+  ) : null}
+  <AvatarFallback>
+    <User className="w-16 h-16 text-white/80" />
+  </AvatarFallback>
 </Avatar>
+
 
 
   {/* PLAYER INFO */}
