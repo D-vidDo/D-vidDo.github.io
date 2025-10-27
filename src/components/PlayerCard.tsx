@@ -206,22 +206,19 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
       {/* MODAL */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl p-0 overflow-hidden">
-{/* HEADER */}
+{/* MODAL HEADER */}
 <div
-  className={`flex flex-col sm:flex-row items-center sm:items-start text-white p-6 sm:p-8 relative rounded-t-lg`}
+  className="flex flex-col sm:flex-row items-center sm:items-start text-white p-6 sm:p-8 relative rounded-t-lg"
   style={{
-  background: player.color && player.color2
-    ? `linear-gradient(90deg, ${player.color} 0%, ${player.color2} 100%)`
-    : player.color || "#374151", // fallback dark gray
-}}
-
+    background: `linear-gradient(90deg, ${player.color} 0%, ${player.color2} 100%)`,
+  }}
 >
   {/* PLAYER IMAGE */}
-  <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-slate-600 flex items-center justify-center">
+  <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
     {player.imageUrl ? (
       <AvatarImage src={player.imageUrl} alt={player.name} />
     ) : (
-      <User className="w-16 h-16 text-slate-300" />
+      <User className="w-16 h-16 text-white/80" />
     )}
   </div>
 
@@ -232,7 +229,13 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
 
       {/* TITLE BADGE */}
       {player.title && (
-        <span className="inline-block px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-sm font-semibold shadow max-w-max">
+        <span
+          className="inline-block px-2 py-0.5 rounded text-sm font-semibold shadow max-w-max"
+          style={{
+            background: `linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)`,
+            color: "#fff",
+          }}
+        >
           {player.title}
         </span>
       )}
@@ -240,18 +243,14 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
       {/* TEAM BADGE */}
       {player.team && (
         <span
-  className="inline-block px-2 py-0.5 rounded text-sm font-semibold shadow max-w-max"
-  style={{
-    backgroundImage:
-      player.color && player.color2
-        ? `linear-gradient(90deg, ${player.color} 0%, ${player.color2} 100%)`
-        : `#374151`,
-    color: "#fff",
-  }}
->
-  {player.team}
-</span>
-
+          className="inline-block px-2 py-0.5 rounded text-sm font-semibold shadow max-w-max"
+          style={{
+            background: `linear-gradient(90deg, ${player.color} 0%, ${player.color2} 100%)`,
+            color: "#fff",
+          }}
+        >
+          {player.team}
+        </span>
       )}
     </div>
 
