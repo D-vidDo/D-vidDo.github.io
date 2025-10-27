@@ -63,27 +63,32 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     100
   );
 
- const chartData = useMemo(
-    () =>
-      Object.entries(player.stats || {}).map(([key, value]) => ({
-        stat: key,
-        value,
-      })),
-    [player.stats]
-  );
+  const chartData = Object.entries(player.stats || {}).map(([key, value]) => ({
+    stat: key,
+    value,
+  }));
 
-  const compareChartData = useMemo(() => {
-    if (!comparePlayer) return [];
-    const allStats = new Set([
-      ...Object.keys(player.stats || {}),
-      ...Object.keys(comparePlayer.stats || {}),
-    ]);
-    return Array.from(allStats).map((stat) => ({
-      stat,
-      [player.name]: player.stats[stat] || 0,
-      [comparePlayer.name]: comparePlayer.stats[stat] || 0,
-    }));
-  }, [comparePlayer, player.stats, player.name]);
+const compareChartDataMemo = useMemo(() => {
+  if (!comparePlayer) return [];
+  const allStats = new Set([
+    ...Object.keys(player.stats),
+    ...Object.keys(comparePlayer.stats),
+  ]);
+  return Array.from(allStats).map((stat) => ({
+    stat,
+    [player.name]: player.stats[stat] || 0,
+    [comparePlayer.name]: comparePlayer.stats[stat] || 0,
+  }));
+}, [comparePlayer, player.stats, player.name]);
+
+
+  const maxCompareValue = () => {
+    const values = [
+      ...Object.values(player.stats || {}),
+      ...(comparePlayer ? Object.values(comparePlayer.stats || {}) : []),
+    ];
+    return values.length ? Math.max(...values) : 5;
+  };
 
   return (
     <>
