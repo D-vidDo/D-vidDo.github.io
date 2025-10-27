@@ -221,21 +221,21 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   }}
 >
 {/* PLAYER IMAGE */}
-<Avatar className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+<div
+  className="relative w-32 h-40 sm:w-40 sm:h-52 overflow-hidden bg-transparent flex items-end justify-center"
+  // items-end pushes the content to the bottom
+>
   {player.imageUrl ? (
-    <AvatarImage
-      src={player.imageUrl}
-      alt={player.name}
-      onError={(e) => {
-        // Hide broken image to show fallback
-        (e.currentTarget as HTMLImageElement).style.display = "none";
-      }}
-    />
-  ) : null}
-  <AvatarFallback>
-    <User className="w-16 h-16 text-white/80" />
-  </AvatarFallback>
-</Avatar>
+    <Avatar className="w-full h-full">
+      <AvatarImage src={player.imageUrl} alt={player.name} className="object-cover" />
+    </Avatar>
+  ) : (
+    <div className="w-full h-full bg-slate-600 flex items-center justify-center">
+      <User className="w-16 h-16 text-white/80" />
+    </div>
+  )}
+</div>
+
 
 
 
