@@ -42,7 +42,7 @@ interface Player {
 }
 
 interface PlayerCardProps {
-  player: Player & { team_name?: string; team_color?: string; team_color2?: string };
+  player: Player & { team_name?: string; color?: string; color2?: string };
   allPlayers?: Player[];
   sortKey?: string;
 }
@@ -208,8 +208,8 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
 <div
   className={`flex flex-col sm:flex-row items-center sm:items-start text-white p-6 sm:p-8 relative rounded-t-lg`}
   style={{
-    background: player.team_color
-      ? `linear-gradient(90deg, ${player.team_color} 0%, ${player.team_color2} 100%)`
+    background: player.color
+      ? `linear-gradient(90deg, ${player.color} 0%, ${player.color2} 100%)`
       : undefined,
   }}
 >
