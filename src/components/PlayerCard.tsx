@@ -216,12 +216,14 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
 
   {/* PLAYER INFO */}
   <div className="mt-4 sm:mt-0 sm:ml-8 flex-1 flex flex-col text-center sm:text-left">
-    <h1 className="text-3xl font-bold">{player.name}</h1>
-    {player.title && (
-      <span className="mt-1 inline-block px-3 py-1 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-sm font-semibold shadow">
-        {player.title}
-      </span>
-    )}
+    <div className="mt-2 flex flex-wrap items-center gap-2">
+  <h1 className="text-3xl font-bold">{player.name}</h1>
+  {player.title && (
+    <span className="inline-block px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-sm font-semibold shadow max-w-max">
+      {player.title}
+    </span>
+  )}
+</div>
     <div className="mt-2 text-sm text-slate-300">
       {player.primary_position}
       {player.secondary_position && <span> / {player.secondary_position}</span>}
