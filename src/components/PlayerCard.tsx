@@ -225,7 +225,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   className="relative w-32 h-40 sm:w-40 sm:h-52 overflow-hidden bg-transparent flex items-end justify-center"
   // items-end pushes the content to the bottom
 >
-<Avatar className="w-full h-full">
+<Avatar className="relative w-32 h-32 sm:w-40 sm:h-40 overflow-hidden bg-transparent flex items-center justify-center">
   {player.imageUrl ? (
     <AvatarImage
       src={player.imageUrl}
