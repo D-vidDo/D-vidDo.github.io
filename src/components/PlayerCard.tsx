@@ -238,11 +238,15 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
 
       {/* TEAM BADGE */}
       {player.team && (
-        <span className="inline-block px-2 py-0.5 rounded bg-white/20 text-sm font-semibold text-white shadow max-w-max"
-        style={{ backgroundColor: player.color, color: "#fff" }}
-    >
-          {player.team}
-        </span>
+        <span
+  className="inline-block px-2 py-0.5 rounded text-sm font-semibold shadow max-w-max"
+  style={{
+    background: `linear-gradient(90deg, ${player.color} 0%, ${player.color2} 100%)`,
+    color: "#fff",
+  }}
+>
+  {player.team}
+</span>
       )}
     </div>
 
