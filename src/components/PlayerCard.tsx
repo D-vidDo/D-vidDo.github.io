@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -58,16 +58,12 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     .join("")
     .toUpperCase();
 
-  const overallRating = useMemo(
-    () =>
-      Math.min(
-        Object.values(player.stats || {}).reduce((sum, val) => sum + val, 0) * 2,
-        100
-      ),
-    [player.stats]
+  const overallRating = Math.min(
+    Object.values(player.stats || {}).reduce((sum, val) => sum + val, 0) * 2,
+    100
   );
 
-  const chartData = useMemo(
+ const chartData = useMemo(
     () =>
       Object.entries(player.stats || {}).map(([key, value]) => ({
         stat: key,
@@ -170,9 +166,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
 
           {player.games_played > 0 && (
             <div className="mt-3 pt-3 border-t text-center">
-              <div className="text-sm text-muted-foreground">
-                Average per game:
-              </div>
+              <div className="text-sm text-muted-foreground">Average per game:</div>
               <div
                 className={`text-lg font-semibold ${
                   player.plus_minus / player.games_played > 0
@@ -187,10 +181,24 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
               </div>
             </div>
           )}
+
+          <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+            {Object.entries(player.stats || {}).map(([stat, value]) => (
+              <div
+                key={stat}
+                className={`flex justify-between items-center rounded px-2 py-1 ${
+                  sortKey === stat ? "bg-yellow-100 font-bold" : "bg-muted/30"
+                }`}
+              >
+                <span className="font-medium capitalize">{stat}</span>
+                <span className="text-primary">{value}</span>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
-      {/* PLAYER DETAILS MODAL */}
+      {/* PLAYER MODAL */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl p-0 overflow-hidden">
           <div className="flex flex-col sm:flex-row items-center sm:items-start bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-white p-6 sm:p-8">
@@ -215,12 +223,11 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                 )}
               </div>
               <div className="mt-3 text-lg font-semibold">
-                Overall Rating:{" "}
-                <span className="text-yellow-400">{overallRating}</span>
+                Overall Rating: <span className="text-yellow-400">{overallRating}</span>
               </div>
 
               {/* Compare Button */}
-              {allPlayers.filter((p) => p.id !== player.id).length > 0 && (
+              {allPlayers.filter(p => p.id !== player.id).length > 0 && (
                 <button
                   className="mt-4 px-4 py-2 bg-yellow-400 text-black font-semibold rounded hover:bg-yellow-500 transition"
                   onClick={(e) => {
@@ -233,62 +240,20 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
               )}
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* COMPARE MODAL */}
-      <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
-        <DialogContent className="max-w-3xl p-6 sm:p-8 overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>Compare Stats</DialogTitle>
-            <DialogDescription>
-              Compare {player.name} with another player
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Player Selection */}
-          <div className="mb-4">
-            <select
-              className="border px-3 py-2 rounded w-full"
-              value={comparePlayer?.id || ""}
-              onChange={(e) => {
-                const selected = allPlayers.find(
-                  (p) => p.id === e.target.value
-                );
-                setComparePlayer(selected || null);
-              }}
-            >
-              <option value="">Select a player to compare</option>
-              {allPlayers
-                .filter((p) => p.id !== player.id)
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-            </select>
-          </div>
 
           {/* Radar Chart */}
-          {comparePlayer && compareChartData.length > 0 && (
-            <div className="h-64">
+          {chartData.length > 0 && (
+            <div className="h-64 mb-6">
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={compareChartData}>
+                <RadarChart data={chartData}>
                   <PolarGrid stroke="#e5e7eb" />
                   <PolarAngleAxis dataKey="stat" stroke="#374151" />
                   <PolarRadiusAxis angle={30} domain={[0, 5]} stroke="#9ca3af" />
                   <Radar
-                    name={player.name}
-                    dataKey={player.name}
+                    name="Stats"
+                    dataKey="value"
                     stroke="#facc15"
                     fill="#facc15"
-                    fillOpacity={0.5}
-                  />
-                  <Radar
-                    name={comparePlayer.name}
-                    dataKey={comparePlayer.name}
-                    stroke="#3b82f6"
-                    fill="#3b82f6"
                     fillOpacity={0.5}
                   />
                 </RadarChart>
@@ -297,6 +262,80 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
           )}
         </DialogContent>
       </Dialog>
+
+{/* COMPARE MODAL */}
+<Dialog open={compareOpen} onOpenChange={setCompareOpen}>
+  <DialogContent className="max-w-3xl p-0 overflow-hidden">
+    <DialogHeader>
+      <DialogTitle>Compare Stats</DialogTitle>
+      <DialogDescription>
+        Compare {player.name} with another player
+      </DialogDescription>
+    </DialogHeader>
+
+    <div className="p-6 sm:p-8 space-y-4">
+      {/* Player dropdown */}
+      <div>
+        <select
+          className="border px-3 py-2 rounded w-full"
+          value={comparePlayer?.id || ""}
+          onChange={(e) => {
+            const selected = allPlayers.find((p) => p.id === e.target.value) || null;
+            setComparePlayer(selected);
+          }}
+        >
+          <option value="">Select a player to compare</option>
+          {allPlayers
+            .filter((p) => p.id !== player.id)
+            .map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+        </select>
+      </div>
+
+      {/* Radar chart */}
+      {comparePlayer && compareChartData().length > 0 && (
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart data={compareChartDataMemo}>
+  <PolarGrid stroke="#e5e7eb" />
+  <PolarAngleAxis dataKey="stat" stroke="#374151" />
+  <PolarRadiusAxis angle={30} domain={[0, 5]} stroke="#9ca3af" />
+  <Radar
+    name={player.name}
+    dataKey={player.name}
+    stroke="#facc15"
+    fill="#facc15"
+    fillOpacity={0.5}
+  />
+  <Radar
+    name={comparePlayer.name}
+    dataKey={comparePlayer.name}
+    stroke="#3b82f6"
+    fill="#3b82f6"
+    fillOpacity={0.5}
+  />
+</RadarChart>
+
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Optional Close Button */}
+      <div className="flex justify-end mt-4">
+        <button
+          className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400 transition"
+          onClick={() => setCompareOpen(false)}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
+
     </>
   );
 };
