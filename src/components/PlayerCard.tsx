@@ -267,78 +267,69 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
         </DialogContent>
       </Dialog>
 
-{/* COMPARE MODAL */}
-<Dialog open={compareOpen} onOpenChange={setCompareOpen}>
-  <DialogContent className="max-w-3xl p-0 overflow-hidden">
-    <DialogHeader>
-      <DialogTitle>Compare Stats</DialogTitle>
-      <DialogDescription>
-        Compare {player.name} with another player
-      </DialogDescription>
-    </DialogHeader>
+      {/* COMPARE MODAL */}
+      <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Compare Stats</DialogTitle>
+            <DialogDescription>
+              Compare {player.name} with another player
+            </DialogDescription>
+          </DialogHeader>
 
-    <div className="p-6 sm:p-8 space-y-4">
-      {/* Player dropdown */}
-      <div>
-        <select
-          className="border px-3 py-2 rounded w-full"
-          value={comparePlayer?.id || ""}
-          onChange={(e) => {
-            const selected = allPlayers.find((p) => p.id === e.target.value) || null;
-            setComparePlayer(selected);
-          }}
-        >
-          <option value="">Select a player to compare</option>
-          {allPlayers
-            .filter((p) => p.id !== player.id)
-            .map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-        </select>
-      </div>
+          <div className="p-6 sm:p-8">
+            <div className="mb-4">
+              <select
+  className="border px-3 py-2 rounded w-full"
+  onChange={(e) => {
+    const selected = allPlayers.find((p) => p.id === e.target.value) || null;
+    setComparePlayer(selected);
 
-      {/* Radar chart */}
-      {comparePlayer && compareChartData().length > 0 && (
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={compareChartData()}>
-              <PolarGrid stroke="#e5e7eb" />
-              <PolarAngleAxis dataKey="stat" stroke="#374151" />
-              <PolarRadiusAxis angle={30} domain={[0, 5]} stroke="#9ca3af" />
-              <Radar
-                name={player.name}
-                dataKey={player.name}
-                stroke="#facc15"
-                fill="#facc15"
-                fillOpacity={0.5}
-              />
-              <Radar
-                name={comparePlayer.name}
-                dataKey={comparePlayer.name}
-                stroke="#3b82f6"
-                fill="#3b82f6"
-                fillOpacity={0.5}
-              />
-            </RadarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+    // explicitly close the compare modal
+    setCompareOpen(false);
+  }}
+>
+  <option value="">Select a player to compare</option>
+  {allPlayers
+    .filter((p) => p.id !== player.id)
+    .map((p) => (
+      <option key={p.id} value={p.id}>
+        {p.name}
+      </option>
+    ))}
+</select>
+            </div>
 
-      {/* Optional Close Button */}
-      <div className="flex justify-end mt-4">
-        <button
-          className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400 transition"
-          onClick={() => setCompareOpen(false)}
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </DialogContent>
-</Dialog>
-
+            {comparePlayer && compareChartData().length > 0 && (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+  <RadarChart data={compareChartData()}>
+    <PolarGrid stroke="#e5e7eb" />
+    <PolarAngleAxis dataKey="stat" stroke="#374151" />
+    <PolarRadiusAxis angle={30} domain={[0, 5]} stroke="#9ca3af" />
+    <Radar
+      name={player.name}
+      dataKey={player.name}
+      stroke="#facc15"
+      fill="#facc15"
+      fillOpacity={0.5}
+    />
+    {comparePlayer && (
+      <Radar
+        name={comparePlayer.name}
+        dataKey={comparePlayer.name}
+        stroke="#3b82f6"
+        fill="#3b82f6"
+        fillOpacity={0.5}
+      />
+    )}
+  </RadarChart>
+</ResponsiveContainer>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
