@@ -54,7 +54,7 @@ const Rules = () => {
 
               <h3 className="font-semibold mt-4">Re-Tier Drafts</h3>
               <ul className="list-disc list-inside mt-1 text-muted-foreground space-y-1">
-                <li>All players will re-enter the draft pool at each new schedule except for the retained players as explained in the next section</li>
+                <li>All players will re-enter the draft pool at each new split except for the retained players as explained in the next section</li>
                 <li>The last place team will have the first pick in the re-draft, second highest win/loss ratio will have second, and so forth</li>
                 <li>The draft will be anonymously made, only the team captains will know the draft order.</li>
                 <ul className="list-inside ml-4">
@@ -72,7 +72,7 @@ const Rules = () => {
             <section>
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <CalendarDays className="h-5 w-5 text-muted-foreground" />
-                Every Re-Tier = 1 “Schedule”
+                Every Re-Tier = 1 “Split”
               </h2>
               <ul className="list-disc list-inside mt-2 text-muted-foreground space-y-1">
                 <li>All non-captain players re-enter the draft pool</li>
@@ -89,7 +89,7 @@ const Rules = () => {
                 Winning Incentive
               </h2>
               <ul className="list-disc list-inside mt-2 text-muted-foreground space-y-1">
-                <li>At the end of each schedule, the team with the highest win/loss ratio can:</li>
+                <li>At the end of each split, the team with the highest win/loss ratio can:</li>
                 <ul className="list-inside ml-4">
                   <li>Retain up to 2 players from their current roster</li>
                 </ul>
@@ -108,9 +108,9 @@ const Rules = () => {
                 Retention Rules
               </h2>
               <ul className="list-disc list-inside mt-2 text-muted-foreground space-y-1">
-                <li>The retained players stay with the captain for the next schedule</li>
-                <li>Players can only be retained for 2 consecutive schedules, then must re-enter the draft pool</li>
-                <li>First pick cannot use their first pick on the player as their last split first pick. (This is considered retaining for 2 consecutive schedules.)</li>
+                <li>The retained players stay with the captain for the next split</li>
+                <li>Players can only be retained for 2 consecutive splits, then must re-enter the draft pool</li>
+                <li>First pick cannot use their first pick on the player as their last split first pick. (This is considered retaining for 2 consecutive splits.)</li>
               </ul>
             </section>
 
