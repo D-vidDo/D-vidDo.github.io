@@ -1,7 +1,19 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Award } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface Player {
   id: string;
@@ -14,6 +26,11 @@ interface Player {
   title: string;
   team: string;
   stats: Record<string, number>;
+  // 👇 Add extended stats
+  height?: string;
+  dominant_hand?: string;
+  reach?: string;
+  vertical_jump?: string;
 }
 
 interface PlayerCardProps {
@@ -22,6 +39,8 @@ interface PlayerCardProps {
 }
 
 const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
+  const [open, setOpen] = useState(false);
+
   const initials = player.name
     .split(" ")
     .map((n) => n[0])
@@ -34,119 +53,169 @@ const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
   );
 
   return (
-    <Card className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105">
-      <CardHeader className="pb-3">
-        <div className="flex items-center space-x-3 relative">
-          <Avatar className="h-12 w-12">
-            <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              {/* <h3 className="font-semibold text-card-foreground">{player.name}</h3> */}
+    <>
+      {/* CARD */}
+      <Card
+        onClick={() => setOpen(true)}
+        className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 cursor-pointer"
+      >
+        <CardHeader className="pb-3">
+          <div className="flex items-center space-x-3 relative">
+            <Avatar className="h-12 w-12">
+              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
               <div className="flex items-center gap-2">
-  <h3 className="font-semibold text-card-foreground">{player.name}</h3>
-  {player.title && (
-    <span className="text-sm font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm">
-      {player.title}
-    </span>
-  )}
-  {/* {player.isCaptain && (
-    <Badge variant="default" className="text-xs">
-      <Award className="h-3 w-3 mr-1" /> Captain
-    </Badge>
-  )} */}
-</div>
-
-              
-              {player.isCaptain && (
-                <Badge variant="default" className="text-xs">
-                  <Award className="h-3 w-3 mr-1" /> Captain
-                </Badge>
-              )}
+                <h3 className="font-semibold text-card-foreground">
+                  {player.name}
+                </h3>
+                {player.title && (
+                  <span className="text-sm font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm">
+                    {player.title}
+                  </span>
+                )}
+                {player.isCaptain && (
+                  <Badge variant="default" className="text-xs">
+                    <Award className="h-3 w-3 mr-1" /> Captain
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {player.primary_position}
+                {player.secondary_position && (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    / {player.secondary_position}
+                  </span>
+                )}
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {player.primary_position}
-              {player.secondary_position && (
-                <span className="ml-2 text-xs text-muted-foreground">
-                  / {player.secondary_position}
-                </span>
-              )}
-            </p>
-          </div>
 
-          <div className="absolute top-0 right-0 flex flex-col items-center">
-            <span className="text-[10px] font-semibold text-muted-foreground mb-0.5">OVR</span>
-            <Badge variant="secondary" className="text-base px-2 py-1 font-bold">
-              {overallRating}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        <div className="grid grid-cols-2 gap-4 text-center">
-          <div className="space-y-1">
-            <div
-              className={`text-lg font-bold ${
-                player.plus_minus > 0
-                  ? "text-green-600"
-                  : player.plus_minus < 0
-                  ? "text-red-500"
-                  : "text-muted-foreground"
-              }`}
-            >
-              {player.plus_minus > 0 ? "+" : ""}
-              {player.plus_minus}
-            </div>
-            <div className="text-xs text-muted-foreground">+/-</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-lg font-bold text-primary">{player.games_played}</div>
-            <div className="text-xs text-muted-foreground">Games</div>
-          </div>
-        </div>
-
-        {player.games_played > 0 && (
-          <div className="mt-3 pt-3 border-t text-center">
-            <div className="text-sm text-muted-foreground">Average per game:</div>
-            <div
-              className={`text-lg font-semibold ${
-                player.plus_minus / player.games_played > 0
-                  ? "text-green-600"
-                  : player.plus_minus / player.games_played < 0
-                  ? "text-red-500"
-                  : "text-muted-foreground"
-              }`}
-            >
-              {player.plus_minus / player.games_played > 0 ? "+" : ""}
-              {(player.plus_minus / player.games_played).toFixed(1)}
+            <div className="absolute top-0 right-0 flex flex-col items-center">
+              <span className="text-[10px] font-semibold text-muted-foreground mb-0.5">
+                OVR
+              </span>
+              <Badge
+                variant="secondary"
+                className="text-base px-2 py-1 font-bold"
+              >
+                {overallRating}
+              </Badge>
             </div>
           </div>
-        )}
+        </CardHeader>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-          {sortKey === "Overall Rating" && (
-            <div className="col-span-2 flex justify-between items-center bg-yellow-100 rounded px-2 py-1 font-bold">
-              <span className="font-medium">Overall Rating</span>
-              <span className="text-primary">{overallRating}</span>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div className="space-y-1">
+              <div
+                className={`text-lg font-bold ${
+                  player.plus_minus > 0
+                    ? "text-green-600"
+                    : player.plus_minus < 0
+                    ? "text-red-500"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {player.plus_minus > 0 ? "+" : ""}
+                {player.plus_minus}
+              </div>
+              <div className="text-xs text-muted-foreground">+/-</div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-lg font-bold text-primary">
+                {player.games_played}
+              </div>
+              <div className="text-xs text-muted-foreground">Games</div>
+            </div>
+          </div>
+
+          {player.games_played > 0 && (
+            <div className="mt-3 pt-3 border-t text-center">
+              <div className="text-sm text-muted-foreground">
+                Average per game:
+              </div>
+              <div
+                className={`text-lg font-semibold ${
+                  player.plus_minus / player.games_played > 0
+                    ? "text-green-600"
+                    : player.plus_minus / player.games_played < 0
+                    ? "text-red-500"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {player.plus_minus / player.games_played > 0 ? "+" : ""}
+                {(player.plus_minus / player.games_played).toFixed(1)}
+              </div>
             </div>
           )}
-          {Object.entries(player.stats || {}).map(([stat, value]) => (
-            <div
-              key={stat}
-              className={`flex justify-between items-center rounded px-2 py-1 ${
-                sortKey === stat ? "bg-yellow-100 font-bold" : "bg-muted/30"
-              }`}
-            >
-              <span className="font-medium capitalize">{stat}</span>
-              <span className="text-primary">{value}</span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+
+          <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+            {sortKey === "Overall Rating" && (
+              <div className="col-span-2 flex justify-between items-center bg-yellow-100 rounded px-2 py-1 font-bold">
+                <span className="font-medium">Overall Rating</span>
+                <span className="text-primary">{overallRating}</span>
+              </div>
+            )}
+            {Object.entries(player.stats || {}).map(([stat, value]) => (
+              <div
+                key={stat}
+                className={`flex justify-between items-center rounded px-2 py-1 ${
+                  sortKey === stat ? "bg-yellow-100 font-bold" : "bg-muted/30"
+                }`}
+              >
+                <span className="font-medium capitalize">{stat}</span>
+                <span className="text-primary">{value}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* MODAL */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{player.name}</DialogTitle>
+            <DialogDescription>
+              Player details and extended stats
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-2 gap-4 text-sm mt-2">
+            {player.height && (
+              <div className="flex justify-between">
+                <span className="font-medium text-muted-foreground">Height</span>
+                <span>{player.height}</span>
+              </div>
+            )}
+            {player.dominant_hand && (
+              <div className="flex justify-between">
+                <span className="font-medium text-muted-foreground">
+                  Dominant Hand
+                </span>
+                <span>{player.dominant_hand}</span>
+              </div>
+            )}
+            {player.reach && (
+              <div className="flex justify-between">
+                <span className="font-medium text-muted-foreground">Reach</span>
+                <span>{player.reach}</span>
+              </div>
+            )}
+            {player.vertical_jump && (
+              <div className="flex justify-between">
+                <span className="font-medium text-muted-foreground">
+                  Vertical Jump
+                </span>
+                <span>{player.vertical_jump}</span>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
