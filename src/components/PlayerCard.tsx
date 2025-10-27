@@ -165,6 +165,25 @@ const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
               </div>
             </div>
           )}
+           <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+            {sortKey === "Overall Rating" && (
+              <div className="col-span-2 flex justify-between items-center bg-yellow-100 rounded px-2 py-1 font-bold">
+                <span className="font-medium">Overall Rating</span>
+                <span className="text-primary">{overallRating}</span>
+              </div>
+            )}
+            {Object.entries(player.stats || {}).map(([stat, value]) => (
+              <div
+                key={stat}
+                className={`flex justify-between items-center rounded px-2 py-1 ${
+                  sortKey === stat ? "bg-yellow-100 font-bold" : "bg-muted/30"
+                }`}
+              >
+                <span className="font-medium capitalize">{stat}</span>
+                <span className="text-primary">{value}</span>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
