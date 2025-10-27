@@ -287,7 +287,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   {/* TOP-RIGHT STATS */}
   <div className="absolute top-6 right-6 flex flex-col gap-1 text-sm text-slate-200 bg-slate-800/70 backdrop-blur-md rounded-lg px-3 py-2 text-right shadow-md">
     {player.height && <div><span className="font-medium">Height:</span> {player.height}</div>}
-    {player.dominant_hand && <div><span className="font-medium">Hand:</span> {player.dominant_hand}</div>}
+    {player.dominant_hand && <div><span className="font-medium">Hits:</span> {player.dominant_hand}</div>}
     {player.reach && <div><span className="font-medium">Reach:</span> {player.reach}</div>}
     {player.vertical_jump && <div><span className="font-medium">Vertical:</span> {player.vertical_jump}</div>}
   </div>
