@@ -280,22 +280,24 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
           <div className="p-6 sm:p-8">
             <div className="mb-4">
               <select
-                className="border px-3 py-2 rounded w-full"
-                onChange={(e) => {
-                  const selected = allPlayers.find((p) => p.id === e.target.value) || null;
-                  setComparePlayer(selected);
-                  if (selected) setCompareOpen(false); // Auto-close modal
-                }}
-              >
-                <option value="">Select a player to compare</option>
-                {allPlayers
-                  .filter((p) => p.id !== player.id)
-                  .map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-              </select>
+  className="border px-3 py-2 rounded w-full"
+  onChange={(e) => {
+    const selected = allPlayers.find((p) => p.id === e.target.value) || null;
+    setComparePlayer(selected);
+
+    // explicitly close the compare modal
+    setCompareOpen(false);
+  }}
+>
+  <option value="">Select a player to compare</option>
+  {allPlayers
+    .filter((p) => p.id !== player.id)
+    .map((p) => (
+      <option key={p.id} value={p.id}>
+        {p.name}
+      </option>
+    ))}
+</select>
             </div>
 
             {comparePlayer && compareChartData().length > 0 && (
