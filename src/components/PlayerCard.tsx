@@ -33,6 +33,8 @@ interface Player {
   isCaptain?: boolean;
   title: string;
   team: string;
+  color: string;
+  color2: string;
   stats: Record<string, number>;
   height?: string;
   dominant_hand?: string;
@@ -42,7 +44,7 @@ interface Player {
 }
 
 interface PlayerCardProps {
-  player: Player & { team_name?: string; color?: string; color2?: string };
+  player: Player;
   allPlayers?: Player[];
   sortKey?: string;
 }
@@ -236,7 +238,9 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
 
       {/* TEAM BADGE */}
       {player.team && (
-        <span className="inline-block px-2 py-0.5 rounded bg-white/20 text-sm font-semibold text-white shadow max-w-max">
+        <span className="inline-block px-2 py-0.5 rounded bg-white/20 text-sm font-semibold text-white shadow max-w-max"
+        style={{ backgroundColor: player.color, color: "#fff" }}
+    >
           {player.team}
         </span>
       )}

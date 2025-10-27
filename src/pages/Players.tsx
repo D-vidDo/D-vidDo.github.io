@@ -85,6 +85,7 @@ const Players = () => {
       ...p,
       team: team ? team.name : "Free Agent",
       teamColor: team?.color || "#999",
+      teamColor2: team?.color2 || "#999",
     };
   });
 
