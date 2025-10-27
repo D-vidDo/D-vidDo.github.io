@@ -121,29 +121,44 @@ const Rules = () => {
 
             <Separator />
 
-            <section>
+<section>
   <h2 className="text-xl font-semibold flex items-center gap-2">
     <ClipboardList className="h-5 w-5 text-muted-foreground" />
     Score Weighting
   </h2>
   <ul className="list-disc list-inside mt-2 text-muted-foreground space-y-1">
     <li>
-      To make stats fair between players with different numbers of games, we use a <strong>weighted +/-</strong> system.
+      To keep stats fair between players with different numbers of games, we use an <strong>Adjusted +/-</strong> system based on a weighted average.
     </li>
     <li>
-      The formula is: <code>Weighted +/- = Total +/- × √(Games Played)</code>
+      The formula is: <code>(Total +/- + Prior × League Avg) ÷ (Games Played + Prior)</code>
     </li>
     <li>
-      This gives a small boost to players who have played more games while keeping averages from short-term players from being too inflated.
+      The <strong>Prior</strong> value is set to <code>5</code>, which gives more stability to players who have played fewer games while letting regular players’ scores reflect their true performance.
     </li>
     <li>
-      Example: A player with +12 over 9 games scores <code>12 × √9 = 36</code>, while another with +12 over 4 games scores <code>12 × √4 = 24</code>.
+      This means a player with fewer games is gently pulled toward the league average, while a player with 20+ games is mostly evaluated on their own results.
     </li>
     <li>
-      This helps reward consistency and participation, not just one lucky game.
+      Example: If the league average is +1.5 per game —
+      <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
+        <li>
+          A player with +12 over 9 games = <code>(12 + 5×1.5) ÷ (9+5) = +1.46 per game</code>
+        </li>
+        <li>
+          A player with +12 over 20 games = <code>(12 + 5×1.5) ÷ (20+5) = +0.90 per game</code>
+        </li>
+      </ul>
+    </li>
+    <li>
+      The Prior stays fixed throughout each season to keep rankings consistent, and will only be reviewed between seasons if the average number of games per player changes by 30% or more.
+    </li>
+    <li>
+      This approach rewards consistency and participation while preventing small-sample outliers from topping the leaderboard.
     </li>
   </ul>
 </section>
+
 
 
             <Separator />
