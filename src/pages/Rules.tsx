@@ -16,7 +16,7 @@ const Rules = () => {
   </CardTitle>
   <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
     <Clock className="h-4 w-4" />
-    <span>Last updated on September 8, 2025</span>
+    <span>Last updated on October 27, 2025</span>
   </div>
 </CardHeader>
 
