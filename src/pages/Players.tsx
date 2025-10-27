@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +9,21 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import PlayerCard from "@/components/PlayerCard";
 import { supabase } from "@/lib/supabase";
 import { List, Grid } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+} from "recharts";
 
 const statKeys = [
   "+/-",
@@ -23,18 +39,17 @@ const statKeys = [
   "Stamina",
   "Vertical Jump",
   "Communication",
-  
 ];
 
 const statAbbreviations: Record<string, string> = {
-  "Hustle": "HUS",
-  "Hitting": "HIT",
-  "Serving": "SER",
-  "Setting": "SET",
-  "Stamina": "STA",
-  "Blocking": "BLO",
-  "Receiving": "REC",
-  "Communication": "COM",
+  Hustle: "HUS",
+  Hitting: "HIT",
+  Serving: "SER",
+  Setting: "SET",
+  Stamina: "STA",
+  Blocking: "BLO",
+  Receiving: "REC",
+  Communication: "COM",
   "Vertical Jump": "VER",
   "Defensive Positioning": "DEF",
   "+/-": "+/-",
@@ -67,10 +82,16 @@ const Players = () => {
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [selectedTeam, setSelectedTeam] = useState("All");
 
-  const { data: allPlayers = [], isLoading: loadingPlayers, error: errorPlayers } = useQuery({
-    queryKey: ["players"],
-    queryFn: fetchPlayers,
-  });
+  // Compare modal state
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [compareA, setCompareA] = useState<any | null>(null);
+  const [compareB, setCompareB] = useState<any | null>(null);
+
+  const { data: allPlayers = [], isLoading: loadingPlayers, error: errorPlayers } =
+    useQuery({
+      queryKey: ["players"],
+      queryFn: fetchPlayers,
+    });
 
   const { data: allTeams = [] } = useQuery({
     queryKey: ["teams"],
@@ -100,6 +121,13 @@ const Players = () => {
     if (sortKey === "Games Played") return (b.games_played || 0) - (a.games_played || 0);
     return (b.stats?.[sortKey] || 0) - (a.stats?.[sortKey] || 0);
   });
+
+  // Function to open compare modal from PlayerCard
+  const openCompare = (player: any) => {
+    setCompareA(player);
+    setCompareB(null);
+    setCompareOpen(true);
+  };
 
   const renderListView = () => (
     <div className="max-w-5xl mx-auto divide-y divide-border bg-card rounded-lg shadow-card overflow-hidden">
@@ -174,19 +202,31 @@ const Players = () => {
                 </Badge>
                 <div className="text-[10px] text-muted-foreground">{statAbbreviations["Overall Rating"]}</div>
               </div>
-              {statKeys
-  .filter((s) => !["Overall Rating", "+/-", "Games Played"].includes(s))
-  .map((stat) => (
-    <div key={stat}>
-      <div
-        className={`font-bold ${stat === sortKey ? "text-yellow-400" : "text-primary"}`}
-      >
-        {player.stats?.[stat]}
-      </div>
-      <div className="text-[10px] text-muted-foreground">{statAbbreviations[stat]}</div>
-    </div>
-  ))}
 
+              {statKeys
+                .filter((s) => !["Overall Rating", "+/-", "Games Played"].includes(s))
+                .map((stat) => (
+                  <div key={stat}>
+                    <div
+                      className={`font-bold ${stat === sortKey ? "text-yellow-400" : "text-primary"}`}
+                    >
+                      {player.stats?.[stat]}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">{statAbbreviations[stat]}</div>
+                  </div>
+                ))}
+
+              {/* Compare Button */}
+              <Button
+                size="sm"
+                className="mt-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openCompare(player);
+                }}
+              >
+                Compare Stats
+              </Button>
             </div>
           </div>
         );
@@ -237,32 +277,31 @@ const Players = () => {
           </Button>
         </div>
 
-{/* Team Dropdown */}
-<select
-  value={selectedTeam}
-  onChange={(e) => setSelectedTeam(e.target.value)}
-  className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition font-sans"
->
-  {teams.map((team) => (
-    <option key={team} value={team}>
-      {team}
-    </option>
-  ))}
-</select>
+        {/* Team Dropdown */}
+        <select
+          value={selectedTeam}
+          onChange={(e) => setSelectedTeam(e.target.value)}
+          className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition font-sans"
+        >
+          {teams.map((team) => (
+            <option key={team} value={team}>
+              {team}
+            </option>
+          ))}
+        </select>
 
-{/* Sort Dropdown */}
-<select
-  value={sortKey}
-  onChange={(e) => setSortKey(e.target.value)}
-  className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition font-sans"
->
-  {statKeys.map((key) => (
-    <option key={key} value={key}>
-      {key}
-    </option>
-  ))}
-</select>
-
+        {/* Sort Dropdown */}
+        <select
+          value={sortKey}
+          onChange={(e) => setSortKey(e.target.value)}
+          className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition font-sans"
+        >
+          {statKeys.map((key) => (
+            <option key={key} value={key}>
+              {key}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Player Display */}
@@ -274,13 +313,107 @@ const Players = () => {
         ) : viewMode === "card" ? (
           <div className="grid md:grid-cols-3 gap-6">
             {sortedPlayers.map((player) => (
-              <PlayerCard key={player.id} player={player} sortKey={sortKey} allPlayers={sortedPlayers} />
+              <PlayerCard
+                key={player.id}
+                player={player}
+                sortKey={sortKey}
+                allPlayers={sortedPlayers}
+                onCompareClick={openCompare}
+              />
             ))}
           </div>
         ) : (
           renderListView()
         )}
       </div>
+
+      {/* Compare Stats Modal */}
+      <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
+        <DialogContent className="max-w-3xl p-6">
+          <DialogHeader>
+            <DialogTitle>Compare Stats</DialogTitle>
+          </DialogHeader>
+
+          {/* Player selectors */}
+          <div className="flex gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium">Player A:</label>
+              <select
+                value={compareA?.id || ""}
+                onChange={(e) =>
+                  setCompareA(sortedPlayers.find((p) => p.id === e.target.value) || null)
+                }
+                className="border rounded px-3 py-1 mt-1"
+              >
+                {sortedPlayers.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">Player B:</label>
+              <select
+                value={compareB?.id || ""}
+                onChange={(e) =>
+                  setCompareB(sortedPlayers.find((p) => p.id === e.target.value) || null)
+                }
+                className="border rounded px-3 py-1 mt-1"
+              >
+                <option value="">Select Player</option>
+                {sortedPlayers
+                  .filter((p) => p.id !== compareA?.id)
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Radar Chart */}
+          {compareA && (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart
+                  data={Object.keys(compareA.stats).map((key) => ({
+                    stat: key,
+                    [compareA.name]: compareA.stats[key],
+                    ...(compareB ? { [compareB.name]: compareB.stats[key] } : {}),
+                  }))}
+                >
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="stat" />
+                  <PolarRadiusAxis angle={30} domain={[0, 10]} />
+                  <Radar
+                    name={compareA.name}
+                    dataKey={compareA.name}
+                    stroke="#facc15"
+                    fill="#facc15"
+                    fillOpacity={0.5}
+                  />
+                  {compareB && (
+                    <Radar
+                      name={compareB.name}
+                      dataKey={compareB.name}
+                      stroke="#3b82f6"
+                      fill="#3b82f6"
+                      fillOpacity={0.5}
+                    />
+                  )}
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          <div className="mt-4 text-right">
+            <Button onClick={() => setCompareOpen(false)}>Close</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
