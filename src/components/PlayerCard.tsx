@@ -303,13 +303,6 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     {player.reach && <div><span className="font-medium">Reach:</span> {player.reach}</div>}
     {player.vertical_jump && <div><span className="font-medium">Vertical:</span> {player.vertical_jump}</div>}
   </div>
-   {/* CLOSE BUTTON */}
-  <button
-    onClick={() => setOpen(false)}
-    className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-black flex items-center justify-center shadow-lg transition"
-  >
-    ✕
-  </button>
 </div>
 
 
