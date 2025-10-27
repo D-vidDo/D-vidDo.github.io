@@ -296,7 +296,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
 
 
           {/* BODY SECTION */}
-          <div className="p-6 sm:p-8">
+          <div className="p-6 sm:p-8 bg-[#1f1f1f]">
             {/* Radar Chart */}
             {chartData.length > 0 && (
               <div className="h-64 mb-6">
