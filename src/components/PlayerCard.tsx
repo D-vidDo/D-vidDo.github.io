@@ -301,28 +301,26 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
             {comparePlayer && compareChartData().length > 0 && (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-  <RadarChart data={compareChartData()}>
-    <PolarGrid stroke="#e5e7eb" />
-    <PolarAngleAxis dataKey="stat" stroke="#374151" />
-    <PolarRadiusAxis angle={30} domain={[0, 5]} stroke="#9ca3af" />
-    <Radar
-      name={player.name}
-      dataKey={player.name}
-      stroke="#facc15"
-      fill="#facc15"
-      fillOpacity={0.5}
-    />
-    {comparePlayer && (
-      <Radar
-        name={comparePlayer.name}
-        dataKey={comparePlayer.name}
-        stroke="#3b82f6"
-        fill="#3b82f6"
-        fillOpacity={0.5}
-      />
-    )}
-  </RadarChart>
-</ResponsiveContainer>
+                  <RadarChart data={compareChartData()}>
+                    <PolarGrid stroke="#e5e7eb" />
+                    <PolarAngleAxis dataKey="stat" stroke="#374151" />
+                    <PolarRadiusAxis angle={30} domain={[0, maxCompareValue()]} stroke="#9ca3af" />
+                    <Radar
+                      name={player.name}
+                      dataKey={player.name}
+                      stroke="#facc15"
+                      fill="#facc15"
+                      fillOpacity={0.5}
+                    />
+                    <Radar
+                      name={comparePlayer.name}
+                      dataKey={comparePlayer.name}
+                      stroke="#3b82f6"
+                      fill="#3b82f6"
+                      fillOpacity={0.5}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
               </div>
             )}
           </div>
