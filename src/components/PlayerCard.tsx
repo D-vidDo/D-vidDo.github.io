@@ -43,7 +43,7 @@ interface Player {
 
 interface PlayerCardProps {
   player: Player;
-  allPlayers?: Player[];
+  allPlayers?: Player[]; // 🆕 optional for comparison
   sortKey?: string;
 }
 
@@ -79,14 +79,6 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
       [player.name]: player.stats[stat] || 0,
       [comparePlayer.name]: comparePlayer.stats[stat] || 0,
     }));
-  };
-
-  const maxCompareValue = () => {
-    const values = [
-      ...Object.values(player.stats || {}),
-      ...(comparePlayer ? Object.values(comparePlayer.stats || {}) : []),
-    ];
-    return values.length ? Math.max(...values) : 5;
   };
 
   return (
@@ -167,10 +159,11 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
               <div className="text-xs text-muted-foreground">Games</div>
             </div>
           </div>
-
           {player.games_played > 0 && (
             <div className="mt-3 pt-3 border-t text-center">
-              <div className="text-sm text-muted-foreground">Average per game:</div>
+              <div className="text-sm text-muted-foreground">
+                Average per game:
+              </div>
               <div
                 className={`text-lg font-semibold ${
                   player.plus_minus / player.games_played > 0
@@ -185,8 +178,13 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
               </div>
             </div>
           )}
-
           <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+            {sortKey === "Overall Rating" && (
+              <div className="col-span-2 flex justify-between items-center bg-yellow-100 rounded px-2 py-1 font-bold">
+                <span className="font-medium">Overall Rating</span>
+                <span className="text-primary">{overallRating}</span>
+              </div>
+            )}
             {Object.entries(player.stats || {}).map(([stat, value]) => (
               <div
                 key={stat}
@@ -202,9 +200,10 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
         </CardContent>
       </Card>
 
-      {/* PLAYER MODAL */}
+      {/* MODAL */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl p-0 overflow-hidden">
+          {/* HEADER */}
           <div className="flex flex-col sm:flex-row items-center sm:items-start bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-white p-6 sm:p-8">
             <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-slate-600 flex items-center justify-center">
               {player.imageUrl ? (
@@ -227,43 +226,76 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                 )}
               </div>
               <div className="mt-3 text-lg font-semibold">
-                Overall Rating: <span className="text-yellow-400">{overallRating}</span>
+                Overall Rating:{" "}
+                <span className="text-yellow-400">{overallRating}</span>
               </div>
 
               {/* Compare Button */}
               {allPlayers.filter(p => p.id !== player.id).length > 0 && (
-                <button
-                  className="mt-4 px-4 py-2 bg-yellow-400 text-black font-semibold rounded hover:bg-yellow-500 transition"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCompareOpen(true);
-                  }}
-                >
-                  Compare Stats
-                </button>
-              )}
+  <button
+    className="mt-4 px-4 py-2 bg-yellow-400 text-black font-semibold rounded hover:bg-yellow-500 transition"
+    onClick={(e) => {
+      e.stopPropagation(); // prevent modal close
+      setCompareOpen(true);
+    }}
+  >
+    Compare Stats
+  </button>
+)}
+
             </div>
           </div>
 
-          {/* Radar Chart */}
-          {chartData.length > 0 && (
-            <div className="h-64 mb-6">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={chartData}>
-                  <PolarGrid stroke="#e5e7eb" />
-                  <PolarAngleAxis dataKey="stat" stroke="#374151" />
-                  <PolarRadiusAxis angle={30} domain={[0, 5]} stroke="#9ca3af" />
-                  <Radar
-                    name="Stats"
-                    dataKey="value"
-                    stroke="#facc15"
-                    fill="#facc15"
-                    fillOpacity={0.5}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
+          {/* BODY SECTION */}
+          <div className="p-6 sm:p-8">
+            {/* Radar Chart */}
+            {chartData.length > 0 && (
+              <div className="h-64 mb-6">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={chartData}>
+                    <PolarGrid stroke="#e5e7eb" />
+                    <PolarAngleAxis dataKey="stat" stroke="#374151" />
+                    <PolarRadiusAxis angle={30} domain={[0, 5]} stroke="#9ca3af" />
+                    <Radar
+                      name="Stats"
+                      dataKey="value"
+                      stroke="#facc15"
+                      fill="#facc15"
+                      fillOpacity={0.5}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* EXTENDED ATTRIBUTES */}
+            <div className="grid grid-cols-2 gap-y-3 text-sm">
+              {player.height && (
+                <div className="flex justify-between border-b pb-1">
+                  <span className="font-medium text-muted-foreground">Height</span>
+                  <span>{player.height}</span>
+                </div>
+              )}
+              {player.dominant_hand && (
+                <div className="flex justify-between border-b pb-1">
+                  <span className="font-medium text-muted-foreground">Dominant Hand</span>
+                  <span>{player.dominant_hand}</span>
+                </div>
+              )}
+              {player.reach && (
+                <div className="flex justify-between border-b pb-1">
+                  <span className="font-medium text-muted-foreground">Reach</span>
+                  <span>{player.reach}</span>
+                </div>
+              )}
+              {player.vertical_jump && (
+                <div className="flex justify-between border-b pb-1">
+                  <span className="font-medium text-muted-foreground">Vertical Jump</span>
+                  <span>{player.vertical_jump}</span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -280,22 +312,23 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
           <div className="p-6 sm:p-8">
             <div className="mb-4">
               <select
-                className="border px-3 py-2 rounded w-full"
-                onChange={(e) => {
-                  const selected = allPlayers.find((p) => p.id === e.target.value) || null;
-                  setComparePlayer(selected);
-                  if (selected) setCompareOpen(false); // Auto-close modal
-                }}
-              >
-                <option value="">Select a player to compare</option>
-                {allPlayers
-                  .filter((p) => p.id !== player.id)
-                  .map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-              </select>
+  className="border px-3 py-2 rounded w-full"
+  onChange={(e) => {
+    const selected = allPlayers.find((p) => p.id === e.target.value) || null;
+    setComparePlayer(selected);
+    if (selected) setCompareOpen(false); // <-- close modal after selection
+  }}
+>
+  <option value="">Select a player to compare</option>
+  {allPlayers
+    .filter((p) => p.id !== player.id)
+    .map((p) => (
+      <option key={p.id} value={p.id}>
+        {p.name}
+      </option>
+    ))}
+</select>
+
             </div>
 
             {comparePlayer && compareChartData().length > 0 && (
@@ -304,7 +337,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                   <RadarChart data={compareChartData()}>
                     <PolarGrid stroke="#e5e7eb" />
                     <PolarAngleAxis dataKey="stat" stroke="#374151" />
-                    <PolarRadiusAxis angle={30} domain={[0, maxCompareValue()]} stroke="#9ca3af" />
+                    <PolarRadiusAxis angle={30} domain={[0, 5]} stroke="#9ca3af" />
                     <Radar
                       name={player.name}
                       dataKey={player.name}
