@@ -231,14 +231,18 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
               </div>
 
               {/* Compare Button */}
-              {allPlayers.length > 1 && (
-                <button
-                  className="mt-4 px-4 py-2 bg-yellow-400 text-black font-semibold rounded hover:bg-yellow-500 transition"
-                  onClick={() => setCompareOpen(true)}
-                >
-                  Compare Stats
-                </button>
-              )}
+              {allPlayers.filter(p => p.id !== player.id).length > 0 && (
+  <button
+    className="mt-4 px-4 py-2 bg-yellow-400 text-black font-semibold rounded hover:bg-yellow-500 transition"
+    onClick={(e) => {
+      e.stopPropagation(); // prevent modal close
+      setCompareOpen(true);
+    }}
+  >
+    Compare Stats
+  </button>
+)}
+
             </div>
           </div>
 
