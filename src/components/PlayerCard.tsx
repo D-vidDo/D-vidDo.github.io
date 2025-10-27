@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import {
   Card,
@@ -5,8 +6,8 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Award } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Award, User } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+} from "recharts";
 
 interface Player {
   id: string;
@@ -26,11 +35,11 @@ interface Player {
   title: string;
   team: string;
   stats: Record<string, number>;
-  // 👇 Add extended stats
   height?: string;
   dominant_hand?: string;
   reach?: string;
   vertical_jump?: string;
+  imageUrl?: string; // 🆕 optional profile picture
 }
 
 interface PlayerCardProps {
@@ -52,9 +61,15 @@ const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
     100
   );
 
+  // Convert stats to recharts-friendly format
+  const chartData = Object.entries(player.stats || {}).map(([key, value]) => ({
+    stat: key,
+    value,
+  }));
+
   return (
     <>
-      {/* CARD */}
+      {/* PLAYER CARD */}
       <Card
         onClick={() => setOpen(true)}
         className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 cursor-pointer"
@@ -150,68 +165,91 @@ const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
               </div>
             </div>
           )}
-
-          <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-            {sortKey === "Overall Rating" && (
-              <div className="col-span-2 flex justify-between items-center bg-yellow-100 rounded px-2 py-1 font-bold">
-                <span className="font-medium">Overall Rating</span>
-                <span className="text-primary">{overallRating}</span>
-              </div>
-            )}
-            {Object.entries(player.stats || {}).map(([stat, value]) => (
-              <div
-                key={stat}
-                className={`flex justify-between items-center rounded px-2 py-1 ${
-                  sortKey === stat ? "bg-yellow-100 font-bold" : "bg-muted/30"
-                }`}
-              >
-                <span className="font-medium capitalize">{stat}</span>
-                <span className="text-primary">{value}</span>
-              </div>
-            ))}
-          </div>
         </CardContent>
       </Card>
 
       {/* MODAL */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{player.name}</DialogTitle>
-            <DialogDescription>
-              Player details and extended stats
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden">
+          {/* HEADER SECTION */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-start bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-white p-6 sm:p-8">
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-slate-600 flex items-center justify-center">
+              {player.imageUrl ? (
+                <AvatarImage src={player.imageUrl} alt={player.name} />
+              ) : (
+                <User className="w-16 h-16 text-slate-300" />
+              )}
+            </div>
 
-          <div className="grid grid-cols-2 gap-4 text-sm mt-2">
-            {player.height && (
-              <div className="flex justify-between">
-                <span className="font-medium text-muted-foreground">Height</span>
-                <span>{player.height}</span>
-              </div>
-            )}
-            {player.dominant_hand && (
-              <div className="flex justify-between">
-                <span className="font-medium text-muted-foreground">
-                  Dominant Hand
+            <div className="mt-4 sm:mt-0 sm:ml-8 flex flex-col text-center sm:text-left">
+              <h1 className="text-3xl font-bold">{player.name}</h1>
+              {player.title && (
+                <span className="mt-1 inline-block px-3 py-1 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-sm font-semibold shadow">
+                  {player.title}
                 </span>
-                <span>{player.dominant_hand}</span>
+              )}
+              <div className="mt-2 text-sm text-slate-300">
+                {player.primary_position}
+                {player.secondary_position && (
+                  <span> / {player.secondary_position}</span>
+                )}
+              </div>
+              <div className="mt-3 text-lg font-semibold">
+                Overall Rating:{" "}
+                <span className="text-yellow-400">{overallRating}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* BODY SECTION */}
+          <div className="p-6 sm:p-8">
+            {/* STATS CHART */}
+            {chartData.length > 0 && (
+              <div className="h-64 mb-6">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={chartData}>
+                    <PolarGrid stroke="#e5e7eb" />
+                    <PolarAngleAxis dataKey="stat" stroke="#374151" />
+                    <PolarRadiusAxis angle={30} domain={[0, 10]} stroke="#9ca3af" />
+                    <Radar
+                      name="Stats"
+                      dataKey="value"
+                      stroke="#facc15"
+                      fill="#facc15"
+                      fillOpacity={0.5}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
               </div>
             )}
-            {player.reach && (
-              <div className="flex justify-between">
-                <span className="font-medium text-muted-foreground">Reach</span>
-                <span>{player.reach}</span>
-              </div>
-            )}
-            {player.vertical_jump && (
-              <div className="flex justify-between">
-                <span className="font-medium text-muted-foreground">
-                  Vertical Jump
-                </span>
-                <span>{player.vertical_jump}</span>
-              </div>
-            )}
+
+            {/* EXTENDED ATTRIBUTES */}
+            <div className="grid grid-cols-2 gap-y-3 text-sm">
+              {player.height && (
+                <div className="flex justify-between border-b pb-1">
+                  <span className="font-medium text-muted-foreground">Height</span>
+                  <span>{player.height}</span>
+                </div>
+              )}
+              {player.dominant_hand && (
+                <div className="flex justify-between border-b pb-1">
+                  <span className="font-medium text-muted-foreground">Dominant Hand</span>
+                  <span>{player.dominant_hand}</span>
+                </div>
+              )}
+              {player.reach && (
+                <div className="flex justify-between border-b pb-1">
+                  <span className="font-medium text-muted-foreground">Reach</span>
+                  <span>{player.reach}</span>
+                </div>
+              )}
+              {player.vertical_jump && (
+                <div className="flex justify-between border-b pb-1">
+                  <span className="font-medium text-muted-foreground">Vertical Jump</span>
+                  <span>{player.vertical_jump}</span>
+                </div>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
