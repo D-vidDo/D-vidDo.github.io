@@ -30,11 +30,6 @@ const Rules = () => {
                 <li>3 teams, each with 6 players</li>
                 <li>Each team must have at least 2 female players</li>
                 <li>1 captain per team, who remains on their team for the entire season</li>
-                <ul className="list-inside ml-4">
-                  <li>Vincent</li>
-                  <li>Justin</li>
-                  <li>Jaydon</li>
-                </ul>
               </ul>
             </section>
 
