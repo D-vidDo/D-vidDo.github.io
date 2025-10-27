@@ -213,35 +213,38 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     background: "transparent", // make DialogContent itself transparent
   }}
 >
-{/* MODAL HEADER */}
+{/* HEADER */}
 <div
-  className="flex flex-col sm:flex-row items-center sm:items-start text-white p-6 sm:p-8 relative rounded-t-lg"
+  className={`relative text-white p-6 sm:p-8 rounded-t-lg`}
   style={{
-    background: `linear-gradient(90deg, ${player.color} 0%, ${player.color2} 100%)`,
+    background: player.color
+      ? `linear-gradient(90deg, ${player.color} 0%, ${player.color2} 100%)`
+      : undefined,
   }}
 >
-{/* PLAYER IMAGE */}
-<div
-  className="relative w-32 h-40 sm:w-40 sm:h-52 overflow-hidden bg-transparent flex items-end justify-center"
-  // items-end pushes the content to the bottom
->
-  {player.imageUrl ? (
-    <Avatar className="w-full h-full">
-      <AvatarImage src={player.imageUrl} alt={player.name} className="object-cover" />
-    </Avatar>
-  ) : (
-    <div className="w-full h-full bg-slate-600 flex items-center justify-center">
-      <User className="w-16 h-16 text-white/80" />
-    </div>
-  )}
-</div>
-
-
-
+  {/* PLAYER IMAGE */}
+  <div
+    className="absolute bottom-0 left-6 sm:left-8 w-32 h-40 sm:w-40 sm:h-52 overflow-hidden bg-transparent"
+    style={{ transform: "translateY(25%)" }} // push image down 25% to overlap modal content
+  >
+    {player.imageUrl ? (
+      <Avatar className="w-full h-full">
+        <AvatarImage
+          src={player.imageUrl}
+          alt={player.name}
+          className="object-cover"
+        />
+      </Avatar>
+    ) : (
+      <div className="w-full h-full bg-slate-600 flex items-center justify-center">
+        <User className="w-16 h-16 text-white/80" />
+      </div>
+    )}
+  </div>
 
   {/* PLAYER INFO */}
-  <div className="mt-4 sm:mt-0 sm:ml-8 flex-1 flex flex-col text-center sm:text-left">
-    <div className="flex flex-wrap items-center gap-2">
+  <div className="ml-0 sm:ml-48 flex flex-col sm:flex-row sm:items-start gap-4">
+    <div className="flex-1 flex flex-col justify-center">
       <h1 className="text-3xl font-bold">{player.name}</h1>
 
       {/* TITLE BADGE */}
