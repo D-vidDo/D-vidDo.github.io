@@ -229,7 +229,7 @@ const PlayerCard = ({ player, sortKey }: PlayerCardProps) => {
                   <RadarChart data={chartData}>
                     <PolarGrid stroke="#e5e7eb" />
                     <PolarAngleAxis dataKey="stat" stroke="#374151" />
-                    <PolarRadiusAxis angle={30} domain={[0, 10]} stroke="#9ca3af" />
+                    <PolarRadiusAxis angle={30} domain={[0, 5]} stroke="#9ca3af" />
                     <Radar
                       name="Stats"
                       dataKey="value"
