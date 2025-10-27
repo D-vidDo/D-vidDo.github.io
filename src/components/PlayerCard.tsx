@@ -220,14 +220,24 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     background: `linear-gradient(90deg, ${player.color} 0%, ${player.color2} 100%)`,
   }}
 >
-  {/* PLAYER IMAGE */}
-  <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
-    {player.imageUrl ? (
-      <AvatarImage src={player.imageUrl} alt={player.name} />
-    ) : (
+{/* PLAYER IMAGE */}
+<Avatar className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-transparent flex items-center justify-center">
+  {player.imageUrl ? (
+    <AvatarImage
+      src={player.imageUrl}
+      alt={player.name}
+      onError={(e) => {
+        // hide broken image and show fallback
+        (e.currentTarget as HTMLImageElement).style.display = "none";
+      }}
+    />
+  ) : (
+    <AvatarFallback>
       <User className="w-16 h-16 text-white/80" />
-    )}
-  </div>
+    </AvatarFallback>
+  )}
+</Avatar>
+
 
   {/* PLAYER INFO */}
   <div className="mt-4 sm:mt-0 sm:ml-8 flex-1 flex flex-col text-center sm:text-left">
