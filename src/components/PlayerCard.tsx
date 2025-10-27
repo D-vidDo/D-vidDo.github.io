@@ -205,7 +205,14 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
 
       {/* MODAL */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-3xl p-0 overflow-hidden">
+        <DialogContent
+  open={open}
+  onOpenChange={setOpen}
+  className="max-w-3xl p-0 overflow-hidden"
+  style={{
+    background: "transparent", // make DialogContent itself transparent
+  }}
+>
 {/* MODAL HEADER */}
 <div
   className="flex flex-col sm:flex-row items-center sm:items-start text-white p-6 sm:p-8 relative rounded-t-lg"
