@@ -203,7 +203,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
       {/* MODAL */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl p-0 overflow-hidden">
-       {/* HEADER */}
+    {/* HEADER */}
 <div className="flex flex-col sm:flex-row items-center sm:items-start bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-white p-6 sm:p-8 relative">
   {/* PLAYER IMAGE */}
   <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-slate-600 flex items-center justify-center">
@@ -216,23 +216,28 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
 
   {/* PLAYER INFO */}
   <div className="mt-4 sm:mt-0 sm:ml-8 flex-1 flex flex-col text-center sm:text-left">
-    <div className="mt-2 flex flex-wrap items-center gap-2">
-  <h1 className="text-3xl font-bold">{player.name}</h1>
-  {player.title && (
-    <span className="inline-block px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-sm font-semibold shadow max-w-max">
-      {player.title}
-    </span>
-  )}
-</div>
+    {/* NAME + TITLE */}
+    <div className="flex flex-wrap items-center gap-2">
+      <h1 className="text-3xl font-bold">{player.name}</h1>
+      {player.title && (
+        <span className="inline-block px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-sm font-semibold shadow max-w-max">
+          {player.title}
+        </span>
+      )}
+    </div>
+
+    {/* POSITION */}
     <div className="mt-2 text-sm text-slate-300">
       {player.primary_position}
       {player.secondary_position && <span> / {player.secondary_position}</span>}
     </div>
+
+    {/* OVERALL RATING */}
     <div className="mt-3 text-lg font-semibold">
       Overall Rating: <span className="text-yellow-400">{overallRating}</span>
     </div>
 
-    {/* Compare Button */}
+    {/* COMPARE BUTTON */}
     {allPlayers.filter((p) => p.id !== player.id).length > 0 && (
       <button
         className="mt-4 px-4 py-2 bg-yellow-400 text-black font-semibold rounded hover:bg-yellow-500 transition"
@@ -246,14 +251,15 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     )}
   </div>
 
-  {/* EXTENDED STATS - TOP RIGHT */}
-  <div className="absolute top-6 right-6 flex flex-col gap-1 text-sm text-slate-200 text-right">
+  {/* TOP-RIGHT STATS BOX */}
+  <div className="absolute top-6 right-6 flex flex-col gap-1 text-sm text-slate-200 bg-slate-800/70 backdrop-blur-md rounded-lg px-3 py-2 text-right shadow-md">
     {player.height && <div><span className="font-medium">Height:</span> {player.height}</div>}
     {player.dominant_hand && <div><span className="font-medium">Hand:</span> {player.dominant_hand}</div>}
     {player.reach && <div><span className="font-medium">Reach:</span> {player.reach}</div>}
     {player.vertical_jump && <div><span className="font-medium">Vertical:</span> {player.vertical_jump}</div>}
   </div>
 </div>
+
 
           {/* BODY SECTION */}
           <div className="p-6 sm:p-8">
