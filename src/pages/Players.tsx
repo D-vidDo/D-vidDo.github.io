@@ -23,18 +23,17 @@ const statKeys = [
   "Stamina",
   "Vertical Jump",
   "Communication",
-  
 ];
 
 const statAbbreviations: Record<string, string> = {
-  "Hustle": "HUS",
-  "Hitting": "HIT",
-  "Serving": "SER",
-  "Setting": "SET",
-  "Stamina": "STA",
-  "Blocking": "BLO",
-  "Receiving": "REC",
-  "Communication": "COM",
+  Hustle: "HUS",
+  Hitting: "HIT",
+  Serving: "SER",
+  Setting: "SET",
+  Stamina: "STA",
+  Blocking: "BLO",
+  Receiving: "REC",
+  Communication: "COM",
   "Vertical Jump": "VER",
   "Defensive Positioning": "DEF",
   "+/-": "+/-",
@@ -67,7 +66,11 @@ const Players = () => {
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [selectedTeam, setSelectedTeam] = useState("All");
 
-  const { data: allPlayers = [], isLoading: loadingPlayers, error: errorPlayers } = useQuery({
+  const {
+    data: allPlayers = [],
+    isLoading: loadingPlayers,
+    error: errorPlayers,
+  } = useQuery({
     queryKey: ["players"],
     queryFn: fetchPlayers,
   });
@@ -80,7 +83,8 @@ const Players = () => {
   const teams = ["All", ...allTeams.map((t: any) => t.name)];
 
   const playersWithTeam = allPlayers.map((p) => {
-    const team = allTeams.find((t: any) => (t.player_ids || []).includes(p.id)) || null;
+    const team =
+      allTeams.find((t: any) => (t.player_ids || []).includes(p.id)) || null;
     return {
       ...p,
       team: team ? team.name : "Free Agent",
@@ -90,18 +94,25 @@ const Players = () => {
   });
 
   const filteredPlayers = playersWithTeam.filter((player) => {
-    const matchesSearch = player.name.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = player.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
     const matchesTeam = selectedTeam === "All" || player.team === selectedTeam;
     return matchesSearch && matchesTeam;
   });
 
   const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-    if (sortKey === "Overall Rating") return getOverallRating(b) - getOverallRating(a);
+    if (sortKey === "Overall Rating")
+      return getOverallRating(b) - getOverallRating(a);
     if (sortKey === "+/-") return (b.plus_minus || 0) - (a.plus_minus || 0);
-    if (sortKey === "Games Played") return (b.games_played || 0) - (a.games_played || 0);
+    if (sortKey === "Games Played")
+      return (b.games_played || 0) - (a.games_played || 0);
     return (b.stats?.[sortKey] || 0) - (a.stats?.[sortKey] || 0);
   });
 
+  {
+    /* LIST VIEW */
+  }
   const renderListView = () => (
     <div className="max-w-5xl mx-auto divide-y divide-border bg-card rounded-lg shadow-card overflow-hidden">
       {sortedPlayers.map((player) => {
@@ -125,7 +136,9 @@ const Players = () => {
               </Avatar>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-semibold text-card-foreground truncate">{player.name}</h3>
+                  <h3 className="font-semibold text-card-foreground truncate">
+                    {player.name}
+                  </h3>
                   {player.title && (
                     <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm">
                       {player.title}
@@ -163,31 +176,47 @@ const Players = () => {
                   {player.plus_minus > 0 ? "+" : ""}
                   {player.plus_minus}
                 </div>
-                <div className="text-[10px] text-muted-foreground">{statAbbreviations["+/-"]}</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {statAbbreviations["+/-"]}
+                </div>
               </div>
               <div>
-                <div className="font-bold text-primary">{player.games_played}</div>
-                <div className="text-[10px] text-muted-foreground">{statAbbreviations["Games Played"]}</div>
+                <div className="font-bold text-primary">
+                  {player.games_played}
+                </div>
+                <div className="text-[10px] text-muted-foreground">
+                  {statAbbreviations["Games Played"]}
+                </div>
               </div>
               <div>
-                <Badge variant="secondary" className="text-sm px-2 py-1 font-bold">
+                <Badge
+                  variant="secondary"
+                  className="text-sm px-2 py-1 font-bold"
+                >
                   {overall}
                 </Badge>
-                <div className="text-[10px] text-muted-foreground">{statAbbreviations["Overall Rating"]}</div>
+                <div className="text-[10px] text-muted-foreground">
+                  {statAbbreviations["Overall Rating"]}
+                </div>
               </div>
               {statKeys
-  .filter((s) => !["Overall Rating", "+/-", "Games Played"].includes(s))
-  .map((stat) => (
-    <div key={stat}>
-      <div
-        className={`font-bold ${stat === sortKey ? "text-yellow-400" : "text-primary"}`}
-      >
-        {player.stats?.[stat]}
-      </div>
-      <div className="text-[10px] text-muted-foreground">{statAbbreviations[stat]}</div>
-    </div>
-  ))}
-
+                .filter(
+                  (s) => !["Overall Rating", "+/-", "Games Played"].includes(s)
+                )
+                .map((stat) => (
+                  <div key={stat}>
+                    <div
+                      className={`font-bold ${
+                        stat === sortKey ? "text-yellow-400" : "text-primary"
+                      }`}
+                    >
+                      {player.stats?.[stat]}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {statAbbreviations[stat]}
+                    </div>
+                  </div>
+                ))}
             </div>
           </div>
         );
@@ -238,32 +267,33 @@ const Players = () => {
           </Button>
         </div>
 
-{/* Team Dropdown */}
-<select
-  value={selectedTeam}
-  onChange={(e) => setSelectedTeam(e.target.value)}
-  className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition font-sans"
->
-  {teams.map((team) => (
-    <option key={team} value={team}>
-      {team}
-    </option>
-  ))}
-</select>
+        {/* Team Dropdown */}
+        <select
+          value={selectedTeam}
+          onChange={(e) => setSelectedTeam(e.target.value)}
+          className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition font-sans"
+        >
+          {/* Free Agent option */}
+          <option value="Free Agent">Free Agent</option>
+          {teams.map((team) => (
+            <option key={team} value={team}>
+              {team}
+            </option>
+          ))}
+        </select>
 
-{/* Sort Dropdown */}
-<select
-  value={sortKey}
-  onChange={(e) => setSortKey(e.target.value)}
-  className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition font-sans"
->
-  {statKeys.map((key) => (
-    <option key={key} value={key}>
-      {key}
-    </option>
-  ))}
-</select>
-
+        {/* Sort Dropdown */}
+        <select
+          value={sortKey}
+          onChange={(e) => setSortKey(e.target.value)}
+          className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition font-sans"
+        >
+          {statKeys.map((key) => (
+            <option key={key} value={key}>
+              {key}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Player Display */}
@@ -271,11 +301,18 @@ const Players = () => {
         {loadingPlayers ? (
           <p className="text-center">Loading players...</p>
         ) : errorPlayers ? (
-          <p className="text-center text-red-500">Error: {errorPlayers.message}</p>
+          <p className="text-center text-red-500">
+            Error: {errorPlayers.message}
+          </p>
         ) : viewMode === "card" ? (
           <div className="grid md:grid-cols-3 gap-6">
             {sortedPlayers.map((player) => (
-              <PlayerCard key={player.id} player={player} sortKey={sortKey} allPlayers={sortedPlayers} />
+              <PlayerCard
+                key={player.id}
+                player={player}
+                sortKey={sortKey}
+                allPlayers={sortedPlayers}
+              />
             ))}
           </div>
         ) : (
