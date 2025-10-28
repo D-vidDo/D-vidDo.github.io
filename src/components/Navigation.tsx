@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Trophy, Upload } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,7 +16,6 @@ const Navigation = () => {
     { path: "/players", label: "Players" },
     { path: "/stats", label: "Stats" },
     { path: "/trades", label: "Trades" },
-  
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -49,16 +49,14 @@ const Navigation = () => {
               </Link>
             ))}
 
-            
-<Link to="/vod">
-    <Button
-      variant="ghost"
-      className="text-white hover:bg-white hover:text-black border border-white"
-    >
-      Upload VOD
-    </Button>
-  </Link>
-
+            <Link to="/vod">
+              <Button
+                variant="ghost"
+                className="text-white hover:bg-white hover:text-black border border-white"
+              >
+                Upload VOD
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -67,7 +65,11 @@ const Navigation = () => {
             className="md:hidden text-primary-foreground hover:bg-primary-foreground/20"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
           </Button>
         </div>
 
@@ -76,7 +78,11 @@ const Navigation = () => {
           <div className="md:hidden pb-4">
             <div className="flex flex-col space-y-2">
               {navItems.map((item) => (
-                <Link key={item.path} to={item.path} onClick={() => setIsMenuOpen(false)}>
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsMenuOpen(false)}
+                >
                   <Button
                     variant={isActive(item.path) ? "secondary" : "ghost"}
                     className={`w-full justify-start text-primary-foreground hover:bg-primary-foreground/20 ${
@@ -87,22 +93,21 @@ const Navigation = () => {
                   </Button>
                 </Link>
               ))}
-              
-<Link to="/vod" onClick={() => setIsMenuOpen(false)}>
-  <Button
-    variant="ghost"
-    className="w-full flex items-center justify-center text-white hover:bg-white hover:text-black border border-white"
-  >
-    <Upload className="h-4 w-4 mr-2" />
-    Upload VOD
-  </Button>
-</Link>
 
-
+              <Link to="/vod" onClick={() => setIsMenuOpen(false)}>
+                <Button
+                  variant="ghost"
+                  className="w-full flex items-center justify-center text-white hover:bg-white hover:text-black border border-white"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload VOD
+                </Button>
+              </Link>
             </div>
           </div>
         )}
       </div>
+      <ThemeToggle />
     </nav>
   );
 };
