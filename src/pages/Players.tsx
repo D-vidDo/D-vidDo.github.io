@@ -274,7 +274,7 @@ const Players = () => {
           className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition font-sans"
         >
           {/* Free Agent option */}
-          <option value="Free Agent">Free Agent</option>
+          <option value="Free Agent">Free Agents</option>
           {teams.map((team) => (
             <option key={team} value={team}>
               {team}
