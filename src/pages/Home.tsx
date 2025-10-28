@@ -217,7 +217,7 @@ const Home = () => {
               <div className="text-2xl font-bold text-card-foreground">
                 {teams.reduce((sum, team) => sum + team.player_ids.length, 0)}
               </div>
-              <div className="text-sm text-muted-foreground">Players</div>
+              <div className="text-sm text-muted-foreground">Active Players</div>
             </CardContent>
           </Card>
           <Card className="bg-gradient-stats shadow-card">
