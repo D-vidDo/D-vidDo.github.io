@@ -41,12 +41,14 @@ interface Player {
   reach?: string;
   vertical_jump?: string;
   imageUrl?: string;
+  jersey_number?: string;
 }
 
 interface PlayerCardProps {
   player: Player;
   allPlayers?: Player[];
   sortKey?: string;
+  allTeams?: Player[];
 }
 
 
@@ -224,15 +226,28 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
 >
 {/* PLAYER IMAGE */}
 <div
-  className="relative w-32 h-40 sm:w-40 sm:h-52 overflow-hidden bg-transparent flex items-end justify-center"
-  // items-end pushes the content to the bottom
+  className="relative w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 overflow-hidden bg-transparent"
+  onClick={(e) => e.stopPropagation()}
 >
+  {/* JERSEY NUMBER OVERLAY */}
+  {player.jersey_number && (
+    <div
+      className="absolute top-2 left-2 z-10 flex items-center justify-center w-10 h-10 rounded-lg bg-black/60 text-white font-bold text-xl shadow-md"
+      style={{
+        border: `2px solid ${player.color2 || "#fff"}`,
+        backdropFilter: "blur(4px)",
+      }}
+    >
+      {player.jersey_number}
+    </div>
+  )}
+
   {player.imageUrl ? (
-    <Avatar className="w-full h-full">
-      <AvatarImage src={player.imageUrl} alt={player.name} className="object-cover" />
+    <Avatar className="w-full h-full rounded-none">
+      <AvatarImage src={player.imageUrl} alt={player.name} />
     </Avatar>
   ) : (
-    <div className="w-full h-full bg-slate-600 flex items-center justify-center">
+    <div className="w-full h-full flex items-center justify-center bg-gray-500">
       <User className="w-16 h-16 text-white/80" />
     </div>
   )}
@@ -264,7 +279,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   <span
     className="inline-block px-2 py-0.5 rounded text-sm font-semibold text-white max-w-max"
     style={{
-      backgroundImage: `linear-gradient(90deg, #858585 0%, #858585 100%)`,
+      backgroundImage: `linear-gradient(90deg, ${player.color || "#858585"} 0%, ${player.color2 || "#858585"} 100%)`,
       WebkitBackgroundClip: "text",
       WebkitTextFillColor: "white", // ensures text stays visible
       backgroundClip: "padding-box", // ensures gradient fills the badge
