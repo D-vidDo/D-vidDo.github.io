@@ -275,7 +275,7 @@ const Players = () => {
         ) : viewMode === "card" ? (
           <div className="grid md:grid-cols-3 gap-6">
             {sortedPlayers.map((player) => (
-              <PlayerCard key={player.id} player={player} sortKey={sortKey} allPlayers={sortedPlayers} allTeams={teams} />
+              <PlayerCard key={player.id} player={player} sortKey={sortKey} allPlayers={sortedPlayers} />
             ))}
           </div>
         ) : (

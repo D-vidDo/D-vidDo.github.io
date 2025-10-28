@@ -42,15 +42,6 @@ interface Player {
   vertical_jump?: string;
   imageUrl?: string;
   jersey_number?: string;
-  player_ids: string;
-}
-
-interface Team {
-  team_id: number;
-  team_name: string;
-  color: string;
-  color2: string;
-  player_ids?: string[]; 
 }
 
 interface PlayerCardProps {
@@ -61,15 +52,10 @@ interface PlayerCardProps {
 }
 
 
-
-
-const PlayerCard = ({ player, allPlayers = [], sortKey, allTeams = [] }: PlayerCardProps) => {
+const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   const [open, setOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [comparePlayer, setComparePlayer] = useState<Player | null>(null);
-
-const team = allTeams?.find(t => t.player_ids === player.id)
-
 
   const initials = player.name
     .split(" ")
