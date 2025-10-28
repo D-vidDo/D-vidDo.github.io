@@ -92,7 +92,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
           className="pb-3 relative rounded-t-lg flex items-start"
           style={{
             background: `linear-gradient(0deg, #ffffff
-             90%, ${player.teamColor || "#ffffff"} 100%)`,
+             85%, ${player.teamColor || "#ffffff"} 100%)`,
           }}
         >
           <div className="flex items-start space-x-3">
