@@ -265,53 +265,58 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
               )}
             </div>
 
-            {/* PLAYER INFO */}
-            <div className="mt-4 sm:mt-0 sm:ml-8 flex-1 flex flex-col text-center sm:text-left">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-3xl font-bold">{player.name}</h1>
+{/* PLAYER INFO */}
+<div className="mt-4 sm:mt-0 sm:ml-8 flex-1 flex flex-col text-center sm:text-left">
+  {/* PLAYER NAME */}
+  <h1 className="text-3xl font-bold">{player.name}</h1>
 
-                {/* TITLE BADGE */}
-                {player.title && (
-                  <span
-                    className="inline-block px-2 py-0.5 rounded text-sm font-semibold shadow max-w-max"
-                    style={{
-                      background: `linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)`,
-                      color: "#fff",
-                    }}
-                  >
-                    {player.title}
-                  </span>
-                )}
+  {/* BADGES BELOW NAME */}
+  <div className="flex flex-wrap items-center gap-2 mt-2">
+    {/* TITLE BADGE */}
+    {player.title && (
+      <span
+        className="inline-block px-2 py-0.5 rounded text-sm font-semibold shadow max-w-max"
+        style={{
+          background: `linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)`,
+          color: "#fff",
+        }}
+      >
+        {player.title}
+      </span>
+    )}
 
-                {/* TEAM BADGE */}
-                {player.team && (
-                  <span
-                    className="inline-block px-2 py-0.5 rounded text-sm font-semibold text-white max-w-max"
-                    style={{
-                      backgroundImage: `linear-gradient(90deg, ${
-                        player.teamColor || "#858585"
-                      } 0%, ${player.teamColor || "#858585"} 100%)`,
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "white", // ensures text stays visible
-                      backgroundClip: "padding-box", // ensures gradient fills the badge
-                    }}
-                  >
-                    {player.team}
-                  </span>
-                )}
-              </div>
+    {/* TEAM BADGE */}
+    {player.team && (
+      <span
+        className="inline-block px-2 py-0.5 rounded text-sm font-semibold text-white max-w-max"
+        style={{
+          backgroundImage: `linear-gradient(90deg, ${
+            player.teamColor || "#858585"
+          } 0%, ${player.teamColor2 || "#858585"} 100%)`,
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "white",
+          backgroundClip: "padding-box",
+        }}
+      >
+        {player.team}
+      </span>
+    )}
+  </div>
 
-              <div className="mt-2 text-sm text-slate-200">
-                {player.primary_position}
-                {player.secondary_position && (
-                  <span> / {player.secondary_position}</span>
-                )}
-              </div>
+  {/* PLAYER POSITIONS BELOW BADGES */}
+  <div className="mt-2 text-sm text-slate-200">
+    {player.primary_position}
+    {player.secondary_position && (
+      <span> / {player.secondary_position}</span>
+    )}
+  </div>
 
-              <div className="mt-3 text-lg font-semibold">
-                Overall Rating:{" "}
-                <span className="text-yellow-400">{overallRating}</span>
-              </div>
+  {/* OVERALL RATING */}
+  <div className="mt-3 text-lg font-semibold">
+    Overall Rating: <span className="text-yellow-400">{overallRating}</span>
+  </div>
+</div>
+
 
               {/* Compare Button
     {allPlayers.filter((p) => p.id !== player.id).length > 0 && (
