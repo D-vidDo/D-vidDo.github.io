@@ -37,6 +37,14 @@ All colors MUST be HSL for consistency and theming support.
       hsl(210 90% 70%) 50%,
       hsl(230 80% 60%) 100%
     );
+    .nav-gradient {
+      background: linear-gradient(
+        315deg,
+        /* 135 + 180 flipped */ hsl(195 100% 85%) 0%,
+        hsl(210 90% 70%) 50%,
+        hsl(230 80% 60%) 100%
+      );
+    }
 
     --gradient-card: linear-gradient(
       145deg,
