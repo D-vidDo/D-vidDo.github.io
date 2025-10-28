@@ -148,19 +148,19 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                 )}
               </p>
             </div>
+          </div>
 
-            {/* CARD OVERALL RATING */}
-            <div className="flex flex-col items-center ml-auto">
-              <span className="text-[10px] font-semibold text-muted-foreground mb-0.5">
-                OVR
-              </span>
-              <Badge
-                variant="secondary"
-                className="text-base px-2 py-1 font-bold"
-              >
-                {overallRating}
-              </Badge>
-            </div>
+          {/* CARD OVERALL RATING */}
+          <div className="flex flex-col items-center ml-auto">
+            <span className="text-[10px] font-semibold text-muted-foreground mb-0.5">
+              OVR
+            </span>
+            <Badge
+              variant="secondary"
+              className="text-base px-2 py-1 font-bold"
+            >
+              {overallRating}
+            </Badge>
           </div>
         </CardHeader>
 
