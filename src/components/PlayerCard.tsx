@@ -210,16 +210,15 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
         <DialogContent
   open={open}
   onOpenChange={setOpen}
-  className="max-w-3xl p-0 overflow-hidden"
+  className="max-w-3xl p-0 overflow-hidden bg-[#1f1f1f] rounded-lg"
   style={{
     background: "transparent", // make DialogContent itself transparent
   }}
   onClick={() => setOpen(false)} // clicking header closes modal
-
 >
 {/* MODAL HEADER */}
 <div
-  className="flex flex-col sm:flex-row items-center sm:items-start text-white p-6 sm:p-8 relative rounded-t-lg"
+  className="flex flex-col sm:flex-row items-center sm:items-start text-white p-6 sm:p-8"
   style={{
     background: `linear-gradient(90deg, ${player.teamColor} 0%, ${player.teamColor2} 100%)`,
   }}
@@ -279,7 +278,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   <span
     className="inline-block px-2 py-0.5 rounded text-sm font-semibold text-white max-w-max"
     style={{
-      backgroundImage: `linear-gradient(90deg, ${player.teamColor || "#858585"} 0%, ${player.teamColor2 || "#858585"} 100%)`,
+      backgroundImage: `linear-gradient(90deg, ${player.teamColor || "#858585"} 0%, ${player.teamColor || "#858585"} 100%)`,
       WebkitBackgroundClip: "text",
       WebkitTextFillColor: "white", // ensures text stays visible
       backgroundClip: "padding-box", // ensures gradient fills the badge
@@ -325,7 +324,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
 
 
           {/* BODY SECTION */}
-          <div className="p-6 sm:p-8 bg-[#1f1f1f]">
+          <div className="p-6 sm:p-8">
             {/* Radar Chart */}
             {chartData.length > 0 && (
               <div className="h-64 mb-6">
