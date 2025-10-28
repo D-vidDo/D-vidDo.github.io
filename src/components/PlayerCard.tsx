@@ -86,16 +86,16 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
       {/* PLAYER CARD */}
       <Card
         onClick={() => setOpen(true)}
-        className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 cursor-pointer"
+        className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 cursor-pointer overflow-hidden"
       >
         <CardHeader
-          className="pb-3"
+          className="pb-3 rounded-t-lg flex items-center justify-between"
           style={{
             background: `linear-gradient(90deg, #ffffff
-             0%, ${player.teamColor || "#ffffff"} 100%)`,
+             70%, ${player.teamColor || "#ffffff"} 100%)`,
           }}
         >
-          <div className="flex items-center space-x-3 relative">
+          <div className="flex items-center space-x-3">
             {/* CARD AVATAR */}
             <Avatar className="h-12 w-12">
               {player.imageUrl ? (
