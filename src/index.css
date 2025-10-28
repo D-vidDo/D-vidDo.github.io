@@ -49,6 +49,11 @@ All colors MUST be HSL for consistency and theming support.
       hsl(215 85% 55% / 0.1) 100%
     );
 
+    /* nav bg flip */
+    nav * {
+      transform: scaleY(-1);
+    }
+
     /* Elegant shadows */
     --shadow-card: 0 4px 20px hsl(220 15% 8% / 0.08);
     --shadow-hover: 0 8px 30px hsl(220 15% 8% / 0.12);
