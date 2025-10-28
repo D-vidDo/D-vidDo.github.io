@@ -121,9 +121,13 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                     {player.title}
                   </span>
                 )}
-                {player.isCaptain && (
-                  <Badge variant="default" className="text-xs">
-                    <Award className="h-3 w-3 mr-1" /> Captain
+                {/* Free Agent Badge */}
+                {player.team === "Free Agent" && (
+                  <Badge
+                    variant="default"
+                    className="text-xs flex items-center gap-1"
+                  >
+                    FA
                   </Badge>
                 )}
               </div>
