@@ -90,11 +90,27 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
       >
         <CardHeader className="pb-3">
           <div className="flex items-center space-x-3 relative">
-            <Avatar className="h-12 w-12">
+            {/* <Avatar className="h-12 w-12">
               <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
                 {initials}
               </AvatarFallback>
-            </Avatar>
+            </Avatar> */}
+
+            {player.imageUrl ? (
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={player.imageUrl} alt={player.name} />
+                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                {initials}
+              </AvatarFallback>
+                </Avatar>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-500">
+                  <User className="w-16 h-16 text-white/80" />
+                </div>
+              )}
+
+
+
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-card-foreground">
