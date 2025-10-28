@@ -8,36 +8,26 @@ All colors MUST be HSL for consistency and theming support.
 
 @layer base {
   :root {
-    --background: #f6f8fa; /* 220 20% 97% */
-    --foreground: #0f1214; /* 220 15% 8% */
-
-    --card: #ffffff; /* 0 0% 100% */
-    --card-foreground: #0f1214; /* 220 15% 8% */
-
-    --popover: #ffffff; /* 0 0% 100% */
-    --popover-foreground: #0f1214; /* 220 15% 8% */
-
-    /* Volleyball-inspired orange primary */
-    --primary: #f58020; /* 25 95% 53% */
-    --primary-foreground: #ffffff; /* 0 0% 100% */
-    --primary-glow: #ffa54c; /* 25 100% 65% */
-
-    /* Cool blue secondary */
-    --secondary: #2d83e5; /* 215 85% 55% */
-    --secondary-foreground: #ffffff; /* 0 0% 100% */
-
-    --muted: #f1f3f6; /* 220 15% 95% */
-    --muted-foreground: #647285; /* 220 10% 45% */
-
-    --accent: #2d83e5; /* 215 85% 55% */
-    --accent-foreground: #ffffff; /* 0 0% 100% */
-
-    --destructive: #e64545; /* 0 84% 60% */
-    --destructive-foreground: #ffffff; /* 0 0% 100% */
-
-    --border: #d6dae0; /* 220 15% 88% */
-    --input: #d6dae0; /* 220 15% 88% */
-    --ring: #f58020; /* 25 95% 53% */
+    --background: 220 20% 97%;
+    --foreground: 220 15% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 8%; /* Volleyball-inspired orange primary */
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 25 100% 65%; /* Cool blue secondary */
+    --secondary: 215 85% 55%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 15% 95%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 215 85% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 25 95% 53%;
 
     /* Sports website gradients */
     /* --gradient-hero: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(215 85% 55%) 100%); */
@@ -68,9 +58,9 @@ All colors MUST be HSL for consistency and theming support.
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     * {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
+      transition: background-color 0.3s ease, color 0.3s ease,
+        border-color 0.3s ease;
+    }
 
     --radius: 0.5rem;
 
