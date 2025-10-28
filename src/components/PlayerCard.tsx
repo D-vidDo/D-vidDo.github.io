@@ -292,7 +292,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                     style={{
                       backgroundImage: `linear-gradient(90deg, ${
                         player.teamColor || "#858585"
-                      } 0%, ${player.teamColor2 || "#858585"} 100%)`,
+                      } 0%, ${player.teamColor || "#858585"} 100%)`,
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "white",
                       backgroundClip: "padding-box",
