@@ -212,6 +212,8 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   style={{
     background: "transparent", // make DialogContent itself transparent
   }}
+  onClick={() => setOpen(false)} // clicking header closes modal
+
 >
 {/* MODAL HEADER */}
 <div
@@ -262,7 +264,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   <span
     className="inline-block px-2 py-0.5 rounded text-sm font-semibold text-white max-w-max"
     style={{
-      backgroundImage: `linear-gradient(90deg, ${player.color} 0%, ${player.color2} 100%)`,
+      backgroundImage: `linear-gradient(90deg, #858585 0%, #858585 100%)`,
       WebkitBackgroundClip: "text",
       WebkitTextFillColor: "white", // ensures text stays visible
       backgroundClip: "padding-box", // ensures gradient fills the badge
@@ -282,7 +284,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
       Overall Rating: <span className="text-yellow-400">{overallRating}</span>
     </div>
 
-    {/* Compare Button */}
+    {/* Compare Button
     {allPlayers.filter((p) => p.id !== player.id).length > 0 && (
       <button
         className="mt-4 px-4 py-2 bg-yellow-400 text-black font-semibold rounded hover:bg-yellow-500 transition"
@@ -293,7 +295,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
       >
         Compare Stats
       </button>
-    )}
+    )} */}
   </div>
 
   {/* TOP-RIGHT STATS */}
