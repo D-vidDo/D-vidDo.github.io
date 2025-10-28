@@ -125,7 +125,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                 {player.team === "Free Agent" && (
                   <Badge
                     variant="default"
-                    className="text-xs flex items-center gap-1"
+                    className="text-sm font-semibold px-2 py-0.5 rounded text-white shadow-sm"
                   >
                     FA
                   </Badge>
