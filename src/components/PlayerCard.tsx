@@ -89,7 +89,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
         className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 cursor-pointer overflow-hidden"
       >
         <CardHeader
-          className="pb-3 rounded-t-lg flex items-center justify-between"
+          className="pb-3 rounded-t-lg flex items-center"
           style={{
             background: `linear-gradient(90deg, #ffffff
              70%, ${player.teamColor || "#ffffff"} 100%)`,
