@@ -91,7 +91,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
         <CardHeader
           className="pb-3 rounded-t-lg flex items-center"
           style={{
-            background: `linear-gradient(90deg, #ffffff
+            background: `linear-gradient(30deg, #ffffff
              90%, ${player.teamColor || "#ffffff"} 100%)`,
           }}
         >
