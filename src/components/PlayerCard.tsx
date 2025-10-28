@@ -323,7 +323,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   <PolarRadiusAxis
     angle={30}
     domain={[0, 6]}
-    
+    ticks={[1, 3, 5 ]}
     stroke="#9ca3af"
     tick={{ fontFamily: 'Inter, sans-serif', fontSize: 10, fill: '#e5e7eb' }}
   />
