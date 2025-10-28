@@ -92,10 +92,10 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
           className="pb-3 rounded-t-lg flex items-center"
           style={{
             background: `linear-gradient(90deg, #ffffff
-             70%, ${player.teamColor || "#ffffff"} 100%)`,
+             90%, ${player.teamColor || "#ffffff"} 100%)`,
           }}
         >
-          <div className="flex items-center space-x-3">
+          <div className="flex items-start space-x-3">
             {/* CARD AVATAR */}
             <Avatar className="h-12 w-12">
               {player.imageUrl ? (
@@ -115,7 +115,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
             {/* CARD TITLE */}
 
             <div className="flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-2">
                 <h3 className="font-semibold text-card-foreground">
                   {player.name}
                 </h3>
@@ -150,7 +150,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
             </div>
 
             {/* CARD OVERALL RATING */}
-            <div className="absolute top-0 right-0 flex flex-col items-center">
+            <div className="flex flex-col items-center ml-auto">
               <span className="text-[10px] font-semibold text-muted-foreground mb-0.5">
                 OVR
               </span>
