@@ -62,6 +62,7 @@ const fetchTeams = async () => {
 
 const Players = () => {
   const [sortKey, setSortKey] = useState("+/-");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [selectedTeam, setSelectedTeam] = useState("All");
@@ -273,13 +274,14 @@ const Players = () => {
           onChange={(e) => setSelectedTeam(e.target.value)}
           className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary transition font-sans"
         >
-          {/* Free Agent option */}
-          <option value="Free Agent">Free Agents</option>
+          {/* Team select option */}
           {teams.map((team) => (
             <option key={team} value={team}>
               {team}
             </option>
           ))}
+          {/* Free Agent option */}
+          <option value="Free Agent">Free Agents</option>
         </select>
 
         {/* Sort Dropdown */}
@@ -294,6 +296,15 @@ const Players = () => {
             </option>
           ))}
         </select>
+        {/* Asc/Desc Button */}
+        <button
+          onClick={() =>
+            setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+          }
+          className="border border-border rounded px-3 py-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+        >
+          {sortOrder === "asc" ? "↑ Asc" : "↓ Desc"}
+        </button>
       </div>
 
       {/* Player Display */}
