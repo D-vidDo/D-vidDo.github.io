@@ -88,14 +88,15 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
         onClick={() => setOpen(true)}
         className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 cursor-pointer"
       >
-        <CardHeader className="pb-3">
+        <CardHeader
+          className="pb-3"
+          style={{
+            background: `linear-gradient(90deg, #ffffff
+             0%, ${player.teamColor || "#ffffff"} 100%)`,
+          }}
+        >
           <div className="flex items-center space-x-3 relative">
-            {/* <Avatar className="h-12 w-12">
-              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                {initials}
-              </AvatarFallback>
-            </Avatar> */}
-
+            {/* CARD AVATAR */}
             <Avatar className="h-12 w-12">
               {player.imageUrl ? (
                 <>
@@ -110,6 +111,8 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                 </AvatarFallback>
               )}
             </Avatar>
+
+            {/* CARD TITLE */}
 
             <div className="flex-1">
               <div className="flex items-center gap-2">
@@ -134,6 +137,8 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                   </Badge>
                 )}
               </div>
+
+              {/* CARD POSITIONS */}
               <p className="text-sm text-muted-foreground">
                 {player.primary_position}
                 {player.secondary_position && (
@@ -144,6 +149,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
               </p>
             </div>
 
+            {/* CARD OVERALL RATING */}
             <div className="absolute top-0 right-0 flex flex-col items-center">
               <span className="text-[10px] font-semibold text-muted-foreground mb-0.5">
                 OVR
