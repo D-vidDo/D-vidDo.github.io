@@ -107,7 +107,6 @@ const Navigation = () => {
           </div>
         )}
       </div>
-      <ThemeToggle />
     </nav>
   );
 };
