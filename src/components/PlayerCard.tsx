@@ -33,8 +33,8 @@ interface Player {
   isCaptain?: boolean;
   title: string;
   team: string;
-  color: string;
-  color2: string;
+  teamColor: string;
+  teamColor2: string;
   stats: Record<string, number>;
   height?: string;
   dominant_hand?: string;
@@ -221,7 +221,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
 <div
   className="flex flex-col sm:flex-row items-center sm:items-start text-white p-6 sm:p-8 relative rounded-t-lg"
   style={{
-    background: `linear-gradient(90deg, ${player.color} 0%, ${player.color2} 100%)`,
+    background: `linear-gradient(90deg, ${player.teamColor} 0%, ${player.teamColor2} 100%)`,
   }}
 >
 {/* PLAYER IMAGE */}
@@ -234,11 +234,11 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     <div
       className="absolute top-2 left-2 z-10 flex items-center justify-center w-10 h-10 rounded-lg bg-black/60 text-white font-bold text-xl shadow-md"
       style={{
-        border: `2px solid ${player.color2 || "#fff"}`,
+        border: `2px solid ${player.teamColor2 || "#fff"}`,
         backdropFilter: "blur(4px)",
       }}
     >
-      {player.jersey_number}
+      #{player.jersey_number}
     </div>
   )}
 
@@ -279,7 +279,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   <span
     className="inline-block px-2 py-0.5 rounded text-sm font-semibold text-white max-w-max"
     style={{
-      backgroundImage: `linear-gradient(90deg, ${player.color || "#858585"} 0%, ${player.color2 || "#858585"} 100%)`,
+      backgroundImage: `linear-gradient(90deg, ${player.teamColor || "#858585"} 0%, ${player.teamColor2 || "#858585"} 100%)`,
       WebkitBackgroundClip: "text",
       WebkitTextFillColor: "white", // ensures text stays visible
       backgroundClip: "padding-box", // ensures gradient fills the badge
