@@ -8,51 +8,45 @@ All colors MUST be HSL for consistency and theming support.
 
 @layer base {
   :root {
+    --background: #f6f8fa; /* 220 20% 97% */
+    --foreground: #0f1214; /* 220 15% 8% */
 
+    --card: #ffffff; /* 0 0% 100% */
+    --card-foreground: #0f1214; /* 220 15% 8% */
 
-    --background: #f7faff; /* light frosted background */
-    --foreground: #0a0d12; /* deep navy-charcoal text */
+    --popover: #ffffff; /* 0 0% 100% */
+    --popover-foreground: #0f1214; /* 220 15% 8% */
 
-    --card: #ffffff;
-    --card-foreground: #0a0d12;
+    /* Volleyball-inspired orange primary */
+    --primary: #f58020; /* 25 95% 53% */
+    --primary-foreground: #ffffff; /* 0 0% 100% */
+    --primary-glow: #ffa54c; /* 25 100% 65% */
 
-    --popover: #ffffff;
-    --popover-foreground: #0a0d12;
+    /* Cool blue secondary */
+    --secondary: #2d83e5; /* 215 85% 55% */
+    --secondary-foreground: #ffffff; /* 0 0% 100% */
 
-    /* Liquid Glass Primary — cool aqua with glow */
-    --primary: #7fdcff; /* from hsl(195 100% 75%) */
-    --primary-foreground: #ffffff;
-    --primary-glow: #b5eaff; /* from hsl(195 100% 85%) */
+    --muted: #f1f3f6; /* 220 15% 95% */
+    --muted-foreground: #647285; /* 220 10% 45% */
 
-    /* Secondary — deeper icy blue accent */
-    --secondary: #4a90e2; /* from hsl(210 90% 70%) */
-    --secondary-foreground: #ffffff;
+    --accent: #2d83e5; /* 215 85% 55% */
+    --accent-foreground: #ffffff; /* 0 0% 100% */
 
-    /* Muted neutrals for glass-like transparency */
-    --muted: #eef3f9; /* from hsl(210 25% 94%) */
-    --muted-foreground: #60738c; /* from hsl(210 15% 46%) */
+    --destructive: #e64545; /* 0 84% 60% */
+    --destructive-foreground: #ffffff; /* 0 0% 100% */
 
-    --accent: #4a90e2;
-    --accent-foreground: #ffffff;
-
-    --destructive: #e64545;
-    --destructive-foreground: #ffffff;
-
-    /* Subtle frosted borders and highlights */
-    --border: #d8e4f2; /* from hsl(210 30% 88%) */
-    --input: #d8e4f2;
-    --ring: #7fdcff; /* same as primary */
+    --border: #d6dae0; /* 220 15% 88% */
+    --input: #d6dae0; /* 220 15% 88% */
+    --ring: #f58020; /* 25 95% 53% */
 
     /* Sports website gradients */
     /* --gradient-hero: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(215 85% 55%) 100%); */
-    /* --gradient-hero: linear-gradient(135deg, hsl(190 95% 65%) 0%, hsl(210 100% 75%) 40%, hsl(230 100% 90%) 100%);  */
     --gradient-hero: linear-gradient(
       135deg,
       hsl(195 100% 85%) 0%,
       hsl(210 90% 70%) 50%,
       hsl(230 80% 60%) 100%
     );
-    /* --gradient-hero: linear-gradient(135deg, hsl(200 90% 60%) 0%, hsl(180 95% 70%) 50%, hsl(220 100% 85%) 100%); 1 */
 
     --gradient-card: linear-gradient(
       145deg,
