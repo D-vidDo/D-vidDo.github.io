@@ -322,9 +322,8 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   />
   <PolarRadiusAxis
     angle={30}
-    domain={[0, 5]}
-    ticks={[1, 2, 3, 4, 5]}
-    tickFormatter={(t) => (t === 3 ? '3' : '')}
+    domain={[0, 6]}
+    ticks={[1, 2, 3, 4, 5, 6]}
     stroke="#9ca3af"
     tick={{ fontFamily: 'Inter, sans-serif', fontSize: 10, fill: '#e5e7eb' }}
   />
