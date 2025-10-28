@@ -96,20 +96,20 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
               </AvatarFallback>
             </Avatar> */}
 
-            {player.imageUrl ? (
-                <Avatar className="h-12 w-12">
+            <Avatar className="h-12 w-12">
+              {player.imageUrl ? (
+                <>
                   <AvatarImage src={player.imageUrl} alt={player.name} />
                   <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                {initials}
-              </AvatarFallback>
-                </Avatar>
+                    {initials}
+                  </AvatarFallback>
+                </>
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-500">
-                  <User className="w-16 h-16 text-white/80" />
-                </div>
+                <AvatarFallback className="bg-gray-500 text-white font-semibold flex items-center justify-center">
+                  {initials}
+                </AvatarFallback>
               )}
-
-
+            </Avatar>
 
             <div className="flex-1">
               <div className="flex items-center gap-2">
@@ -222,9 +222,11 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
           open={open}
           onOpenChange={setOpen}
           className="max-w-3xl p-0 overflow-hidden bg-[#1f1f1f] rounded-lg"
-          style={{
-            // background: "transparent", // make DialogContent itself transparent
-          }}
+          style={
+            {
+              // background: "transparent", // make DialogContent itself transparent
+            }
+          }
           onClick={() => setOpen(false)} // clicking header closes modal
         >
           {/* MODAL HEADER */}
