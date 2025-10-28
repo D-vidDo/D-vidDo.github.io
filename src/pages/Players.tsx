@@ -62,7 +62,7 @@ const fetchTeams = async () => {
 
 const Players = () => {
   const [sortKey, setSortKey] = useState("+/-");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [selectedTeam, setSelectedTeam] = useState("All");
