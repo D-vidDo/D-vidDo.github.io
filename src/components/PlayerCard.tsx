@@ -126,6 +126,9 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                   <Badge
                     variant="default"
                     className="text-sm font-semibold px-2 py-0.5 rounded text-white shadow-sm"
+                    style={{
+                      backgroundColor: "#6b7280", // Tailwind gray-500
+                    }}
                   >
                     FA
                   </Badge>
