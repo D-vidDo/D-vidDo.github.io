@@ -89,7 +89,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
         className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 cursor-pointer overflow-hidden"
       >
         <CardHeader
-          className="pb-3 rounded-t-lg flex items-start"
+          className="pb-3 relative rounded-t-lg flex items-start"
           style={{
             background: `linear-gradient(45deg, #ffffff
              90%, ${player.teamColor || "#ffffff"} 100%)`,
@@ -148,8 +148,8 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                 )}
               </p>
             </div>
-
-            {/* CARD OVERALL RATING */}
+          </div>
+          {/* CARD OVERALL RATING */}
             <div className="flex flex-col items-center absolute top-3 right-3">
               <span className="text-[10px] font-semibold text-muted-foreground mb-0.5">
                 OVR
@@ -161,7 +161,6 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                 {overallRating}
               </Badge>
             </div>
-          </div>
         </CardHeader>
 
         <CardContent>
