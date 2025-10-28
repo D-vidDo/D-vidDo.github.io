@@ -102,14 +102,23 @@ const Players = () => {
     return matchesSearch && matchesTeam;
   });
 
-  const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-    if (sortKey === "Overall Rating")
-      return getOverallRating(b) - getOverallRating(a);
-    if (sortKey === "+/-") return (b.plus_minus || 0) - (a.plus_minus || 0);
-    if (sortKey === "Games Played")
-      return (b.games_played || 0) - (a.games_played || 0);
-    return (b.stats?.[sortKey] || 0) - (a.stats?.[sortKey] || 0);
-  });
+  /* SORT FUNCTION */
+const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+  let diff = 0;
+
+  if (sortKey === "Overall Rating") {
+    diff = getOverallRating(b) - getOverallRating(a);
+  } else if (sortKey === "+/-") {
+    diff = (b.plus_minus || 0) - (a.plus_minus || 0);
+  } else if (sortKey === "Games Played") {
+    diff = (b.games_played || 0) - (a.games_played || 0);
+  } else {
+    diff = (b.stats?.[sortKey] || 0) - (a.stats?.[sortKey] || 0);
+  }
+
+  return sortOrder === "asc" ? -diff : diff; // flip for ascending
+});
+
 
   {
     /* LIST VIEW */
