@@ -1,9 +1,5 @@
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Award, User } from "lucide-react";
@@ -50,7 +46,6 @@ interface PlayerCardProps {
   sortKey?: string;
   allTeams?: Player[];
 }
-
 
 const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
   const [open, setOpen] = useState(false);
@@ -208,97 +203,99 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
       {/* MODAL */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
-  open={open}
-  onOpenChange={setOpen}
-  className="max-w-3xl p-0 overflow-hidden bg-[#1f1f1f] rounded-lg"
-  style={{
-    background: "transparent", // make DialogContent itself transparent
-  }}
-  onClick={() => setOpen(false)} // clicking header closes modal
->
-{/* MODAL HEADER */}
-<div
-  className="flex flex-col sm:flex-row items-center sm:items-start text-white p-6 sm:p-8"
-  style={{
-    background: `linear-gradient(90deg, ${player.teamColor} 0%, ${player.teamColor2} 100%)`,
-  }}
->
-{/* PLAYER IMAGE */}
-<div
-  className="relative w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 overflow-hidden bg-transparent"
-  onClick={(e) => e.stopPropagation()}
->
-  {/* JERSEY NUMBER OVERLAY */}
-  {player.jersey_number && (
-    <div
-      className="absolute top-2 left-2 z-10 flex items-center justify-center w-10 h-10 rounded-lg bg-black/60 text-white font-bold text-xl shadow-md"
-      style={{
-        border: `2px solid ${player.teamColor2 || "#fff"}`,
-        backdropFilter: "blur(4px)",
-      }}
-    >
-      #{player.jersey_number}
-    </div>
-  )}
-
-  {player.imageUrl ? (
-    <Avatar className="w-full h-full rounded-none">
-      <AvatarImage src={player.imageUrl} alt={player.name} />
-    </Avatar>
-  ) : (
-    <div className="w-full h-full flex items-center justify-center bg-gray-500">
-      <User className="w-16 h-16 text-white/80" />
-    </div>
-  )}
-</div>
-
-
-
-
-  {/* PLAYER INFO */}
-  <div className="mt-4 sm:mt-0 sm:ml-8 flex-1 flex flex-col text-center sm:text-left">
-    <div className="flex flex-wrap items-center gap-2">
-      <h1 className="text-3xl font-bold">{player.name}</h1>
-
-      {/* TITLE BADGE */}
-      {player.title && (
-        <span
-          className="inline-block px-2 py-0.5 rounded text-sm font-semibold shadow max-w-max"
+          open={open}
+          onOpenChange={setOpen}
+          className="max-w-3xl p-0 overflow-hidden bg-[#1f1f1f] rounded-lg"
           style={{
-            background: `linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)`,
-            color: "#fff",
+            // background: "transparent", // make DialogContent itself transparent
           }}
+          onClick={() => setOpen(false)} // clicking header closes modal
         >
-          {player.title}
-        </span>
-      )}
+          {/* MODAL HEADER */}
+          <div
+            className="flex flex-col sm:flex-row items-center sm:items-start text-white p-6 sm:p-8"
+            style={{
+              background: `linear-gradient(90deg, ${player.teamColor} 0%, ${player.teamColor2} 100%)`,
+            }}
+          >
+            {/* PLAYER IMAGE */}
+            <div
+              className="relative w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 overflow-hidden bg-transparent"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* JERSEY NUMBER OVERLAY */}
+              {player.jersey_number && (
+                <div
+                  className="absolute top-2 left-2 z-10 flex items-center justify-center w-10 h-10 rounded-lg bg-black/60 text-white font-bold text-xl shadow-md"
+                  style={{
+                    border: `2px solid ${player.teamColor2 || "#fff"}`,
+                    backdropFilter: "blur(4px)",
+                  }}
+                >
+                  #{player.jersey_number}
+                </div>
+              )}
 
-      {/* TEAM BADGE */}
-      {player.team && (
-  <span
-    className="inline-block px-2 py-0.5 rounded text-sm font-semibold text-white max-w-max"
-    style={{
-      backgroundImage: `linear-gradient(90deg, ${player.teamColor || "#858585"} 0%, ${player.teamColor || "#858585"} 100%)`,
-      WebkitBackgroundClip: "text",
-      WebkitTextFillColor: "white", // ensures text stays visible
-      backgroundClip: "padding-box", // ensures gradient fills the badge
-    }}
-  >
-    {player.team}
-  </span>
-)}
-    </div>
+              {player.imageUrl ? (
+                <Avatar className="w-full h-full rounded-none">
+                  <AvatarImage src={player.imageUrl} alt={player.name} />
+                </Avatar>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-500">
+                  <User className="w-16 h-16 text-white/80" />
+                </div>
+              )}
+            </div>
 
-    <div className="mt-2 text-sm text-slate-200">
-      {player.primary_position}
-      {player.secondary_position && <span> / {player.secondary_position}</span>}
-    </div>
+            {/* PLAYER INFO */}
+            <div className="mt-4 sm:mt-0 sm:ml-8 flex-1 flex flex-col text-center sm:text-left">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-3xl font-bold">{player.name}</h1>
 
-    <div className="mt-3 text-lg font-semibold">
-      Overall Rating: <span className="text-yellow-400">{overallRating}</span>
-    </div>
+                {/* TITLE BADGE */}
+                {player.title && (
+                  <span
+                    className="inline-block px-2 py-0.5 rounded text-sm font-semibold shadow max-w-max"
+                    style={{
+                      background: `linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)`,
+                      color: "#fff",
+                    }}
+                  >
+                    {player.title}
+                  </span>
+                )}
 
-    {/* Compare Button
+                {/* TEAM BADGE */}
+                {player.team && (
+                  <span
+                    className="inline-block px-2 py-0.5 rounded text-sm font-semibold text-white max-w-max"
+                    style={{
+                      backgroundImage: `linear-gradient(90deg, ${
+                        player.teamColor || "#858585"
+                      } 0%, ${player.teamColor || "#858585"} 100%)`,
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "white", // ensures text stays visible
+                      backgroundClip: "padding-box", // ensures gradient fills the badge
+                    }}
+                  >
+                    {player.team}
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-2 text-sm text-slate-200">
+                {player.primary_position}
+                {player.secondary_position && (
+                  <span> / {player.secondary_position}</span>
+                )}
+              </div>
+
+              <div className="mt-3 text-lg font-semibold">
+                Overall Rating:{" "}
+                <span className="text-yellow-400">{overallRating}</span>
+              </div>
+
+              {/* Compare Button
     {allPlayers.filter((p) => p.id !== player.id).length > 0 && (
       <button
         className="mt-4 px-4 py-2 bg-yellow-400 text-black font-semibold rounded hover:bg-yellow-500 transition"
@@ -310,18 +307,34 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
         Compare Stats
       </button>
     )} */}
-  </div>
+            </div>
 
-  {/* TOP-RIGHT STATS */}
-  <div className="absolute top-6 right-6 flex flex-col gap-1 text-sm text-slate-200 bg-slate-800/70 backdrop-blur-md rounded-lg px-3 py-2 text-right shadow-md">
-    {player.height && <div><span className="font-medium">Height:</span> {player.height}</div>}
-    {player.dominant_hand && <div><span className="font-medium">Hits:</span> {player.dominant_hand}</div>}
-    {player.reach && <div><span className="font-medium">Reach:</span> {player.reach}</div>}
-    {player.vertical_jump && <div><span className="font-medium">Vertical:</span> {player.vertical_jump}</div>}
-  </div>
-</div>
-
-
+            {/* TOP-RIGHT STATS */}
+            <div className="absolute top-6 right-6 flex flex-col gap-1 text-sm text-slate-200 bg-slate-800/70 backdrop-blur-md rounded-lg px-3 py-2 text-right shadow-md">
+              {player.height && (
+                <div>
+                  <span className="font-medium">Height:</span> {player.height}
+                </div>
+              )}
+              {player.dominant_hand && (
+                <div>
+                  <span className="font-medium">Hits:</span>{" "}
+                  {player.dominant_hand}
+                </div>
+              )}
+              {player.reach && (
+                <div>
+                  <span className="font-medium">Reach:</span> {player.reach}
+                </div>
+              )}
+              {player.vertical_jump && (
+                <div>
+                  <span className="font-medium">Vertical:</span>{" "}
+                  {player.vertical_jump}
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* BODY SECTION */}
           <div className="p-6 sm:p-8">
@@ -330,28 +343,35 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
               <div className="h-64 mb-6">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={chartData}>
-  <PolarGrid stroke="#e5e7eb" />
-  <PolarAngleAxis
-    dataKey="stat"
-    stroke="#374151"
-    tick={{ fontFamily: 'Inter, sans-serif', fontSize: 12, fill: '#f3f4f6' }}
-  />
-  <PolarRadiusAxis
-    angle={30}
-    domain={[0, 6]}
-    ticks={[1, 3, 5 ]}
-    stroke="#9ca3af"
-    tick={{ fontFamily: 'Inter, sans-serif', fontSize: 10, fill: '#e5e7eb' }}
-  />
-  <Radar
-    name="Stats"
-    dataKey="value"
-    stroke="#facc15"
-    fill="#facc15"
-    fillOpacity={0.5}
-  />
-</RadarChart>
-
+                    <PolarGrid stroke="#e5e7eb" />
+                    <PolarAngleAxis
+                      dataKey="stat"
+                      stroke="#374151"
+                      tick={{
+                        fontFamily: "Inter, sans-serif",
+                        fontSize: 12,
+                        fill: "#f3f4f6",
+                      }}
+                    />
+                    <PolarRadiusAxis
+                      angle={30}
+                      domain={[0, 6]}
+                      ticks={[1, 3, 5]}
+                      stroke="#9ca3af"
+                      tick={{
+                        fontFamily: "Inter, sans-serif",
+                        fontSize: 10,
+                        fill: "#e5e7eb",
+                      }}
+                    />
+                    <Radar
+                      name="Stats"
+                      dataKey="value"
+                      stroke="#facc15"
+                      fill="#facc15"
+                      fillOpacity={0.5}
+                    />
+                  </RadarChart>
                 </ResponsiveContainer>
               </div>
             )}
@@ -360,25 +380,33 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
             <div className="grid grid-cols-2 gap-y-3 text-sm">
               {player.height && (
                 <div className="flex justify-between border-b pb-1">
-                  <span className="font-medium text-muted-foreground">Height</span>
+                  <span className="font-medium text-muted-foreground">
+                    Height
+                  </span>
                   <span>{player.height}</span>
                 </div>
               )}
               {player.dominant_hand && (
                 <div className="flex justify-between border-b pb-1">
-                  <span className="font-medium text-muted-foreground">Dominant Hand</span>
+                  <span className="font-medium text-muted-foreground">
+                    Dominant Hand
+                  </span>
                   <span>{player.dominant_hand}</span>
                 </div>
               )}
               {player.reach && (
                 <div className="flex justify-between border-b pb-1">
-                  <span className="font-medium text-muted-foreground">Reach</span>
+                  <span className="font-medium text-muted-foreground">
+                    Reach
+                  </span>
                   <span>{player.reach}</span>
                 </div>
               )}
               {player.vertical_jump && (
                 <div className="flex justify-between border-b pb-1">
-                  <span className="font-medium text-muted-foreground">Vertical Jump</span>
+                  <span className="font-medium text-muted-foreground">
+                    Vertical Jump
+                  </span>
                   <span>{player.vertical_jump}</span>
                 </div>
               )}
@@ -387,7 +415,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
         </DialogContent>
       </Dialog>
 
-      {/* COMPARE MODAL */}
+      {/* COMPARE MODAL
       <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
         <DialogContent className="max-w-3xl p-0 overflow-hidden">
           <DialogHeader>
@@ -424,7 +452,11 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                   <RadarChart data={compareChartData()}>
                     <PolarGrid stroke="#e5e7eb" />
                     <PolarAngleAxis dataKey="stat" stroke="#374151" />
-                    <PolarRadiusAxis angle={30} domain={[0, 5]} stroke="#9ca3af" />
+                    <PolarRadiusAxis
+                      angle={30}
+                      domain={[0, 5]}
+                      stroke="#9ca3af"
+                    />
                     <Radar
                       name={player.name}
                       dataKey={player.name}
@@ -445,7 +477,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
             )}
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </>
   );
 };
