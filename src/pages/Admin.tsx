@@ -461,7 +461,7 @@ const AdminGameEntry = () => {
   </span>
   {standIns[player.id] && (
     <span className="truncate ml-1 text-muted-foreground">
-      ({standIns[player.id]})
+      ({allPlayers.find(p => p.id === standIns[player.id])?.name || "Unknown"})
     </span>
   )}
 </label>
@@ -644,7 +644,7 @@ const AdminGameEntry = () => {
                     key={p.id}
                     className="w-full text-left px-3 py-2 rounded hover:bg-muted/50"
                     onClick={() => {
-                      setStandIns((prev) => ({ ...prev, [currentSubPlayer]: p.name }));
+                      setStandIns((prev) => ({ ...prev, [currentSubPlayer]: p.id }));
                       setSubPlayers((prev) => [...prev, currentSubPlayer]);
                       setShowSubModal(false);
                       setCurrentSubPlayer(null);
