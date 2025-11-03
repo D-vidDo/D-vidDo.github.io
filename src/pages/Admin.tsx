@@ -26,7 +26,12 @@ const AdminGameEntry = () => {
   const [loading, setLoading] = useState(false);
 
   const [sets, setSets] = useState<
-    { set_no: number; points_for: number; points_against: number; result: "W" | "L" }[]
+    {
+      set_no: number;
+      points_for: number;
+      points_against: number;
+      result: "W" | "L";
+    }[]
   >([]);
   const [set_no, setSetNo] = useState<number>(1);
   const [set_points_for, setSetPointsFor] = useState("");
@@ -40,7 +45,9 @@ const AdminGameEntry = () => {
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
 
   // NEW: Sub/stand-in modal states
-  const [standIns, setStandIns] = useState<{ [playerId: string]: string | null }>({});
+  const [standIns, setStandIns] = useState<{
+    [playerId: string]: string | null;
+  }>({});
   const [showSubModal, setShowSubModal] = useState(false);
   const [currentSubPlayer, setCurrentSubPlayer] = useState<string | null>(null);
 
@@ -112,7 +119,9 @@ const AdminGameEntry = () => {
         const ampm = hour >= 12 ? "PM" : "AM";
         hour = hour % 12 || 12;
         const formattedTime = `${hour}:${minute} ${ampm}`;
-        const label = `${g.opponent} — ${g.date} ${formattedTime} (Court ${g.court ?? "?"})`;
+        const label = `${g.opponent} — ${g.date} ${formattedTime} (Court ${
+          g.court ?? "?"
+        })`;
 
         return {
           id: g.id.toString(),
@@ -222,7 +231,9 @@ const AdminGameEntry = () => {
         stand_ins: standIns,
       }));
 
-      const { error: setError } = await supabase.from("sets").insert(setsPayload);
+      const { error: setError } = await supabase
+        .from("sets")
+        .insert(setsPayload);
       if (setError) throw setError;
 
       // Totals
@@ -242,7 +253,11 @@ const AdminGameEntry = () => {
       });
 
       const matchResult =
-        totalWins > totalLosses ? "Win" : totalLosses > totalWins ? "Loss" : "Draw";
+        totalWins > totalLosses
+          ? "Win"
+          : totalLosses > totalWins
+          ? "Loss"
+          : "Draw";
 
       // Update players (skip subs)
       for (const player of players) {
@@ -265,6 +280,38 @@ const AdminGameEntry = () => {
           .eq("id", player.id);
 
         if (updatePlayerError) throw updatePlayerError;
+      }
+
+      // Update stand-in players' stats
+      for (const [subbedPlayerId, standInId] of Object.entries(standIns)) {
+        if (!standInId) continue;
+
+        // Load stand-in player’s current stats
+        const { data: standInData, error: standInFetchError } = await supabase
+          .from("players")
+          .select("plus_minus, games_played")
+          .eq("id", standInId)
+          .single();
+
+        if (standInFetchError) throw standInFetchError;
+
+        let updatedPlusMinus = standInData?.plus_minus ?? 0;
+        let updatedGamesPlayed = standInData?.games_played ?? 0;
+
+        sets.forEach((s) => {
+          updatedPlusMinus += s.points_for - s.points_against;
+          updatedGamesPlayed += 1;
+        });
+
+        const { error: updateStandInError } = await supabase
+          .from("players")
+          .update({
+            plus_minus: updatedPlusMinus,
+            games_played: updatedGamesPlayed,
+          })
+          .eq("id", standInId);
+
+        if (updateStandInError) throw updateStandInError;
       }
 
       // Update team totals
@@ -379,7 +426,9 @@ const AdminGameEntry = () => {
                     checked={teamId === team.team_id}
                     onChange={() => {
                       if (sets.length > 0) {
-                        alert("Please finish or clear the sets for the current game before switching.");
+                        alert(
+                          "Please finish or clear the sets for the current game before switching."
+                        );
                         return;
                       }
                       setTeamId(team.team_id);
@@ -391,7 +440,9 @@ const AdminGameEntry = () => {
                     alt={team.name}
                     className="w-16 h-16 object-contain mb-2 rounded"
                   />
-                  <span className="text-sm font-medium text-center">{team.name}</span>
+                  <span className="text-sm font-medium text-center">
+                    {team.name}
+                  </span>
                 </label>
               ))}
             </div>
@@ -407,7 +458,9 @@ const AdminGameEntry = () => {
                 value={selectedGameId}
                 onChange={(e) => {
                   if (sets.length > 0) {
-                    alert("Please finish or clear the sets for the current game before switching.");
+                    alert(
+                      "Please finish or clear the sets for the current game before switching."
+                    );
                     return;
                   }
                   setSelectedGameId(e.target.value);
@@ -437,35 +490,37 @@ const AdminGameEntry = () => {
                 const checked = subPlayers.includes(player.id);
                 return (
                   <label
-  key={player.id}
-  className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition
+                    key={player.id}
+                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition
     ${
       checked
         ? "bg-muted/60 border-primary ring-1 ring-primary/30"
         : "bg-background border-muted hover:bg-muted/40"
     }
     focus-within:ring-2 focus-within:ring-primary/60`}
->
-  <input
-    type="checkbox"
-    checked={checked}
-    onChange={() => handleSubToggle(player.id)}
-    className="h-4 w-4 rounded border-muted text-primary focus:ring-primary/60"
-  />
-  <span
-    className={`truncate ${
-      checked ? "line-through text-muted-foreground" : ""
-    }`}
-  >
-    {player.name}
-  </span>
-  {standIns[player.id] && (
-    <span className="truncate ml-1 text-muted-foreground">
-      ({allPlayers.find(p => p.id === standIns[player.id])?.name || "Unknown"})
-    </span>
-  )}
-</label>
-
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => handleSubToggle(player.id)}
+                      className="h-4 w-4 rounded border-muted text-primary focus:ring-primary/60"
+                    />
+                    <span
+                      className={`truncate ${
+                        checked ? "line-through text-muted-foreground" : ""
+                      }`}
+                    >
+                      {player.name}
+                    </span>
+                    {standIns[player.id] && (
+                      <span className="truncate ml-1 text-muted-foreground">
+                        (
+                        {allPlayers.find((p) => p.id === standIns[player.id])
+                          ?.name || "Unknown"}
+                        )
+                      </span>
+                    )}
+                  </label>
                 );
               })}
             </div>
@@ -560,9 +615,13 @@ const AdminGameEntry = () => {
                   >
                     <span className="font-medium">
                       Set {set.set_no}:{" "}
-                      <span className="text-green-700 font-semibold">{set.points_for}</span>
+                      <span className="text-green-700 font-semibold">
+                        {set.points_for}
+                      </span>
                       {" - "}
-                      <span className="text-red-700 font-semibold">{set.points_against}</span>
+                      <span className="text-red-700 font-semibold">
+                        {set.points_against}
+                      </span>
                     </span>
 
                     <div className="flex items-center gap-2">
@@ -609,7 +668,8 @@ const AdminGameEntry = () => {
           {message && (
             <div
               className={`mt-2 text-center font-semibold rounded-md px-3 py-2 ${
-                message.toLowerCase().includes("failed") || message.toLowerCase().includes("error")
+                message.toLowerCase().includes("failed") ||
+                message.toLowerCase().includes("error")
                   ? "text-red-700 bg-red-50 border border-red-200"
                   : "text-green-700 bg-green-50 border border-green-200"
               }`}
@@ -620,7 +680,7 @@ const AdminGameEntry = () => {
         </form>
       </section>
 
-       {/* Sub Modal */}
+      {/* Sub Modal */}
       {showSubModal && currentSubPlayer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md bg-background border border-border/60 rounded-xl shadow-xl p-5 sm:p-6 space-y-4">
@@ -629,7 +689,10 @@ const AdminGameEntry = () => {
               <button
                 className="w-full text-left px-3 py-2 rounded hover:bg-muted/50"
                 onClick={() => {
-                  setStandIns((prev) => ({ ...prev, [currentSubPlayer]: null }));
+                  setStandIns((prev) => ({
+                    ...prev,
+                    [currentSubPlayer]: null,
+                  }));
                   setSubPlayers((prev) => [...prev, currentSubPlayer]);
                   setShowSubModal(false);
                   setCurrentSubPlayer(null);
@@ -644,7 +707,10 @@ const AdminGameEntry = () => {
                     key={p.id}
                     className="w-full text-left px-3 py-2 rounded hover:bg-muted/50"
                     onClick={() => {
-                      setStandIns((prev) => ({ ...prev, [currentSubPlayer]: p.id }));
+                      setStandIns((prev) => ({
+                        ...prev,
+                        [currentSubPlayer]: p.id,
+                      }));
                       setSubPlayers((prev) => [...prev, currentSubPlayer]);
                       setShowSubModal(false);
                       setCurrentSubPlayer(null);
@@ -678,9 +744,11 @@ const AdminGameEntry = () => {
 
             {dupSetNos.length > 0 && (
               <div className="rounded-md border border-red-200 bg-red-50 text-red-700 p-3 text-sm">
-                The following <span className="font-semibold">set numbers</span> already exist for this
-                game: <span className="font-semibold">{dupSetNos.join(", ")}</span>. Please remove or
-                renumber these sets. You cannot submit while duplicates exist.
+                The following <span className="font-semibold">set numbers</span>{" "}
+                already exist for this game:{" "}
+                <span className="font-semibold">{dupSetNos.join(", ")}</span>.
+                Please remove or renumber these sets. You cannot submit while
+                duplicates exist.
               </div>
             )}
 
@@ -688,7 +756,8 @@ const AdminGameEntry = () => {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Game</span>
                 <span className="font-medium">
-                  {games.find((g) => g.id === selectedGameId)?.label ?? "Selected game"}
+                  {games.find((g) => g.id === selectedGameId)?.label ??
+                    "Selected game"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -702,12 +771,19 @@ const AdminGameEntry = () => {
                     const isWin = s.points_for > s.points_against;
                     const isLoss = s.points_for < s.points_against;
                     return (
-                      <li key={s.set_no} className="flex items-center justify-between text-sm">
+                      <li
+                        key={s.set_no}
+                        className="flex items-center justify-between text-sm"
+                      >
                         <span className="font-medium">
                           Set {s.set_no}:{" "}
-                          <span className="text-green-700 font-semibold">{s.points_for}</span>
+                          <span className="text-green-700 font-semibold">
+                            {s.points_for}
+                          </span>
                           {" - "}
-                          <span className="text-red-700 font-semibold">{s.points_against}</span>
+                          <span className="text-red-700 font-semibold">
+                            {s.points_against}
+                          </span>
                         </span>
                         <span
                           className={`px-2 py-0.5 text-[11px] font-bold rounded ${
