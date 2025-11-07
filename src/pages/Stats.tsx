@@ -52,17 +52,17 @@ const Stats = () => {
   // Top performers
   const topplus_minus = [...players]
     .sort((a, b) => b.plus_minus - a.plus_minus)
-    .slice(0, 18);
+    .slice(0, 20);
 
   const topAverage = [...players]
     .filter(p => p.games_played > 0)
     .sort((a, b) => (b.plus_minus / b.games_played) - (a.plus_minus / a.games_played))
-    .slice(0, 18);
+    .slice(0, 20);
 
   const topAdjusted = [...players]
     .filter(p => p.games_played > 0 || p.plus_minus !== 0)
     .sort((a, b) => adjustedPerGame(b) - adjustedPerGame(a))
-    .slice(0, 18);
+    .slice(0, 20);
 
   const tabs = [
     { id: "plus_minus", label: "Top +/-", icon: TrendingUp, data: topplus_minus },
