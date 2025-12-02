@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script src="
+https://cdn.jsdelivr.net/npm/snowfall@2.1.0/src/index.min.js
+"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NCL Fall 2025</title>
@@ -19,6 +22,14 @@
 
   <body>
     <div id="root"></div>
+    <script>new Snowfall({
+      maxSnowflakes: 75,
+      round: true,
+      minSize: 2,
+      maxSize: 5,
+      snowColor: "#fff"
+    });
+      </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
