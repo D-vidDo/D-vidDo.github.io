@@ -108,6 +108,22 @@ const StandingsTable = () => {
         let gameTies = 0;
         let pf = 0;
         let pa = 0;
+        
+        Object.values(teamMap).forEach((team) => {
+  team.games.sort((a, b) => {
+    // Sort by date first
+    const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
+    if (dateCompare !== 0) return dateCompare;
+
+    // Then opponent (alphabetically)
+    const opponentCompare = a.opponent.localeCompare(b.opponent);
+    if (opponentCompare !== 0) return opponentCompare;
+
+    // Finally set number (first set of match first)
+    return (a.sets[0]?.set_no ?? 0) - (b.sets[0]?.set_no ?? 0);
+  });
+});
+
 
         game.sets.forEach((set) => {
           pf += set.points_for;
@@ -124,13 +140,17 @@ const StandingsTable = () => {
         else if (gameLosses > gameWins) team.losses++;
         else team.ties++;
 
-        team.games.push({
-          id: game.id,
-          date: game.date,
-          opponent: game.opponent,
-          sets: game.sets,
-        });
-      });
+        // Sort sets by set number
+const sortedSets = [...game.sets].sort((a, b) => a.set_no - b.set_no);
+
+// Push sorted game
+team.games.push({
+  id: game.id,
+  date: game.date,
+  opponent: game.opponent,
+  sets: sortedSets,
+});
+
 
       setTeams(Object.values(teamMap));
     }
