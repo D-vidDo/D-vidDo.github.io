@@ -23,6 +23,8 @@ interface Game {
   date: string;
   opponent: string;
   sets: Set[];
+  time: string;
+  dateTime: Date;
 }
 
 interface Team {
@@ -131,10 +133,13 @@ const StandingsTable = () => {
         // Sort sets by set number
         const sortedSets = [...game.sets].sort((a, b) => a.set_no - b.set_no);
 
-        // Push sorted game
+        const dateTime = new Date(`${game.date}T${game.time}`);
+
         team.games.push({
           id: game.id,
-          date: game.date,
+          date: game.date, // keep original values if you want to display them
+          time: game.time,
+          dateTime, // <- new property used for sorting
           opponent: game.opponent,
           sets: sortedSets,
         });
@@ -142,16 +147,15 @@ const StandingsTable = () => {
 
       Object.values(teamMap).forEach((team) => {
         team.games.sort((a, b) => {
-          // Sort by date first
-          const dateCompare =
-            new Date(a.date).getTime() - new Date(b.date).getTime();
+          // 1. Sort by full datetime
+          const dateCompare = a.dateTime.getTime() - b.dateTime.getTime();
           if (dateCompare !== 0) return dateCompare;
 
-          // Then opponent (alphabetically)
+          // 2. Sort by opponent if same datetime
           const opponentCompare = a.opponent.localeCompare(b.opponent);
           if (opponentCompare !== 0) return opponentCompare;
 
-          // Finally set number (first set of match first)
+          // 3. Sort sets by set number
           return (a.sets[0]?.set_no ?? 0) - (b.sets[0]?.set_no ?? 0);
         });
       });
