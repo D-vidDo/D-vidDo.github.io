@@ -48,7 +48,9 @@ const AccordionContent = ({
 
   useEffect(() => {
     if (ref.current) {
-      ref.current.style.maxHeight = expanded ? ref.current.scrollHeight + "px" : "0px";
+      ref.current.style.maxHeight = expanded
+        ? ref.current.scrollHeight + "px"
+        : "0px";
     }
   }, [expanded]);
 
@@ -79,7 +81,9 @@ const StandingsTable = () => {
       const { data: teamData } = await supabase.from("teams").select("*");
       const { data: gameData } = await supabase
         .from("games")
-        .select("id, date, opponent, team_id, sets (set_no, points_for, points_against)");
+        .select(
+          "id, date, opponent, team_id, sets (set_no, points_for, points_against)"
+        );
 
       if (!teamData || !gameData) return;
 
@@ -108,22 +112,6 @@ const StandingsTable = () => {
         let gameTies = 0;
         let pf = 0;
         let pa = 0;
-        
-        Object.values(teamMap).forEach((team) => {
-  team.games.sort((a, b) => {
-    // Sort by date first
-    const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
-    if (dateCompare !== 0) return dateCompare;
-
-    // Then opponent (alphabetically)
-    const opponentCompare = a.opponent.localeCompare(b.opponent);
-    if (opponentCompare !== 0) return opponentCompare;
-
-    // Finally set number (first set of match first)
-    return (a.sets[0]?.set_no ?? 0) - (b.sets[0]?.set_no ?? 0);
-  });
-});
-
 
         game.sets.forEach((set) => {
           pf += set.points_for;
@@ -141,16 +129,32 @@ const StandingsTable = () => {
         else team.ties++;
 
         // Sort sets by set number
-const sortedSets = [...game.sets].sort((a, b) => a.set_no - b.set_no);
+        const sortedSets = [...game.sets].sort((a, b) => a.set_no - b.set_no);
 
-// Push sorted game
-team.games.push({
-  id: game.id,
-  date: game.date,
-  opponent: game.opponent,
-  sets: sortedSets,
-});
+        // Push sorted game
+        team.games.push({
+          id: game.id,
+          date: game.date,
+          opponent: game.opponent,
+          sets: sortedSets,
+        });
+      });
 
+      Object.values(teamMap).forEach((team) => {
+        team.games.sort((a, b) => {
+          // Sort by date first
+          const dateCompare =
+            new Date(a.date).getTime() - new Date(b.date).getTime();
+          if (dateCompare !== 0) return dateCompare;
+
+          // Then opponent (alphabetically)
+          const opponentCompare = a.opponent.localeCompare(b.opponent);
+          if (opponentCompare !== 0) return opponentCompare;
+
+          // Finally set number (first set of match first)
+          return (a.sets[0]?.set_no ?? 0) - (b.sets[0]?.set_no ?? 0);
+        });
+      });
 
       setTeams(Object.values(teamMap));
     }
@@ -208,7 +212,8 @@ team.games.push({
                   className="hover:bg-muted/50 transition-colors cursor-pointer"
                   onClick={() => handleRowClick(team.team_id)}
                   style={{
-                    backgroundColor: expandedTeamId === team.team_id ? "#f7fafc" : undefined,
+                    backgroundColor:
+                      expandedTeamId === team.team_id ? "#f7fafc" : undefined,
                   }}
                 >
                   <TableCell className="font-medium">
@@ -249,8 +254,12 @@ team.games.push({
                   <TableCell className="text-center font-semibold">
                     {(team.winPercentage * 100).toFixed(1)}%
                   </TableCell>
-                  <TableCell className="text-center">{team.points_for}</TableCell>
-                  <TableCell className="text-center">{team.points_against}</TableCell>
+                  <TableCell className="text-center">
+                    {team.points_for}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {team.points_against}
+                  </TableCell>
                   <TableCell
                     className={`text-center font-semibold ${
                       team.pointDifferential > 0
@@ -266,7 +275,9 @@ team.games.push({
                 </TableRow>
                 <TableRow>
                   <TableCell colSpan={9} className="bg-background border-t p-0">
-                    <AccordionContent expanded={expandedTeamId === team.team_id}>
+                    <AccordionContent
+                      expanded={expandedTeamId === team.team_id}
+                    >
                       <div className="p-4">
                         <div className="font-semibold mb-4 text-lg flex items-center gap-2">
                           <TrendingUp className="h-4 w-4 text-primary" />
@@ -278,11 +289,15 @@ team.games.push({
                               <thead>
                                 <tr className="bg-primary text-primary-foreground">
                                   <th className="py-2 px-3 text-left">Date</th>
-                                  <th className="py-2 px-3 text-left">Opponent</th>
+                                  <th className="py-2 px-3 text-left">
+                                    Opponent
+                                  </th>
                                   <th className="py-2 px-3 text-center">Set</th>
                                   <th className="py-2 px-3 text-center">PF</th>
                                   <th className="py-2 px-3 text-center">PA</th>
-                                  <th className="py-2 px-3 text-center">Result</th>
+                                  <th className="py-2 px-3 text-center">
+                                    Result
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -298,11 +313,21 @@ team.games.push({
                                     return (
                                       <tr
                                         key={`${game.id}-set-${set.set_no}`}
-                                        className={idx % 2 === 0 ? "bg-muted/30" : "bg-background"}
+                                        className={
+                                          idx % 2 === 0
+                                            ? "bg-muted/30"
+                                            : "bg-background"
+                                        }
                                       >
-                                        <td className="py-2 px-3">{game.date}</td>
-                                        <td className="py-2 px-3 font-semibold">{game.opponent}</td>
-                                        <td className="py-2 px-3 text-center">{set.set_no}</td>
+                                        <td className="py-2 px-3">
+                                          {game.date}
+                                        </td>
+                                        <td className="py-2 px-3 font-semibold">
+                                          {game.opponent}
+                                        </td>
+                                        <td className="py-2 px-3 text-center">
+                                          {set.set_no}
+                                        </td>
                                         <td className="py-2 px-3 text-center text-green-700 font-bold">
                                           {set.points_for}
                                         </td>
@@ -330,7 +355,9 @@ team.games.push({
                             </table>
                           </div>
                         ) : (
-                          <div className="text-muted-foreground">No games recorded yet.</div>
+                          <div className="text-muted-foreground">
+                            No games recorded yet.
+                          </div>
                         )}
                       </div>
                     </AccordionContent>
