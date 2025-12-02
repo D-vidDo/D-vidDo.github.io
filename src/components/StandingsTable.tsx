@@ -81,11 +81,18 @@ const StandingsTable = () => {
   useEffect(() => {
     async function fetchData() {
       const { data: teamData } = await supabase.from("teams").select("*");
-      const { data: gameData } = await supabase
-        .from("games")
-        .select(
-          "id, date, opponent, team_id, sets (set_no, points_for, points_against)"
-        );
+      const { data: gameData } = await supabase.from("games").select(`
+    id,
+    date,
+    time,
+    opponent,
+    team_id,
+    sets (
+      set_no,
+      points_for,
+      points_against
+    )
+  `);
 
       if (!teamData || !gameData) return;
 
@@ -133,7 +140,7 @@ const StandingsTable = () => {
         // Sort sets by set number
         const sortedSets = [...game.sets].sort((a, b) => a.set_no - b.set_no);
 
-        const dateTime = new Date(`${game.date}T${game.time}`);
+        const dateTime = new Date(`${game.date}T${game.time ?? "00:00:00"}`);
 
         team.games.push({
           id: game.id,
