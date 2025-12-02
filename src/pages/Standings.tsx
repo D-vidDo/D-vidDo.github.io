@@ -213,7 +213,7 @@ useEffect(() => {
               <div className="text-2xl font-bold text-card-foreground">
                 {Math.max(...sortedTeams.map((t) => t.wins))}
               </div>
-              <div className="text-sm text-muted-foreground">Most Wins</div>
+              <div className="text-sm text-muted-foreground">Most Set Wins</div>
               <div className="text-xs text-muted-foreground mt-1">
                 {sortedTeams.find((t) => t.wins === Math.max(...sortedTeams.map((team) => team.wins)))
                   ?.name || "-"}
