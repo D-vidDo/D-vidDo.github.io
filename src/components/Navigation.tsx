@@ -16,9 +16,12 @@ const Navigation = () => {
     { path: "/players", label: "Players" },
     { path: "/stats", label: "Stats" },
     { path: "/trades", label: "Trades" },
+    { path: "/history/1", label: "History" },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) =>
+    location.pathname === path ||
+    (path.startsWith("/history") && location.pathname.startsWith("/history"));
 
   return (
     <nav className="bg-gradient-hero shadow-card sticky top-0 z-50">
@@ -49,16 +52,6 @@ const Navigation = () => {
               </Link>
             ))}
 
-            {/* History Link */}
-            <Link to="/history/1">
-              <Button
-                variant="ghost"
-                className="text-white hover:bg-white hover:text-black border border-white"
-              >
-                <Trophy className="h-4 w-4 mr-2" />
-                {/* History */}
-              </Button>
-            </Link>
 
             <Link to="/vod">
               <Button
@@ -104,17 +97,6 @@ const Navigation = () => {
                   </Button>
                 </Link>
               ))}
-
-              {/* History Link */}
-              <Link to="/history/1">
-                <Button
-                  variant="ghost"
-                  className="text-white hover:bg-white hover:text-black border border-white"
-                >
-                  <Trophy className="h-4 w-4 mr-2" />
-                  {/* History */}
-                </Button>
-              </Link>
 
               <Link to="/vod" onClick={() => setIsMenuOpen(false)}>
                 <Button
