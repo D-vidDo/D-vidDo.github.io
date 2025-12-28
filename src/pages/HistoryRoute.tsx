@@ -2,9 +2,13 @@ import { useParams } from "react-router-dom";
 import History from "./History";
 
 export default function HistoryRoute() {
-  const { season_id } = useParams<{ season_id: string }>();
+  const { seasonId } = useParams<{ seasonId: string }>();
 
-  if (!season_id) return <div>Invalid season</div>;
+  const parsedSeasonId = Number(seasonId);
 
-  return <History season_id={Number(season_id)} />;
+  if (!seasonId || isNaN(parsedSeasonId)) {
+    return <div>Invalid season</div>;
+  }
+
+  return <History seasonId={parsedSeasonId} />;
 }

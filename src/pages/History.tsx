@@ -42,7 +42,7 @@ interface SetRow {
 
 /* ================= PAGE ================= */
 
-export default function History({ season_id }: { season_id: number }) {
+export default function History({ seasonId }: { seasonId: number }) {
   const [season, setSeason] = useState<Season | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +51,7 @@ export default function History({ season_id }: { season_id: number }) {
       const { data, error } = await supabase
         .from("seasons")
         .select("season_id, name, start_date, end_date")
-        .eq("season_id", season_id)
+        .eq("season_id", seasonId)
         .single();
 
       if (!error) setSeason(data);
