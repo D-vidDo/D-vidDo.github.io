@@ -49,7 +49,7 @@ const Navigation = () => {
               </Link>
             ))}
 
-            /* History Link */
+            {/* History Link */}
             <Link to="/history/1">
               <Button
                 variant="ghost"
