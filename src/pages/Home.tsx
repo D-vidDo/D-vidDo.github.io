@@ -10,9 +10,13 @@ import TeamCard from "@/components/TeamCard";
 import UpcomingGames from "@/components/UpcomingGames";
 import BillOfTheDay from "@/components/BillOfTheDay";
 
+// active season ID
+const ACTIVE_SEASON_ID = 2;
+
 // Initialize Supabase client
-const supabaseUrl = 'https://bqqotvjpvaznkjfldcgm.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcW90dmpwdmF6bmtqZmxkY2dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0NDE4NjEsImV4cCI6MjA3MDAxNzg2MX0.VPClABOucYEo-bVPg_brc6WvSx17zR4LADC2FEWdI5Q';
+const supabaseUrl = "https://bqqotvjpvaznkjfldcgm.supabase.co";
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcW90dmpwdmF6bmtqZmxkY2dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0NDE4NjEsImV4cCI6MjA3MDAxNzg2MX0.VPClABOucYEo-bVPg_brc6WvSx17zR4LADC2FEWdI5Q";
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -27,14 +31,21 @@ type Player = {
 type Team = {
   team_id: string;
   name: string;
-  wins: number;            // kept for other UI, not used for sorting
-  losses: number;          // kept for other UI, not used for sorting
+  wins: number; // kept for other UI, not used for sorting
+  losses: number; // kept for other UI, not used for sorting
   points_for: number;
   points_against: number;
   captain: string;
   color: string;
   player_ids: string[];
-  games: { id: string; date: string; opponent: string; pointsFor: number; pointsAgainst: number; result: string }[];
+  games: {
+    id: string;
+    date: string;
+    opponent: string;
+    pointsFor: number;
+    pointsAgainst: number;
+    result: string;
+  }[];
 };
 
 // Games with nested sets (for deriving match results)
@@ -51,7 +62,9 @@ const Home = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Derived GAME-level wins/losses/ties by team
-  const [gameWLT, setGameWLT] = useState<Record<string, { w: number; l: number; t: number }>>({});
+  const [gameWLT, setGameWLT] = useState<
+    Record<string, { w: number; l: number; t: number }>
+  >({});
 
   useEffect(() => {
     async function fetchData() {
@@ -61,7 +74,8 @@ const Home = () => {
       // Fetch teams
       const { data: teamData, error: teamError } = await supabase
         .from("teams")
-        .select("*");
+        .select("*")
+        .eq("season_id", ACTIVE_SEASON_ID);
 
       // Fetch players
       const { data: playerData, error: playerError } = await supabase
@@ -71,7 +85,18 @@ const Home = () => {
       // Fetch games with nested sets (for match-level aggregation)
       const { data: gamesData, error: gamesError } = await supabase
         .from("games")
-        .select("id, team_id, sets ( set_no, points_for, points_against )");
+        .select(
+          `
+    id,
+    team_id,
+    sets (
+      set_no,
+      points_for,
+      points_against
+    )
+  `
+        )
+        .eq("season_id", ACTIVE_SEASON_ID);
 
       if (teamError) {
         setError(`Error loading teams: ${teamError.message}`);
@@ -151,7 +176,9 @@ const Home = () => {
   // Top performers (unchanged)
   function getTopPerformers() {
     const validPlayers = players.filter((p) => p.games_played > 0);
-    const topplus_minus = [...players].sort((a, b) => b.plus_minus - a.plus_minus);
+    const topplus_minus = [...players].sort(
+      (a, b) => b.plus_minus - a.plus_minus
+    );
     const topAverage = [...validPlayers].sort(
       (a, b) => b.plus_minus / b.games_played - a.plus_minus / a.games_played
     );
@@ -161,7 +188,10 @@ const Home = () => {
   const { topplus_minus, topAverage } = getTopPerformers();
 
   // Total games (left as-is from your original code)
-  const totalGames = teams.reduce((sum, team) => sum + team.wins + team.losses, 0) ;
+  const totalGames = teams.reduce(
+    (sum, team) => sum + team.wins + team.losses,
+    0
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,16 +199,17 @@ const Home = () => {
       <section className="bg-gradient-hero py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="flex flex-col items-center text-5xl md:text-6xl font-bold text-primary-foreground mb-6">
-             <img
-    src="/logo.png"  // or .svg if that's your file type
-    alt="NCL Logo"
-    className="h-24 w-24 md:h-32 md:w-32 mb-4" // Bigger logo + spacing below
-  />
+            <img
+              src="/logo.png" // or .svg if that's your file type
+              alt="NCL Logo"
+              className="h-24 w-24 md:h-32 md:w-32 mb-4" // Bigger logo + spacing below
+            />
             <span>Northeast Community League</span>
           </h1>
 
           <p className="text-xl text-primary-foreground/90 mb-8 max-w-3xl mx-auto">
-            Welcome to the NCL hub. Track teams, players, standings, and statistics all in one place.
+            Welcome to the NCL hub. Track teams, players, standings, and
+            statistics all in one place.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/teams">
@@ -207,7 +238,9 @@ const Home = () => {
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
               <Trophy className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-card-foreground">{teams.length}</div>
+              <div className="text-2xl font-bold text-card-foreground">
+                {teams.length}
+              </div>
               <div className="text-sm text-muted-foreground">Teams</div>
             </CardContent>
           </Card>
@@ -217,13 +250,17 @@ const Home = () => {
               <div className="text-2xl font-bold text-card-foreground">
                 {teams.reduce((sum, team) => sum + team.player_ids.length, 0)}
               </div>
-              <div className="text-sm text-muted-foreground">Active Players</div>
+              <div className="text-sm text-muted-foreground">
+                Active Players
+              </div>
             </CardContent>
           </Card>
           <Card className="bg-gradient-stats shadow-card">
             <CardContent className="p-6 text-center">
               <Calendar className="h-8 w-8 text-accent mx-auto mb-2" />
-              <div className="text-2xl font-bold text-card-foreground">{totalGames}</div>
+              <div className="text-2xl font-bold text-card-foreground">
+                {totalGames}
+              </div>
               <div className="text-sm text-muted-foreground">Games Played</div>
             </CardContent>
           </Card>
@@ -231,14 +268,17 @@ const Home = () => {
             <CardContent className="p-6 text-center">
               <Target className="h-8 w-8 text-primary mx-auto mb-2" />
               <div className="text-2xl font-bold text-card-foreground">
-                {Math.round(teams.reduce((sum, team) => sum + team.points_for, 0) / (teams.length || 1))}
+                {Math.round(
+                  teams.reduce((sum, team) => sum + team.points_for, 0) /
+                    (teams.length || 1)
+                )}
               </div>
               <div className="text-sm text-muted-foreground">Avg Points</div>
             </CardContent>
           </Card>
         </section>
 
-        <UpcomingGames/>
+        <UpcomingGames />
 
         {/* Top Teams (Standings) */}
         <section>
@@ -252,13 +292,19 @@ const Home = () => {
             {topTeams.map((team, index) => (
               <div key={team.team_id} className="relative">
                 {index === 0 && (
-                  <Badge className="absolute -top-2 -right-2 z-10 bg-gradient-hero">🏆 #1</Badge>
+                  <Badge className="absolute -top-2 -right-2 z-10 bg-gradient-hero">
+                    🏆 #1
+                  </Badge>
                 )}
                 {index === 1 && (
-                  <Badge className="absolute -top-2 -right-2 z-10 bg-yellow-400 text-black">🥈 #2</Badge>
+                  <Badge className="absolute -top-2 -right-2 z-10 bg-yellow-400 text-black">
+                    🥈 #2
+                  </Badge>
                 )}
                 {index === 2 && (
-                  <Badge className="absolute -top-2 -right-2 z-10 bg-orange-400 text-black">🥉 #3</Badge>
+                  <Badge className="absolute -top-2 -right-2 z-10 bg-orange-400 text-black">
+                    🥉 #3
+                  </Badge>
                 )}
                 <TeamCard team={team} />
               </div>
@@ -283,10 +329,14 @@ const Home = () => {
                     className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <Badge variant={index === 0 ? "default" : "secondary"}>#{index + 1}</Badge>
+                      <Badge variant={index === 0 ? "default" : "secondary"}>
+                        #{index + 1}
+                      </Badge>
                       <div>
                         <div className="font-semibold">{player.name}</div>
-                        <div className="text-sm text-muted-foreground">{player.primary_position}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {player.primary_position}
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
@@ -320,17 +370,24 @@ const Home = () => {
             <CardContent>
               <div className="space-y-3">
                 {topAverage.slice(0, 3).map((player, index) => {
-                  const average = player.games_played > 0 ? player.plus_minus / player.games_played : 0;
+                  const average =
+                    player.games_played > 0
+                      ? player.plus_minus / player.games_played
+                      : 0;
                   return (
                     <div
                       key={player.id}
                       className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <Badge variant={index === 0 ? "default" : "secondary"}>#{index + 1}</Badge>
+                        <Badge variant={index === 0 ? "default" : "secondary"}>
+                          #{index + 1}
+                        </Badge>
                         <div>
                           <div className="font-semibold">{player.name}</div>
-                          <div className="text-sm text-muted-foreground">{player.primary_position}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {player.primary_position}
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
@@ -356,7 +413,7 @@ const Home = () => {
           </Card>
         </section>
       </div>
-      <BillOfTheDay/>
+      <BillOfTheDay />
     </div>
   );
 };
