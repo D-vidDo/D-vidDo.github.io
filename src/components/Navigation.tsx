@@ -49,6 +49,17 @@ const Navigation = () => {
               </Link>
             ))}
 
+            /* History Link */
+            <Link to="/history/1">
+              <Button
+                variant="ghost"
+                className="text-white hover:bg-white hover:text-black border border-white"
+              >
+                <Trophy className="h-4 w-4 mr-2" />
+                History
+              </Button>
+            </Link>
+
             <Link to="/vod">
               <Button
                 variant="ghost"
