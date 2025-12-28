@@ -42,7 +42,7 @@ interface SetRow {
 
 /* ================= PAGE ================= */
 
-export default function HistoryPage({ seasonId }: { seasonId: number }) {
+export default function History({ seasonId }: { seasonId: number }) {
   const [season, setSeason] = useState<Season | null>(null);
   const [loading, setLoading] = useState(true);
 
