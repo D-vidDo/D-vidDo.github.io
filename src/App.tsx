@@ -17,6 +17,7 @@ import Players from "./pages/Players";
 import Admin from "./pages/Admin";
 import Rules from "./pages/Rules";
 import AdminVod from "./pages/AdminSetVodLink";
+import HistoryRoute from "./pages/HistoryRoute";
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -98,6 +99,7 @@ const App = () => (
             <Route path="/Admin" element={<Admin />} />
             <Route path="/rules" element={<Rules />} />
             <Route path="/vod" element={<AdminVod />} />
+            <Route path="/history/:seasonId" element={<HistoryRoute />} />
             {/* Add a NotFound route at the end */}
             <Route path="*" element={<NotFound />} />
           </Routes>

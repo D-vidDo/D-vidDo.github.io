@@ -42,7 +42,7 @@ interface SetRow {
 
 /* ================= PAGE ================= */
 
-export default function History({ seasonId }: { seasonId: number }) {
+export default function History({ season_id }: { season_id: number }) {
   const [season, setSeason] = useState<Season | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +51,7 @@ export default function History({ seasonId }: { seasonId: number }) {
       const { data, error } = await supabase
         .from("seasons")
         .select("season_id, name, start_date, end_date")
-        .eq("season_id", seasonId)
+        .eq("season_id", season_id)
         .single();
 
       if (!error) setSeason(data);
@@ -59,7 +59,7 @@ export default function History({ seasonId }: { seasonId: number }) {
     };
 
     fetchSeason();
-  }, [seasonId]);
+  }, [season_id]);
 
   if (loading) return <div>Loading season…</div>;
   if (!season) return <div>Season not found</div>;
@@ -73,26 +73,26 @@ export default function History({ seasonId }: { seasonId: number }) {
         </p>
       </header>
 
-      <TeamStats seasonId={seasonId} />
-      <PlayerStats seasonId={seasonId} />
-      <MatchHistory seasonId={seasonId} />
+      <TeamStats season_id={season_id} />
+      <PlayerStats season_id={season_id} />
+      <MatchHistory season_id={season_id} />
     </div>
   );
 }
 
 /* ================= TEAM STATS ================= */
 
-function TeamStats({ seasonId }: { seasonId: number }) {
+function TeamStats({ season_id }: { season_id: number }) {
   const [teams, setTeams] = useState<Team[]>([]);
 
   useEffect(() => {
     supabase
       .from("teams")
       .select("team_id, name, wins, losses, points_for, points_against, captain")
-      .eq("season_id", seasonId)
+      .eq("season_id", season_id)
       .order("wins", { ascending: false })
       .then(({ data }) => setTeams((data as Team[]) || []));
-  }, [seasonId]);
+  }, [season_id]);
 
   return (
     <section>
@@ -127,7 +127,7 @@ function TeamStats({ seasonId }: { seasonId: number }) {
 
 /* ================= PLAYER STATS ================= */
 
-function PlayerStats({ seasonId }: { seasonId: number }) {
+function PlayerStats({ season_id }: { season_id: number }) {
   const [players, setPlayers] = useState<PlayerOld[]>([]);
 
   useEffect(() => {
@@ -136,10 +136,10 @@ function PlayerStats({ seasonId }: { seasonId: number }) {
       .select(
         "id, name, games_played, plus_minus, primary_position, secondary_position, dominant_hand, height"
       )
-      .eq("season_id", seasonId)
+      .eq("season_id", season_id)
       .order("plus_minus", { ascending: false })
       .then(({ data }) => setPlayers((data as PlayerOld[]) || []));
-  }, [seasonId]);
+  }, [season_id]);
 
   return (
     <section>
@@ -176,18 +176,18 @@ function PlayerStats({ seasonId }: { seasonId: number }) {
 
 /* ================= MATCH HISTORY ================= */
 
-function MatchHistory({ seasonId }: { seasonId: number }) {
+function MatchHistory({ season_id }: { season_id: number }) {
   const [sets, setSets] = useState<SetRow[]>([]);
 
   useEffect(() => {
     supabase
       .from("sets")
       .select("id, game_id, set_no, points_for, points_against, result")
-      .eq("season_id", seasonId)
+      .eq("season_id", season_id)
       .order("game_id", { ascending: false })
       .order("set_no", { ascending: true })
       .then(({ data }) => setSets((data as SetRow[]) || []));
-  }, [seasonId]);
+  }, [season_id]);
 
   const grouped = sets.reduce<Record<number, SetRow[]>>((acc, set) => {
     acc[set.game_id] = acc[set.game_id] || [];
