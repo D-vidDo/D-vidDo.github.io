@@ -99,7 +99,7 @@ const App = () => (
             <Route path="/Admin" element={<Admin />} />
             <Route path="/rules" element={<Rules />} />
             <Route path="/vod" element={<AdminVod />} />
-            <Route path="/history/:seasonId" element={<HistoryRoute />} />
+            <Route path="/history/:season_id" element={<HistoryRoute />} />
             {/* Add a NotFound route at the end */}
             <Route path="*" element={<NotFound />} />
           </Routes>
