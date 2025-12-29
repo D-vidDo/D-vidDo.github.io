@@ -55,7 +55,7 @@ const fetchPlayers = async () => {
 };
 
 const fetchTeams = async () => {
-  const { data, error } = await supabase.from("teams").select("*");
+  const { data, error } = await supabase.from("teams").select("*").eq("season_id", 2); // only get teams from season 2
   if (error) throw new Error(error.message);
   return data;
 };
