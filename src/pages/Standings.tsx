@@ -17,130 +17,160 @@ interface Team {
   player_ids: string[];
 }
 
+const CURRENT_SEASON_ID = 2;
+
 const Standings = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [longestStreakTeam, setLongestStreakTeam] = useState<{ name: string; streak: number } | null>(null);
+  const [longestStreakTeam, setLongestStreakTeam] = useState<{
+    name: string;
+    streak: number;
+  } | null>(null);
 
-useEffect(() => {
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      // 1) Load teams (used for names/colors and to ensure we iterate all)
-      const { data: teamData, error: teamError } = await supabase
-        .from("teams")
-        .select("*");
-      if (teamError) throw teamError;
-      if (!teamData) throw new Error("No teams returned");
-      setTeams(teamData);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // 1) Load teams (used for names/colors and to ensure we iterate all)
+        const { data: teamData, error: teamError } = await supabase
+          .from("teams")
+          .select("*")
+          .eq("season_id", CURRENT_SEASON_ID);
 
-      // 2) Load sets joined to games, ORDERED chronologically
-      const { data: setsData, error: setsError } = await supabase
-        .from("sets")
-        .select(`
-          id,
-          set_no,
-          result,
-          game_id,
-          games (
-            id,
-            team_id,
-            date
+        if (teamError) throw teamError;
+        if (!teamData) throw new Error("No teams returned");
+        setTeams(teamData);
+
+        // 2) Load sets joined to games, ORDERED chronologically
+        const { data: setsData, error: setsError } = await supabase
+          .from("sets")
+          .select(
+            `
+    id,
+    set_no,
+    result,
+    game_id,
+    games!inner (
+      id,
+      team_id,
+      date,
+      season_id
+    )
+  `
           )
-        `)
-        .order("date", { foreignTable: "games", ascending: true })
-        .order("set_no", { ascending: true })
-        .order("id", { ascending: true }); // tie-breaker
-      if (setsError) throw setsError;
+          .eq("games.season_id", CURRENT_SEASON_ID)
+          .order("date", { foreignTable: "games", ascending: true })
+          .order("set_no", { ascending: true })
+          .order("id", { ascending: true });
 
-      // Handle bigint ids safely
-      const keyOf = (v: unknown) => String(v ?? "");
+        if (setsError) throw setsError;
 
-      type JoinedSet = {
-        id: number;
-        set_no: number | null;
-        result: string | null; // 'W'|'L'
-        games: { id: number; team_id: string | number | null; date: string | null } | null;
-      };
+        // Handle bigint ids safely
+        const keyOf = (v: unknown) => String(v ?? "");
 
-      // 3) Build: teamKey -> chronological [{date,set_no,result}]
-      const teamResultsMap: Record<string, { date: string; set_no: number; result: "W"|"L" }[]> = {};
-      for (const row of (setsData ?? []) as JoinedSet[]) {
-        const g = row.games;
-        if (!g || g.team_id == null || !g.date) continue;
+        type JoinedSet = {
+          id: number;
+          set_no: number | null;
+          result: string | null; // 'W'|'L'
+          games: {
+            id: number;
+            team_id: string | number | null;
+            date: string | null;
+          } | null;
+        };
 
-        const teamKey = keyOf(g.team_id);
-        const res = (row.result ?? "").trim().toUpperCase();
-        if (res !== "W" && res !== "L") continue;
+        // 3) Build: teamKey -> chronological [{date,set_no,result}]
+        const teamResultsMap: Record<
+          string,
+          { date: string; set_no: number; result: "W" | "L" }[]
+        > = {};
+        for (const row of (setsData ?? []) as JoinedSet[]) {
+          const g = row.games;
+          if (!g || g.team_id == null || !g.date) continue;
 
-        (teamResultsMap[teamKey] ||= []).push({
-          date: g.date,                    // DATE type ('YYYY-MM-DD'); lexical order works
-          set_no: Number(row.set_no) || 0, // ensure numeric
-          result: res as "W" | "L",
-        });
-      }
+          const teamKey = keyOf(g.team_id);
+          const res = (row.result ?? "").trim().toUpperCase();
+          if (res !== "W" && res !== "L") continue;
 
-      // 4) Compute longest W streak per team
-      let maxStreak = 0;
-      let streakTeamKey = "";
+          (teamResultsMap[teamKey] ||= []).push({
+            date: g.date, // DATE type ('YYYY-MM-DD'); lexical order works
+            set_no: Number(row.set_no) || 0, // ensure numeric
+            result: res as "W" | "L",
+          });
+        }
 
-      for (const t of teamData as any[]) {
-        const tKey = keyOf(t.team_id);
-        const results = (teamResultsMap[tKey] ?? []).slice();
+        // 4) Compute longest W streak per team
+        let maxStreak = 0;
+        let streakTeamKey = "";
 
-        // Safety sort (already ordered by SQL, but fine to keep)
-        results.sort((a, b) => (a.date === b.date ? a.set_no - b.set_no : a.date.localeCompare(b.date)));
+        for (const t of teamData as any[]) {
+          const tKey = keyOf(t.team_id);
+          const results = (teamResultsMap[tKey] ?? []).slice();
 
-        let cur = 0, best = 0;
-        for (const r of results) {
-          if (r.result === "W") {
-            cur += 1;
-            if (cur > best) best = cur;
-          } else {
-            cur = 0;
+          // Safety sort (already ordered by SQL, but fine to keep)
+          results.sort((a, b) =>
+            a.date === b.date
+              ? a.set_no - b.set_no
+              : a.date.localeCompare(b.date)
+          );
+
+          let cur = 0,
+            best = 0;
+          for (const r of results) {
+            if (r.result === "W") {
+              cur += 1;
+              if (cur > best) best = cur;
+            } else {
+              cur = 0;
+            }
+          }
+
+          if (best > maxStreak) {
+            maxStreak = best;
+            streakTeamKey = tKey;
           }
         }
 
-        if (best > maxStreak) {
-          maxStreak = best;
-          streakTeamKey = tKey;
-        }
+        const team = (teamData as any[]).find(
+          (t) => keyOf(t.team_id) === streakTeamKey
+        );
+        setLongestStreakTeam({ name: team?.name ?? "-", streak: maxStreak });
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const team = (teamData as any[]).find((t) => keyOf(t.team_id) === streakTeamKey);
-      setLongestStreakTeam({ name: team?.name ?? "-", streak: maxStreak });
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchData();
-}, []);
-
-
+    fetchData();
+  }, []);
 
   if (loading) return <div className="text-center mt-20">Loading teams...</div>;
-  if (error) return <div className="text-center mt-20 text-red-600">Error: {error}</div>;
+  if (error)
+    return <div className="text-center mt-20 text-red-600">Error: {error}</div>;
 
   // Calculate winPercentage and pointDifferential for sorting
   const sortedTeams = teams
     .map((team) => ({
       ...team,
-      winPercentage: team.wins + team.losses > 0 ? team.wins / (team.wins + team.losses) : 0,
+      winPercentage:
+        team.wins + team.losses > 0 ? team.wins / (team.wins + team.losses) : 0,
       pointDifferential: team.points_for - team.points_against,
     }))
     .sort((a, b) => {
       if (b.wins !== a.wins) return b.wins - a.wins;
       if (b.points_for !== a.points_for) return b.points_for - a.points_for;
-      if (b.winPercentage !== a.winPercentage) return b.winPercentage - a.winPercentage;
+      if (b.winPercentage !== a.winPercentage)
+        return b.winPercentage - a.winPercentage;
       return b.pointDifferential - a.pointDifferential;
     });
 
   const leaderTeam = sortedTeams[0] || null;
-  const totalGames = teams.reduce((sum, team) => sum + team.wins + team.losses, 0);
+  const totalGames = teams.reduce(
+    (sum, team) => sum + team.wins + team.losses,
+    0
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,7 +185,10 @@ useEffect(() => {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             {leaderTeam && (
-              <Badge variant="secondary" className="text-lg px-4 py-2 flex items-center">
+              <Badge
+                variant="secondary"
+                className="text-lg px-4 py-2 flex items-center"
+              >
                 <Trophy className="mr-2 h-4 w-4" />
                 Leader: {leaderTeam.name}
               </Badge>
@@ -190,15 +223,21 @@ useEffect(() => {
                     {leaderTeam.name.substring(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-card-foreground">{leaderTeam.name}</h3>
-                    <p className="text-muted-foreground">Captain: {leaderTeam.captain}</p>
+                    <h3 className="text-2xl font-bold text-card-foreground">
+                      {leaderTeam.name}
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Captain: {leaderTeam.captain}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-primary">
                     {(leaderTeam.winPercentage * 100).toFixed(1)}%
                   </div>
-                  <div className="text-sm text-muted-foreground">Win Percentage</div>
+                  <div className="text-sm text-muted-foreground">
+                    Win Percentage
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -215,8 +254,10 @@ useEffect(() => {
               </div>
               <div className="text-sm text-muted-foreground">Most Set Wins</div>
               <div className="text-xs text-muted-foreground mt-1">
-                {sortedTeams.find((t) => t.wins === Math.max(...sortedTeams.map((team) => team.wins)))
-                  ?.name || "-"}
+                {sortedTeams.find(
+                  (t) =>
+                    t.wins === Math.max(...sortedTeams.map((team) => team.wins))
+                )?.name || "-"}
               </div>
             </CardContent>
           </Card>
@@ -227,10 +268,14 @@ useEffect(() => {
               <div className="text-2xl font-bold text-card-foreground">
                 {Math.max(...sortedTeams.map((t) => t.points_for))}
               </div>
-              <div className="text-sm text-muted-foreground">Highest Scoring</div>
+              <div className="text-sm text-muted-foreground">
+                Highest Scoring
+              </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {sortedTeams.find(
-                  (t) => t.points_for === Math.max(...sortedTeams.map((team) => team.points_for))
+                  (t) =>
+                    t.points_for ===
+                    Math.max(...sortedTeams.map((team) => team.points_for))
                 )?.name || "-"}
               </div>
             </CardContent>
@@ -242,11 +287,16 @@ useEffect(() => {
               <div className="text-2xl font-bold text-card-foreground">
                 +{Math.max(...sortedTeams.map((t) => t.pointDifferential))}
               </div>
-              <div className="text-sm text-muted-foreground">Best Differential</div>
+              <div className="text-sm text-muted-foreground">
+                Best Differential
+              </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {sortedTeams.find(
                   (t) =>
-                    t.pointDifferential === Math.max(...sortedTeams.map((team) => team.pointDifferential))
+                    t.pointDifferential ===
+                    Math.max(
+                      ...sortedTeams.map((team) => team.pointDifferential)
+                    )
                 )?.name || "-"}
               </div>
             </CardContent>
@@ -258,7 +308,9 @@ useEffect(() => {
               <div className="text-2xl font-bold text-card-foreground">
                 {longestStreakTeam?.streak || 0}
               </div>
-              <div className="text-sm text-muted-foreground">Longest Win Streak</div>
+              <div className="text-sm text-muted-foreground">
+                Longest Win Streak
+              </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {longestStreakTeam?.name || "-"}
               </div>
