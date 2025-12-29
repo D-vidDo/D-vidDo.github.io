@@ -12,6 +12,8 @@ import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
+/* ================= TYPES ================= */
+
 interface Set {
   set_no: number;
   points_for: number;
@@ -21,9 +23,9 @@ interface Set {
 interface Game {
   id: string;
   date: string;
+  time: string;
   opponent: string;
   sets: Set[];
-  time: string;
   dateTime: Date;
 }
 
@@ -38,6 +40,13 @@ interface Team {
   points_for: number;
   points_against: number;
 }
+
+interface Season {
+  season_id: number;
+  name: string;
+}
+
+/* ================= ACCORDION ================= */
 
 const AccordionContent = ({
   expanded,
@@ -70,29 +79,73 @@ const AccordionContent = ({
   );
 };
 
+/* ================= MAIN COMPONENT ================= */
+
 const StandingsTable = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
+
+  // 👇 Season state
+  const [seasonId, setSeasonId] = useState<number>(2);
+  const [seasonName, setSeasonName] = useState<string>("Season");
+  const [seasons, setSeasons] = useState<Season[]>([]);
 
   const handleRowClick = (teamId: string) => {
     setExpandedTeamId((prev) => (prev === teamId ? null : teamId));
   };
 
+  /* ================= FETCH SEASONS ================= */
+
+  useEffect(() => {
+    async function fetchSeasons() {
+      const { data } = await supabase
+        .from("seasons")
+        .select("season_d, name")
+        .order("season_id");
+
+      if (data) setSeasons(data);
+    }
+
+    fetchSeasons();
+  }, []);
+
+  /* ================= FETCH STANDINGS DATA ================= */
+
   useEffect(() => {
     async function fetchData() {
-      const { data: teamData } = await supabase.from("teams").select("*");
-      const { data: gameData } = await supabase.from("games").select(`
-    id,
-    date,
-    time,
-    opponent,
-    team_id,
-    sets (
-      set_no,
-      points_for,
-      points_against
-    )
-  `);
+      // Season name
+      const { data: season } = await supabase
+        .from("seasons")
+        .select("name")
+        .eq("season_id", seasonId)
+        .single();
+
+      if (season?.name) setSeasonName(season.name);
+
+      // Teams
+      const { data: teamData } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("season_id", seasonId);
+
+      // Games
+      const { data: gameData } = await supabase
+        .from("games")
+        .select(
+          `
+          id,
+          date,
+          time,
+          opponent,
+          team_id,
+          sets (
+            set_no,
+            points_for,
+            points_against
+          )
+        `
+        )
+        .eq("season_id", seasonId);
 
       if (!teamData || !gameData) return;
 
@@ -114,11 +167,11 @@ const StandingsTable = () => {
 
       gameData.forEach((game) => {
         const team = teamMap[game.team_id];
-        if (!team || !game.sets || game.sets.length === 0) return;
+        if (!team || !game.sets?.length) return;
 
-        let gameWins = 0;
-        let gameLosses = 0;
-        let gameTies = 0;
+        let wins = 0;
+        let losses = 0;
+        let ties = 0;
         let pf = 0;
         let pa = 0;
 
@@ -126,52 +179,43 @@ const StandingsTable = () => {
           pf += set.points_for;
           pa += set.points_against;
 
-          if (set.points_for === set.points_against) gameTies++;
-          else if (set.points_for > set.points_against) gameWins++;
-          else gameLosses++;
+          if (set.points_for === set.points_against) ties++;
+          else if (set.points_for > set.points_against) wins++;
+          else losses++;
         });
 
         team.points_for += pf;
         team.points_against += pa;
-        if (gameWins > gameLosses) team.wins++;
-        else if (gameLosses > gameWins) team.losses++;
-        else team.ties++;
 
-        // Sort sets by set number
-        const sortedSets = [...game.sets].sort((a, b) => a.set_no - b.set_no);
+        if (wins > losses) team.wins++;
+        else if (losses > wins) team.losses++;
+        else team.ties++;
 
         const dateTime = new Date(`${game.date}T${game.time ?? "00:00:00"}`);
 
         team.games.push({
           id: game.id,
-          date: game.date, // keep original values if you want to display them
+          date: game.date,
           time: game.time,
-          dateTime, // <- new property used for sorting
+          dateTime,
           opponent: game.opponent,
-          sets: sortedSets,
+          sets: [...game.sets].sort((a, b) => a.set_no - b.set_no),
         });
       });
 
       Object.values(teamMap).forEach((team) => {
-        team.games.sort((a, b) => {
-          // 1. Sort by full datetime
-          const dateCompare = a.dateTime.getTime() - b.dateTime.getTime();
-          if (dateCompare !== 0) return dateCompare;
-
-          // 2. Sort by opponent if same datetime
-          const opponentCompare = a.opponent.localeCompare(b.opponent);
-          if (opponentCompare !== 0) return opponentCompare;
-
-          // 3. Sort sets by set number
-          return (a.sets[0]?.set_no ?? 0) - (b.sets[0]?.set_no ?? 0);
-        });
+        team.games.sort(
+          (a, b) => a.dateTime.getTime() - b.dateTime.getTime()
+        );
       });
 
       setTeams(Object.values(teamMap));
     }
 
     fetchData();
-  }, []);
+  }, [seasonId]);
+
+  /* ================= SORT TEAMS ================= */
 
   const sortedTeams = teams
     .map((team) => ({
@@ -193,14 +237,33 @@ const StandingsTable = () => {
       rank: index + 1,
     }));
 
+  /* ================= RENDER ================= */
+
   return (
     <Card className="bg-gradient-card shadow-card">
       <CardHeader>
         <CardTitle className="text-2xl font-bold flex items-center gap-2">
           <TrendingUp className="h-6 w-6 text-primary" />
-          League Standings
+          {seasonName} Standings
         </CardTitle>
+
+        {/* Season Selector */}
+        <div className="mt-2 flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">Season:</span>
+          <select
+            value={seasonId}
+            onChange={(e) => setSeasonId(Number(e.target.value))}
+            className="border border-border rounded px-3 py-1 bg-background text-sm shadow-sm"
+          >
+            {seasons.map((season) => (
+              <option key={season.season_id} value={season.season_id}>
+                {season.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </CardHeader>
+
       <CardContent>
         <Table>
           <TableHeader>
@@ -216,53 +279,46 @@ const StandingsTable = () => {
               <TableHead className="text-center">Diff</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {sortedTeams.map((team) => (
               <React.Fragment key={team.team_id}>
                 <TableRow
-                  className="hover:bg-muted/50 transition-colors cursor-pointer"
+                  className="hover:bg-muted/50 cursor-pointer"
                   onClick={() => handleRowClick(team.team_id)}
-                  style={{
-                    backgroundColor:
-                      expandedTeamId === team.team_id ? "#f7fafc" : undefined,
-                  }}
                 >
-                  <TableCell className="font-medium">
+                  <TableCell>
                     <Badge
                       variant={team.rank <= 3 ? "default" : "secondary"}
-                      className="w-8 h-8 rounded-full p-0 flex items-center justify-center"
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
                     >
                       {team.rank}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center gap-3">
                       <div
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
                         style={{ backgroundColor: team.color }}
                       >
-                        {team.name.substring(0, 2).toUpperCase()}
+                        {team.name.slice(0, 2).toUpperCase()}
                       </div>
                       <span className="font-semibold">{team.name}</span>
-                      <span className="ml-2">
-                        {expandedTeamId === team.team_id ? (
-                          <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </span>
+                      {expandedTeamId === team.team_id ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-center font-semibold text-green-600">
+                  <TableCell className="text-center text-green-600 font-semibold">
                     {team.wins}
                   </TableCell>
-                  <TableCell className="text-center font-semibold text-red-500">
+                  <TableCell className="text-center text-red-500 font-semibold">
                     {team.losses}
                   </TableCell>
-                  <TableCell className="text-center font-semibold text-muted-foreground">
-                    {team.ties}
-                  </TableCell>
-                  <TableCell className="text-center font-semibold">
+                  <TableCell className="text-center">{team.ties}</TableCell>
+                  <TableCell className="text-center">
                     {(team.winPercentage * 100).toFixed(1)}%
                   </TableCell>
                   <TableCell className="text-center">
@@ -282,96 +338,6 @@ const StandingsTable = () => {
                   >
                     {team.pointDifferential > 0 ? "+" : ""}
                     {team.pointDifferential}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell colSpan={9} className="bg-background border-t p-0">
-                    <AccordionContent
-                      expanded={expandedTeamId === team.team_id}
-                    >
-                      <div className="p-4">
-                        <div className="font-semibold mb-4 text-lg flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-primary" />
-                          Match History (Set-by-Set)
-                        </div>
-                        {team.games.length > 0 ? (
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full text-xs rounded-lg overflow-hidden shadow">
-                              <thead>
-                                <tr className="bg-primary text-primary-foreground">
-                                  <th className="py-2 px-3 text-left">Date</th>
-                                  <th className="py-2 px-3 text-left">
-                                    Opponent
-                                  </th>
-                                  <th className="py-2 px-3 text-center">Set</th>
-                                  <th className="py-2 px-3 text-center">PF</th>
-                                  <th className="py-2 px-3 text-center">PA</th>
-                                  <th className="py-2 px-3 text-center">
-                                    Result
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {team.games.map((game) =>
-                                  game.sets.map((set, idx) => {
-                                    const result =
-                                      set.points_for === set.points_against
-                                        ? "T"
-                                        : set.points_for > set.points_against
-                                        ? "W"
-                                        : "L";
-
-                                    return (
-                                      <tr
-                                        key={`${game.id}-set-${set.set_no}`}
-                                        className={
-                                          idx % 2 === 0
-                                            ? "bg-muted/30"
-                                            : "bg-background"
-                                        }
-                                      >
-                                        <td className="py-2 px-3">
-                                          {game.date}
-                                        </td>
-                                        <td className="py-2 px-3 font-semibold">
-                                          {game.opponent}
-                                        </td>
-                                        <td className="py-2 px-3 text-center">
-                                          {set.set_no}
-                                        </td>
-                                        <td className="py-2 px-3 text-center text-green-700 font-bold">
-                                          {set.points_for}
-                                        </td>
-                                        <td className="py-2 px-3 text-center text-red-600 font-bold">
-                                          {set.points_against}
-                                        </td>
-                                        <td className="py-2 px-3 text-center">
-                                          <span
-                                            className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                              result === "W"
-                                                ? "bg-green-100 text-green-700"
-                                                : result === "L"
-                                                ? "bg-red-100 text-red-700"
-                                                : "bg-yellow-100 text-yellow-700"
-                                            }`}
-                                          >
-                                            {result}
-                                          </span>
-                                        </td>
-                                      </tr>
-                                    );
-                                  })
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : (
-                          <div className="text-muted-foreground">
-                            No games recorded yet.
-                          </div>
-                        )}
-                      </div>
-                    </AccordionContent>
                   </TableCell>
                 </TableRow>
               </React.Fragment>
