@@ -78,59 +78,54 @@ export default function History({ seasonId }: { seasonId: number }) {
   const [teamFilter, setTeamFilter] = useState<number | "all">("all");
   const [playerFilter, setPlayerFilter] = useState<number | "all">("all");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Season
-        const { data: seasonData } = await supabase
-          .from("seasons")
-          .select("*")
-          .eq("season_id", seasonId)
-          .single();
-        setSeason(seasonData ?? null);
+ useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // Fetch season
+      const { data: seasonData } = await supabase
+        .from("seasons")
+        .select("*")
+        .eq("season_id", seasonId)
+        .single();
+      setSeason(seasonData ?? null);
 
-        // Teams
-        const { data: teamsData } = await supabase
-          .from("teams")
-          .select("*")
-          .eq("season_id", seasonId)
-          .order("wins", { ascending: false });
-        setTeams(teamsData ?? []);
+      // Fetch teams
+      const { data: teamsData } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("season_id", seasonId)
+        .order("wins", { ascending: false });
+      setTeams(teamsData ?? []);
 
-        // Players
-        const { data: playersData } = await supabase
-          .from("players_old")
-          .select("*")
-          .eq("season_id", seasonId)
-          .order("plus_minus", { ascending: false });
-        setPlayers(playersData ?? []);
+      // Fetch players
+      const { data: playersData } = await supabase
+        .from("players_old")
+        .select("*")
+        .eq("season_id", seasonId)
+        .order("plus_minus", { ascending: false });
+      setPlayers(playersData ?? []);
 
-        // Games + Sets
-        const { data: gamesData } = await supabase
-          .from("games")
-          .select(`
-            id,
-            date,
-            time,
-            team_id,
-            opponent,
-            sets (
-              id,
-              set_no,
-              points_for,
-              points_against,
-              vod_link
-            )
-          `)
-          .eq("season_id", seasonId)
-          .order("date", { ascending: true })
-          .order("time", { ascending: true })
-          .order("sets.set_no", { foreignTable: "sets", ascending: true });
-
-        const formattedGames: Game[] = (gamesData ?? []).map((g: any) => ({
-          ...g,
-          sets: (g.sets ?? []).map((s: any) => ({
+      // Fetch games
+      const { data: gamesData } = await supabase
+        .from("games")
+        .select("*")
+        .eq("season_id", seasonId)
+        .order("date", { ascending: true })
+        .order("time", { ascending: true });
+      
+      // Fetch sets
+      const { data: setsData } = await supabase
+        .from("sets")
+        .select("*")
+        .eq("season_id", seasonId)
+        .order("set_no", { ascending: true });
+      
+      // Map sets to games
+      const gamesWithSets: Game[] = (gamesData ?? []).map((g: any) => ({
+        ...g,
+        sets: (setsData ?? []).filter((s: any) => s.game_id === g.id)
+          .map((s: any) => ({
             ...s,
             result:
               s.points_for === s.points_against
@@ -139,18 +134,19 @@ export default function History({ seasonId }: { seasonId: number }) {
                 ? "W"
                 : "L",
           })),
-        }));
+      }));
 
-        setGames(formattedGames);
-      } catch (err) {
-        console.error("Error loading history:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setGames(gamesWithSets);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchData();
-  }, [seasonId]);
+  fetchData();
+}, [seasonId]);
+
 
   if (loading) return <div>Loading season…</div>;
   if (!season) return <div>Season not found</div>;
