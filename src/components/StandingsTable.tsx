@@ -289,8 +289,9 @@ const StandingsTable = () => {
           <TableBody>
             {sortedTeams.map((team) => (
               <React.Fragment key={team.team_id}>
+                {/* MAIN ROW */}
                 <TableRow
-                  className="hover:bg-muted/50 cursor-pointer"
+                  className="hover:bg-muted/50 transition-colors cursor-pointer"
                   onClick={() => handleRowClick(team.team_id)}
                 >
                   <TableCell>
@@ -301,6 +302,7 @@ const StandingsTable = () => {
                       {team.rank}
                     </Badge>
                   </TableCell>
+
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div
@@ -317,6 +319,7 @@ const StandingsTable = () => {
                       )}
                     </div>
                   </TableCell>
+
                   <TableCell className="text-center text-green-600 font-semibold">
                     {team.wins}
                   </TableCell>
@@ -344,6 +347,82 @@ const StandingsTable = () => {
                   >
                     {team.pointDifferential > 0 ? "+" : ""}
                     {team.pointDifferential}
+                  </TableCell>
+                </TableRow>
+
+                {/* EXPANDED MATCH HISTORY ROW */}
+                <TableRow>
+                  <TableCell colSpan={9} className="p-0 bg-background border-t">
+                    <AccordionContent
+                      expanded={expandedTeamId === team.team_id}
+                    >
+                      <div className="p-4">
+                        <div className="font-semibold mb-3 text-lg">
+                          Match History (Set-by-Set)
+                        </div>
+
+                        {team.games.length > 0 ? (
+                          <table className="min-w-full text-xs rounded-lg overflow-hidden shadow">
+                            <thead>
+                              <tr className="bg-primary text-primary-foreground">
+                                <th className="py-2 px-3 text-left">Date</th>
+                                <th className="py-2 px-3 text-left">
+                                  Opponent
+                                </th>
+                                <th className="py-2 px-3 text-center">Set</th>
+                                <th className="py-2 px-3 text-center">PF</th>
+                                <th className="py-2 px-3 text-center">PA</th>
+                                <th className="py-2 px-3 text-center">
+                                  Result
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {team.games.map((game) =>
+                                game.sets.map((set, idx) => {
+                                  const result =
+                                    set.points_for === set.points_against
+                                      ? "T"
+                                      : set.points_for > set.points_against
+                                      ? "W"
+                                      : "L";
+
+                                  return (
+                                    <tr
+                                      key={`${game.id}-${set.set_no}`}
+                                      className={
+                                        idx % 2 === 0 ? "bg-muted/30" : ""
+                                      }
+                                    >
+                                      <td className="py-2 px-3">{game.date}</td>
+                                      <td className="py-2 px-3 font-semibold">
+                                        {game.opponent}
+                                      </td>
+                                      <td className="py-2 px-3 text-center">
+                                        {set.set_no}
+                                      </td>
+                                      <td className="py-2 px-3 text-center text-green-700 font-bold">
+                                        {set.points_for}
+                                      </td>
+                                      <td className="py-2 px-3 text-center text-red-600 font-bold">
+                                        {set.points_against}
+                                      </td>
+                                      <td className="py-2 px-3 text-center font-bold">
+                                        {result}
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              )}
+                            </tbody>
+                          </table>
+                        ) : (
+                          <div className="text-muted-foreground">
+                            No games recorded yet.
+                          </div>
+                        )}
+                      </div>
+                    </AccordionContent>
                   </TableCell>
                 </TableRow>
               </React.Fragment>
