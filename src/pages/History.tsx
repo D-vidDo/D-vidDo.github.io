@@ -66,6 +66,8 @@ const formatTime12H = (time?: string) => {
   return `${formattedHour}:${minute} ${suffix}`;
 };
 
+
+
 /* ================= PAGE ================= */
 
 export default function History({ seasonId }: { seasonId: number }) {
@@ -78,75 +80,83 @@ export default function History({ seasonId }: { seasonId: number }) {
   const [teamFilter, setTeamFilter] = useState<number | "all">("all");
   const [playerFilter, setPlayerFilter] = useState<number | "all">("all");
 
- useEffect(() => {
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      // Fetch season
-      const { data: seasonData } = await supabase
-        .from("seasons")
-        .select("*")
-        .eq("season_id", seasonId)
-        .single();
-      setSeason(seasonData ?? null);
-
-      // Fetch teams
-      const { data: teamsData } = await supabase
-        .from("teams")
-        .select("*")
-        .eq("season_id", seasonId)
-        .order("wins", { ascending: false });
-      setTeams(teamsData ?? []);
-
-      // Fetch players
-      const { data: playersData } = await supabase
-        .from("players_old")
-        .select("*")
-        .eq("season_id", seasonId)
-        .order("plus_minus", { ascending: false });
-      setPlayers(playersData ?? []);
-
-      // Fetch games
-      const { data: gamesData } = await supabase
-        .from("games")
-        .select("*")
-        .eq("season_id", seasonId)
-        .order("date", { ascending: true })
-        .order("time", { ascending: true });
-      
-      // Fetch sets
-      const { data: setsData } = await supabase
-        .from("sets")
-        .select("*")
-        .eq("season_id", seasonId)
-        .order("set_no", { ascending: true });
-      
-      // Map sets to games
-      const gamesWithSets: Game[] = (gamesData ?? []).map((g: any) => ({
-        ...g,
-        sets: (setsData ?? []).filter((s: any) => s.game_id === g.id)
-          .map((s: any) => ({
-            ...s,
-            result:
-              s.points_for === s.points_against
-                ? "T"
-                : s.points_for! > s.points_against!
-                ? "W"
-                : "L",
-          })),
-      }));
-
-      setGames(gamesWithSets);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const getTeamColors = (teamId?: number) => {
+  const team = teams.find((t) => t.team_id === teamId);
+  return {
+    bg: team?.color || "bg-muted/10",
+    fg: team?.color2 || ""
   };
+};
 
-  fetchData();
-}, [seasonId]);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch season
+        const { data: seasonData } = await supabase
+          .from("seasons")
+          .select("*")
+          .eq("season_id", seasonId)
+          .single();
+        setSeason(seasonData ?? null);
 
+        // Fetch teams
+        const { data: teamsData } = await supabase
+          .from("teams")
+          .select("*")
+          .eq("season_id", seasonId)
+          .order("wins", { ascending: false });
+        setTeams(teamsData ?? []);
+
+        // Fetch players
+        const { data: playersData } = await supabase
+          .from("players_old")
+          .select("*")
+          .eq("season_id", seasonId)
+          .order("plus_minus", { ascending: false });
+        setPlayers(playersData ?? []);
+
+        // Fetch games
+        const { data: gamesData } = await supabase
+          .from("games")
+          .select("*")
+          .eq("season_id", seasonId)
+          .order("date", { ascending: true })
+          .order("time", { ascending: true });
+
+        // Fetch sets
+        const { data: setsData } = await supabase
+          .from("sets")
+          .select("*")
+          .eq("season_id", seasonId)
+          .order("set_no", { ascending: true });
+
+        // Map sets to games
+        const gamesWithSets: Game[] = (gamesData ?? []).map((g: any) => ({
+          ...g,
+          sets: (setsData ?? [])
+            .filter((s: any) => s.game_id === g.id)
+            .map((s: any) => ({
+              ...s,
+              result:
+                s.points_for === s.points_against
+                  ? "T"
+                  : s.points_for! > s.points_against!
+                  ? "W"
+                  : "L",
+            })),
+        }));
+
+        setGames(gamesWithSets);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [seasonId]);
 
   if (loading) return <div>Loading season…</div>;
   if (!season) return <div>Season not found</div>;
@@ -170,7 +180,9 @@ export default function History({ seasonId }: { seasonId: number }) {
         <select
           value={teamFilter}
           onChange={(e) =>
-            setTeamFilter(e.target.value === "all" ? "all" : Number(e.target.value))
+            setTeamFilter(
+              e.target.value === "all" ? "all" : Number(e.target.value)
+            )
           }
           className="border px-2 py-1 rounded-md"
         >
@@ -185,7 +197,9 @@ export default function History({ seasonId }: { seasonId: number }) {
         <select
           value={playerFilter}
           onChange={(e) =>
-            setPlayerFilter(e.target.value === "all" ? "all" : Number(e.target.value))
+            setPlayerFilter(
+              e.target.value === "all" ? "all" : Number(e.target.value)
+            )
           }
           className="border px-2 py-1 rounded-md"
         >
@@ -222,12 +236,15 @@ export default function History({ seasonId }: { seasonId: number }) {
       <Card>
         <CardHeader>
           <CardTitle>
-            <CalendarDays className="h-5 w-5 inline mr-2" /> Match History (Set-by-Set)
+            <CalendarDays className="h-5 w-5 inline mr-2" /> Match History
+            (Set-by-Set)
           </CardTitle>
         </CardHeader>
         <CardContent>
           {filteredGames.length === 0 ? (
-            <div className="text-muted-foreground text-center py-4">No games played yet.</div>
+            <div className="text-muted-foreground text-center py-4">
+              No games played yet.
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left border-collapse">
@@ -247,13 +264,26 @@ export default function History({ seasonId }: { seasonId: number }) {
                 <tbody>
                   {filteredGames.map((game) =>
                     game.sets.map((set, idx) => (
-                      <tr key={`${game.id}-set-${set.set_no}`} className={idx % 2 === 0 ? "bg-muted/10" : ""}>
+                      <tr
+                        key={`${game.id}-set-${set.set_no}`}
+                        className={`${
+                          getTeamColors(game.team_id).bg
+                        } border-b border-muted`}
+                      >
                         <td className="px-4 py-2">{game.date}</td>
-                        <td className="px-4 py-2">{formatTime12H(game.time)}</td>
-                        <td className="px-4 py-2 font-semibold">{game.opponent}</td>
+                        <td className="px-4 py-2">
+                          {formatTime12H(game.time)}
+                        </td>
+                        <td className="px-4 py-2 font-semibold">
+                          {game.opponent}
+                        </td>
                         <td className="px-4 py-2 text-center">{set.set_no}</td>
-                        <td className="px-4 py-2 text-center text-green-700 font-bold">{set.points_for}</td>
-                        <td className="px-4 py-2 text-center text-red-600 font-bold">{set.points_against}</td>
+                        <td className="px-4 py-2 text-center text-green-700 font-bold">
+                          {set.points_for}
+                        </td>
+                        <td className="px-4 py-2 text-center text-red-600 font-bold">
+                          {set.points_against}
+                        </td>
                         <td className="px-4 py-2 text-center font-semibold">
                           {set.points_for! - set.points_against!}
                         </td>
@@ -276,14 +306,22 @@ export default function History({ seasonId }: { seasonId: number }) {
                               size="sm"
                               variant="default"
                               className="inline-flex items-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90"
-                              onClick={() => window.open(set.vod_link, "_blank", "noopener,noreferrer")}
+                              onClick={() =>
+                                window.open(
+                                  set.vod_link,
+                                  "_blank",
+                                  "noopener,noreferrer"
+                                )
+                              }
                               title="Watch VOD"
                             >
                               <PlayCircle className="h-4 w-4" />
                               Watch
                             </Button>
                           ) : (
-                            <span className="text-muted-foreground text-xs">—</span>
+                            <span className="text-muted-foreground text-xs">
+                              —
+                            </span>
                           )}
                         </td>
                       </tr>
