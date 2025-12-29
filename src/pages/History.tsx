@@ -30,6 +30,16 @@ interface PlayerOld {
   height: string | null;
 }
 
+interface Game {
+  id: number;
+  team_id: number | null;
+  court: number | null;
+  opponent: string | null;
+  time: string | null;
+  date: string | null;
+  season_id: number | null;
+}
+
 interface SetRow {
   id: number;
   game_id: number;
@@ -37,7 +47,9 @@ interface SetRow {
   points_for: number | null;
   points_against: number | null;
   result: string | null;
-  team_id: number | null;
+  vod_link: string | null;
+  subbed_players: any | null;
+  stand_ins: any | null;
 }
 
 /* ================= PAGE ================= */
@@ -46,6 +58,7 @@ export default function History({ seasonId }: { seasonId: number }) {
   const [season, setSeason] = useState<Season | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [players, setPlayers] = useState<PlayerOld[]>([]);
+  const [games, setGames] = useState<Game[]>([]);
   const [sets, setSets] = useState<SetRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,7 +69,6 @@ export default function History({ seasonId }: { seasonId: number }) {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-
       try {
         // Fetch season
         const { data: seasonData } = await supabase
@@ -82,6 +94,15 @@ export default function History({ seasonId }: { seasonId: number }) {
           .order("plus_minus", { ascending: false });
         setPlayers(playersData ?? []);
 
+        // Fetch games
+        const { data: gamesData } = await supabase
+          .from("games")
+          .select("*")
+          .eq("season_id", seasonId)
+          .order("date", { ascending: false })
+          .order("time", { ascending: false });
+        setGames(gamesData ?? []);
+
         // Fetch sets
         const { data: setsData } = await supabase
           .from("sets")
@@ -103,26 +124,27 @@ export default function History({ seasonId }: { seasonId: number }) {
   if (loading) return <div>Loading season…</div>;
   if (!season) return <div>Season not found</div>;
 
-  // Filtered players
   const filteredPlayers = players
     .filter((p) => playerFilter === "all" || p.id === playerFilter)
     .filter((p) =>
       playerSearch ? p.name.toLowerCase().includes(playerSearch.toLowerCase()) : true
     );
 
-  // Filtered teams
   const filteredTeams = teams.filter(
     (t) => teamFilter === "all" || t.team_id === teamFilter
   );
 
-  // Group sets by game
-  const groupedSets = sets.reduce<Record<number, SetRow[]>>((acc, s) => {
-    if (teamFilter === "all" || s.team_id === teamFilter) {
-      if (!acc[s.game_id]) acc[s.game_id] = [];
-      acc[s.game_id].push(s);
-    }
+  // Map sets to games
+  const gameSetsMap: Record<number, SetRow[]> = sets.reduce((acc, s) => {
+    if (!acc[s.game_id]) acc[s.game_id] = [];
+    acc[s.game_id].push(s);
     return acc;
-  }, {});
+  }, {} as Record<number, SetRow[]>);
+
+  // Filter games if teamFilter is applied
+  const filteredGames = games.filter(
+    (g) => teamFilter === "all" || g.team_id === teamFilter
+  );
 
   return (
     <div className="space-y-12 px-4 sm:px-6 lg:px-8">
@@ -245,21 +267,20 @@ export default function History({ seasonId }: { seasonId: number }) {
       {/* MATCH HISTORY */}
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Match History</h2>
-        {Object.keys(groupedSets).length === 0 && (
-          <p className="text-muted-foreground">No match data</p>
-        )}
+        {filteredGames.length === 0 && <p className="text-muted-foreground">No match data</p>}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Object.entries(groupedSets).map(([gameId, gameSets]) => (
+          {filteredGames.map((game) => (
             <div
-              key={gameId}
+              key={game.id}
               className="bg-white border rounded-lg p-4 shadow hover:shadow-lg transition"
             >
-              <div className="font-semibold text-lg mb-2">Game #{gameId}</div>
-              {gameSets.map((s) => (
-                <div
-                  key={s.id}
-                  className="flex justify-between text-sm py-1 border-b last:border-b-0"
-                >
+              <div className="flex justify-between mb-2">
+                <span className="font-semibold text-lg">{teams.find(t => t.team_id === game.team_id)?.name ?? "Unknown Team"}</span>
+                <span className="text-sm text-muted-foreground">{game.date} {game.time}</span>
+              </div>
+              <div className="mb-2 text-sm">Opponent: {game.opponent ?? "—"} | Court: {game.court ?? "—"}</div>
+              {gameSetsMap[game.id]?.map((s) => (
+                <div key={s.id} className="flex justify-between text-sm py-1 border-b last:border-b-0">
                   <span>Set {s.set_no}</span>
                   <span>{s.points_for}–{s.points_against}</span>
                   <span className="font-medium">{s.result}</span>
