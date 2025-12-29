@@ -66,8 +66,6 @@ const formatTime12H = (time?: string) => {
   return `${formattedHour}:${minute} ${suffix}`;
 };
 
-
-
 /* ================= PAGE ================= */
 
 export default function History({ seasonId }: { seasonId: number }) {
@@ -81,12 +79,12 @@ export default function History({ seasonId }: { seasonId: number }) {
   const [playerFilter, setPlayerFilter] = useState<number | "all">("all");
 
   const getTeamColors = (teamId?: number) => {
-  const team = teams.find((t) => t.team_id === teamId);
-  return {
-    bg: team?.color || "bg-muted/10",
-    fg: team?.color2 || ""
+    const team = teams.find((t) => t.team_id === teamId);
+    return {
+      bg: team?.color || "#f3f4f6", // fallback to a light gray
+      fg: team?.color2 || "#000000", // fallback to black
+    };
   };
-};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -252,6 +250,7 @@ export default function History({ seasonId }: { seasonId: number }) {
                   <tr className="border-b border-muted">
                     <th className="px-4 py-2">Date</th>
                     <th className="px-4 py-2">Time</th>
+                    <th className="px-4 py-2">Team</th>
                     <th className="px-4 py-2">Opponent</th>
                     <th className="px-4 py-2 text-center">Set</th>
                     <th className="px-4 py-2 text-center">PF</th>
@@ -266,13 +265,20 @@ export default function History({ seasonId }: { seasonId: number }) {
                     game.sets.map((set, idx) => (
                       <tr
                         key={`${game.id}-set-${set.set_no}`}
-                        className={`${
-                          getTeamColors(game.team_id).bg
-                        } border-b border-muted`}
+                        style={{
+                          backgroundColor: getTeamColors(game.team_id).bg,
+                        }}
+                        className="border-b border-muted"
                       >
                         <td className="px-4 py-2">{game.date}</td>
                         <td className="px-4 py-2">
                           {formatTime12H(game.time)}
+                        </td>
+                        <td className="px-4 py-2 font-semibold">
+                          {game.team_id
+                            ? teams.find((t) => t.team_id === game.team_id)
+                                ?.name
+                            : "N/A"}
                         </td>
                         <td className="px-4 py-2 font-semibold">
                           {game.opponent}
