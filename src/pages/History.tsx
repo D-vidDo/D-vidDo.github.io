@@ -71,9 +71,9 @@ export default function History({ seasonId }: { seasonId: number }) {
         <p className="text-sm text-muted-foreground">{season.name}</p>
       </header>
 
-      <TeamStats season_id={seasonId} />
-      <PlayerStats season_id={seasonId} />
-      <MatchHistory season_id={seasonId} />
+      <TeamStats seasonId={seasonId} />
+      <PlayerStats seasonId={seasonId} />
+      <MatchHistory seasonId={seasonId} />
     </div>
   );
 }
