@@ -266,7 +266,7 @@ export default function History({ seasonId }: { seasonId: number }) {
                       <tr
                         key={`${game.id}-set-${set.set_no}`}
                         style={{
-                          background: `linear-gradient(0deg, #ffffff
+                          background: `linear-gradient(90deg, #ffffff
              85%, ${getTeamColors(game.team_id).bg || "#ffffff"} 100%)`,
                         }}
                         className="border-b border-muted"
