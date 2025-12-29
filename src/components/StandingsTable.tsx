@@ -100,10 +100,16 @@ const StandingsTable = () => {
     async function fetchSeasons() {
       const { data } = await supabase
         .from("seasons")
-        .select("season_d, name")
+        .select("season_id, name")
         .order("season_id");
 
-      if (data) setSeasons(data);
+      if (!data || data.length === 0) return;
+
+      setSeasons(data);
+
+      // Ensure default season exists in options
+      const defaultSeason = data.find((s) => s.season_id === 2);
+      setSeasonId(defaultSeason ? defaultSeason.season_id : data[0].season_id);
     }
 
     fetchSeasons();
@@ -204,9 +210,7 @@ const StandingsTable = () => {
       });
 
       Object.values(teamMap).forEach((team) => {
-        team.games.sort(
-          (a, b) => a.dateTime.getTime() - b.dateTime.getTime()
-        );
+        team.games.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
       });
 
       setTeams(Object.values(teamMap));
@@ -250,17 +254,19 @@ const StandingsTable = () => {
         {/* Season Selector */}
         <div className="mt-2 flex items-center gap-3">
           <span className="text-sm text-muted-foreground">Season:</span>
-          <select
-            value={seasonId}
-            onChange={(e) => setSeasonId(Number(e.target.value))}
-            className="border border-border rounded px-3 py-1 bg-background text-sm shadow-sm"
-          >
-            {seasons.map((season) => (
-              <option key={season.season_id} value={season.season_id}>
-                {season.name}
-              </option>
-            ))}
-          </select>
+          {seasons.length > 0 && (
+            <select
+              value={seasonId}
+              onChange={(e) => setSeasonId(Number(e.target.value))}
+              className="border border-border rounded px-3 py-1 bg-background text-sm shadow-sm"
+            >
+              {seasons.map((season) => (
+                <option key={season.season_id} value={season.season_id}>
+                  {season.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </CardHeader>
 
