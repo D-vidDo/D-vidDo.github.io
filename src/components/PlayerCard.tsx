@@ -59,11 +59,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     .toUpperCase();
 
   const overallRating = Math.min(
-<<<<<<< HEAD
-    (Object.values(player.stats || {}).reduce((sum, val) => sum + val, 0) / 40) * 100,
-=======
     Object.values(player.stats || {}).reduce((sum, val) => sum + val, 0) * 2,
->>>>>>> parent of fe55ca3 (overall rating calc)
     100
   );
 
