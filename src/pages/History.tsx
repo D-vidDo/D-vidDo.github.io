@@ -69,6 +69,35 @@ const formatTime12H = (time?: string) => {
 /* ================= PAGE ================= */
 
 export default function History({ seasonId }: { seasonId: number }) {
+
+  const awards = [
+  {
+    title: "MVP",
+    winner: "Brandon Sangalang",
+    team: "Brawl Luu",
+    icon: "🏆",
+  },
+  {
+    title: "Defensive Player of the Season",
+    winner: "Justine Telan",
+    team: "Bull Luu",
+    icon: "🛡️",
+  },
+  {
+    title: "Best Vibes",
+    winner: "Brandon Sangalang",
+    team: "Brawl Luu",
+    icon: "✨",
+  },
+  {
+    title: "Most Improved",
+    winner: "Justine Telan",
+    team: "Bull Luu",
+    icon: "📈",
+  },
+];
+
+
   const [season, setSeason] = useState<Season | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [players, setPlayers] = useState<PlayerOld[]>([]);
@@ -172,6 +201,35 @@ export default function History({ seasonId }: { seasonId: number }) {
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
       <h1 className="text-3xl font-bold mb-2">{season.name}</h1>
+
+      <Card className="bg-gradient-to-r from-primary/10 via-background to-primary/10 border-primary/20">
+  <CardHeader>
+    <CardTitle className="text-2xl flex items-center gap-2">
+      🏆 Season Awards
+    </CardTitle>
+  </CardHeader>
+
+  <CardContent>
+    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {awards.map((award) => (
+        <div
+          key={award.title}
+          className="rounded-xl border bg-background/60 p-4 text-center shadow-sm hover:shadow-md transition"
+        >
+          <div className="text-4xl mb-2">{award.icon}</div>
+          <div className="font-bold text-lg">{award.title}</div>
+          <div className="mt-2 text-primary font-semibold">
+            {award.winner}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {award.team}
+          </div>
+        </div>
+      ))}
+    </div>
+  </CardContent>
+</Card>
+
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 items-center mb-6">
