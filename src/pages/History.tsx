@@ -74,25 +74,25 @@ export default function History({ seasonId }: { seasonId: number }) {
   {
     title: "Most Valuable Player",
     winner: "Brandon Sangalang",
-    team: "Brawl Luu",
+    team: "Brawl > Brawl > Bull",
     icon: "🏆",
   },
   {
     title: "Defensive Player",
     winner: "Justine Telan",
-    team: "Bull Luu",
+    team: "Brawl > Brawl > Bull",
     icon: "🛡️",
   },
   {
     title: "Ray of Sunshine",
     winner: "Brandon Sangalang",
-    team: "Brawl Luu",
+    team: "Brawl > Brawl > Bull",
     icon: "✨",
   },
   {
     title: "Most Improved",
     winner: "Justine Telan",
-    team: "Bull Luu",
+    team: "Brawl > Brawl > Bull",
     icon: "📈",
   },
 ];
