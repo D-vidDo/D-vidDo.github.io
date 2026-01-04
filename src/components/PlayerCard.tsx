@@ -59,7 +59,7 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     .toUpperCase();
 
   const overallRating = Math.min(
-    Object.values(player.stats || {}).reduce((sum, val) => sum + val, 0) * 2,
+    (Object.values(player.stats || {}).reduce((sum, val) => sum + val, 0) / 40) * 100,
     100
   );
 

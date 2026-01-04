@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import PlayerCard from "@/components/PlayerCard";
+import PlayerCard from "@/components/PlayerCard_SZN1";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, PlayCircle } from "lucide-react";
