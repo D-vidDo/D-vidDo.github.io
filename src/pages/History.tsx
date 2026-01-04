@@ -72,19 +72,19 @@ export default function History({ seasonId }: { seasonId: number }) {
 
   const awards = [
   {
-    title: "MVP",
+    title: "Most Valuable Player",
     winner: "Brandon Sangalang",
     team: "Brawl Luu",
     icon: "🏆",
   },
   {
-    title: "Defensive Player of the Season",
+    title: "Defensive Player",
     winner: "Justine Telan",
     team: "Bull Luu",
     icon: "🛡️",
   },
   {
-    title: "Best Vibes",
+    title: "Ray of Sunshine",
     winner: "Brandon Sangalang",
     team: "Brawl Luu",
     icon: "✨",
