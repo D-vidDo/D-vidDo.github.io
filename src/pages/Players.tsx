@@ -14,24 +14,28 @@ const statKeys = [
   "Games Played",
   "Overall Rating",
   "Serving",
-  "Passing",
+  "Receiving",
+  "Defensive Positioning",
   "Setting",
   "Blocking",
   "Hitting",
+  "Hustle",
   "Stamina",
-  "Game Sense",
+  "Vertical Jump",
   "Communication",
 ];
 
 const statAbbreviations: Record<string, string> = {
+  Hustle: "HUS",
   Hitting: "HIT",
   Serving: "SER",
   Setting: "SET",
   Stamina: "STA",
   Blocking: "BLO",
-  Passing: "PAS",
+  Receiving: "REC",
   Communication: "COM",
-  "Game Sense": "IQ",
+  "Vertical Jump": "VER",
+  "Defensive Positioning": "DEF",
   "+/-": "+/-",
   "Games Played": "GP",
   "Overall Rating": "OVR",
@@ -41,7 +45,7 @@ const getOverallRating = (player: any) => {
   if (!player.stats) return 0;
   const values = Object.values(player.stats);
   const total = values.reduce((sum: number, val: number) => sum + val, 0);
-  return Math.min((total / 40)*100, 100);
+  return Math.min(total * 2, 100);
 };
 
 const fetchPlayers = async () => {
