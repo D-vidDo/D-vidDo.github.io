@@ -58,12 +58,10 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     .join("")
     .toUpperCase();
 
-const overallRating = (player: any) => {
-  if (!player.stats) return 0;
-  const values = Object.values(player.stats);
-  const total = values.reduce((sum: number, val: number) => sum + val, 0);
-  return Math.min((total / 40)*100, 100);
-};
+  const overallRating = Math.min(
+    (Object.values(player.stats || {}).reduce((sum, val) => sum + val, 0) / 40) * 100,
+    100
+  );
 
   const chartData = Object.entries(player.stats || {}).map(([key, value]) => ({
     stat: key,
