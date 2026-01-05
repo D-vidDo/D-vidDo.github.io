@@ -59,7 +59,7 @@ const AdminGameEntry = () => {
   // Load teams
   useEffect(() => {
     async function loadTeams() {
-      const { data, error } = await supabase.from("teams").select("*");
+      const { data, error } = await supabase.from("teams").select("*").eq("season_id", 2);;
       if (error) setMessage(`Error loading teams: ${error.message}`);
       else {
         setTeams(data ?? []);
