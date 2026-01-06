@@ -38,14 +38,18 @@ const statAbbreviations: Record<string, string> = {
 };
 
 const getOverallRating = (player: any) => {
-  if (!player.stats) return 0;
+  if (!player.stat_visibility || !player.stats || Object.keys(player.stats).length === 0) {
+    return null;
+  }
+
   const values = Object.values(player.stats);
   const total = values.reduce((sum: number, val: number) => sum + val, 0);
   return Math.min((total / 40) * 100, 100);
 };
 
+
 const fetchPlayers = async () => {
-  const { data, error } = await supabase.from("players").select("*");
+  const { data, error } = await supabase.from("players_public").select("*");
   if (error) throw new Error(error.message);
   return data;
 };
