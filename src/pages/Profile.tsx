@@ -51,16 +51,28 @@ export default function ProfilePage() {
   const handleAuth = async () => {
     setError(null);
 
-    const fn = isSignup
-      ? supabase.auth.signUp
-      : supabase.auth.signInWithPassword;
+    try {
+      let result;
 
-    const { error } = await fn({
-      email,
-      password,
-    });
+      if (isSignup) {
+        result = await supabase.auth.signUp({
+          email,
+          password,
+        });
+      } else {
+        result = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+      }
 
-    if (error) setError(error.message);
+      if (result.error) {
+        setError(result.error.message);
+      }
+    } catch (err) {
+      console.error("Auth error:", err);
+      setError("Something went wrong. Try again.");
+    }
   };
 
   if (loading) {
@@ -116,10 +128,7 @@ export default function ProfilePage() {
     <div className="max-w-5xl mx-auto mt-12 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">My Profile</h1>
-        <Button
-          variant="ghost"
-          onClick={() => supabase.auth.signOut()}
-        >
+        <Button variant="ghost" onClick={() => supabase.auth.signOut()}>
           Logout
         </Button>
       </div>
