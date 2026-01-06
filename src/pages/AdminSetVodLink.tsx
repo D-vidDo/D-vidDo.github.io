@@ -28,7 +28,8 @@ function normalizeYouTubeUrl(input: string): string {
     if (url.hostname.includes("youtube.com")) {
       const id = url.searchParams.get("v");
       const t = url.searchParams.get("t");
-      if (id) return `https://www.youtube.com/watch?v=${id}${t ? `&t=${t}` : ""}`;
+      if (id)
+        return `https://www.youtube.com/watch?v=${id}${t ? `&t=${t}` : ""}`;
     }
     return trimmed;
   } catch {
@@ -129,7 +130,10 @@ const AdminSetVodLink: React.FC = () => {
     loadSets();
   }, [selectedGameId]);
 
-  const isValidYouTube = useMemo(() => ytPattern.test(youtubeUrl.trim()), [youtubeUrl]);
+  const isValidYouTube = useMemo(
+    () => ytPattern.test(youtubeUrl.trim()),
+    [youtubeUrl]
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -184,11 +188,14 @@ const AdminSetVodLink: React.FC = () => {
         }
       } else {
         // Insert new set row (if it wasn't recorded yet)
-        const { error: insertErr } = await supabase.from("sets").upsert({
-          game_id: selectedGameId,
-          set_no: setNo,
-          vod_link: normalized,
-        }, { onConflict: 'game_id,set_no' });
+        const { error: insertErr } = await supabase.from("sets").upsert(
+          {
+            game_id: selectedGameId,
+            set_no: setNo,
+            vod_link: normalized,
+          },
+          { onConflict: "game_id,set_no" }
+        );
 
         if (insertErr) {
           setMessage(`Failed to insert set with VOD: ${insertErr.message}`);
@@ -199,6 +206,14 @@ const AdminSetVodLink: React.FC = () => {
 
       setMessage("VOD link saved ✅");
       setYoutubeUrl("");
+
+      const teamsBySeason = teams.reduce((acc, team) => {
+        if (!acc[team.season_id]) {
+          acc[team.season_id] = [];
+        }
+        acc[team.season_id].push(team);
+        return acc;
+      }, {});
 
       // Refresh sets list
       const { data: refreshed } = await supabase
@@ -218,35 +233,54 @@ const AdminSetVodLink: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto mt-12 p-4 sm:p-6 bg-card rounded-lg shadow space-y-8">
       <section>
-        <h2 className="text-2xl font-bold mb-4">Secret Admin: Attach VOD to Set</h2>
+        <h2 className="text-2xl font-bold mb-4">
+          Secret Admin: Attach VOD to Set
+        </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Team Selection (radio tiles with logos) */}
           <div>
             <label className="block mb-2 font-semibold">Select Team</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {teams.map((team) => (
-                <label
-                  key={team.team_id}
-                  className={`cursor-pointer border rounded-lg p-2 flex flex-col items-center justify-center transition ${
-                    teamId === team.team_id ? "border-primary ring-2 ring-primary" : "border-muted"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="team"
-                    value={team.team_id}
-                    checked={teamId === team.team_id}
-                    onChange={() => setTeamId(team.team_id)}
-                    className="hidden"
-                  />
-                  <img
-                    src={`/logos/${team.team_id}.jpg`}
-                    alt={team.name}
-                    className="w-16 h-16 object-contain mb-2"
-                  />
-                  <span className="text-sm font-medium text-center">{team.name}</span>
-                </label>
+
+            <div className="space-y-8">
+              {Object.entries(teamsBySeason).map(([seasonId, seasonTeams]) => (
+                <div key={seasonId}>
+                  {/* Season Header */}
+                  <h3 className="mb-3 text-lg font-semibold">
+                    Season {seasonId}
+                  </h3>
+
+                  {/* Teams Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {seasonTeams.map((team) => (
+                      <label
+                        key={team.team_id}
+                        className={`cursor-pointer border rounded-lg p-2 flex flex-col items-center justify-center transition ${
+                          teamId === team.team_id
+                            ? "border-primary ring-2 ring-primary"
+                            : "border-muted"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="team"
+                          value={team.team_id}
+                          checked={teamId === team.team_id}
+                          onChange={() => setTeamId(team.team_id)}
+                          className="hidden"
+                        />
+                        <img
+                          src={`/logos/${team.team_id}.jpg`}
+                          alt={team.name}
+                          className="w-16 h-16 object-contain mb-2"
+                        />
+                        <span className="text-sm font-medium text-center">
+                          {team.name}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -270,12 +304,16 @@ const AdminSetVodLink: React.FC = () => {
 
           {/* Set + YouTube URL */}
           <div>
-            <label className="block mb-2 font-semibold">Attach YouTube VOD</label>
+            <label className="block mb-2 font-semibold">
+              Attach YouTube VOD
+            </label>
             <div className="flex flex-wrap gap-2 mb-2">
               <input
                 type="number"
                 value={setNo}
-                onChange={(e) => setSetNo(Math.max(1, Number(e.target.value) || 1))}
+                onChange={(e) =>
+                  setSetNo(Math.max(1, Number(e.target.value) || 1))
+                }
                 min={1}
                 placeholder="Set Number"
                 className="border rounded px-2 py-2 w-full sm:w-28"
@@ -297,14 +335,18 @@ const AdminSetVodLink: React.FC = () => {
               </button>
             </div>
             {!isValidYouTube && youtubeUrl.trim() !== "" && (
-              <div className="text-sm text-red-600">Enter a valid YouTube link (youtube.com or youtu.be).</div>
+              <div className="text-sm text-red-600">
+                Enter a valid YouTube link (youtube.com or youtu.be).
+              </div>
             )}
           </div>
 
           {/* Existing sets for selected game */}
           {!!sets.length && (
             <div>
-              <h3 className="font-semibold mb-2">Existing Sets for Selected Game</h3>
+              <h3 className="font-semibold mb-2">
+                Existing Sets for Selected Game
+              </h3>
               <ul className="space-y-1">
                 {sets
                   .filter((s) => s.set_no !== null)
