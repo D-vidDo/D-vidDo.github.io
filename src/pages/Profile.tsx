@@ -34,28 +34,21 @@ export default function ProfilePage() {
 
   // Fetch linked player (PRIVATE TABLE)
   useEffect(() => {
-  if (!user) {
-    setPlayer(null);
-    return;
-  }
+  if (!user) return;
 
   const fetchPlayer = async () => {
     const { data, error } = await supabase
       .from("players")
-      .select("*") // select all columns
+      .select("*")
       .eq("user_id", user.id)
       .single();
 
-    if (error) {
-      console.error("Error fetching player:", error.message);
-      setPlayer(null);
-    } else {
-      setPlayer(data); // include stat_visibility and all stats
-    }
+    setPlayer(data);
   };
 
   fetchPlayer();
-}, [user]);
+}, [user?.id]);
+
 
 
   // Login / Signup handler
