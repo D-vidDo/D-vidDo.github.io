@@ -89,25 +89,32 @@ export default function ProfilePage() {
           {isSignup ? "Create Account" : "Login"}
         </h1>
 
-        <Input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="mb-3"
-        />
-        <Input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="mb-4"
-        />
+        <form
+          onSubmit={(e) => {
+            e.preventDefault(); // prevent page reload
+            handleAuth();
+          }}
+        >
+          <Input
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mb-3"
+          />
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mb-4"
+          />
 
-        {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
+          {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
 
-        <Button className="w-full" onClick={handleAuth}>
-          {isSignup ? "Sign Up" : "Login"}
-        </Button>
+          <Button className="w-full" type="submit">
+            {isSignup ? "Sign Up" : "Login"}
+          </Button>
+        </form>
 
         <button
           className="mt-4 text-sm text-muted-foreground"
