@@ -34,55 +34,74 @@ export default function ProfilePage() {
 
   // Fetch linked player (PRIVATE TABLE)
   useEffect(() => {
-  if (!user) {
-    setPlayer(null);
-    return;
-  }
-
-  const fetchPlayer = async () => {
-    const { data, error } = await supabase
-      .from("players")
-      .select("*") // select all columns
-      .eq("user_id", user.id)
-      .single();
-
-    if (error) {
-      console.error("Error fetching player:", error.message);
+    if (!user) {
       setPlayer(null);
-    } else {
-      setPlayer(data); // include stat_visibility and all stats
+      return;
     }
-  };
 
-  fetchPlayer();
-}, [user]);
+    const fetchPlayer = async () => {
+      const { data, error } = await supabase
+        .from("players")
+        .select("*") // select all columns
+        .eq("user_id", user.id)
+        .single();
 
+      if (error) {
+        console.error("Error fetching player:", error.message);
+        setPlayer(null);
+      } else {
+        setPlayer(data); // include stat_visibility and all stats
+      }
+    };
+
+    fetchPlayer();
+  }, [user]);
 
   // Login / Signup handler
   const handleAuth = async () => {
     setError(null);
 
     try {
-      let result;
-
       if (isSignup) {
-        result = await supabase.auth.signUp({
+        // SIGNUP FLOW
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: window.location.origin + "/profile", // optional redirect after confirmation
+          },
         });
-      } else {
-        result = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-      }
 
-      if (result.error) {
-        setError(result.error.message);
+        if (error) {
+          setError(error.message);
+          return;
+        }
+
+        // Supabase usually doesn't return user until confirmed
+        alert(
+          "Signup successful! Please check your email to confirm your account before logging in."
+        );
+        setIsSignup(false); // optionally switch to login form
+        setEmail(""); // clear form
+        setPassword("");
+      } else {
+        // LOGIN FLOW
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          setError(error.message);
+          return;
+        }
+
+        // data.user is now available
+        setUser(data.user);
       }
     } catch (err) {
       console.error("Auth error:", err);
-      setError("Something went wrong. Try again.");
+      setError("Something went wrong. Please try again.");
     }
   };
 
