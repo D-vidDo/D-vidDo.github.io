@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Trophy, Upload } from "lucide-react";
+import { Menu, X, Trophy, Upload, User } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 
 const Navigation = () => {
@@ -52,13 +52,21 @@ const Navigation = () => {
               </Link>
             ))}
 
-
             <Link to="/vod">
               <Button
                 variant="ghost"
                 className="text-white hover:bg-white hover:text-black border border-white"
               >
                 Upload VOD
+              </Button>
+            </Link>
+            <Link to="/profile">
+              <Button
+                variant="ghost"
+                className="text-white hover:bg-white hover:text-black border border-white flex items-center"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Profile
               </Button>
             </Link>
           </div>
@@ -97,6 +105,16 @@ const Navigation = () => {
                   </Button>
                 </Link>
               ))}
+
+              <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+                <Button
+                  variant="ghost"
+                  className="w-full flex items-center justify-center text-white hover:bg-white hover:text-black border border-white"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
+                </Button>
+              </Link>
 
               <Link to="/vod" onClick={() => setIsMenuOpen(false)}>
                 <Button
