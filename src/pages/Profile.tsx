@@ -215,9 +215,21 @@ export default function ProfilePage() {
               onClick={async () => {
                 if (!player) return;
 
+                // ✅ Validate the URL before saving
+                if (
+                  imageUrl.trim() !== "" &&
+                  !/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/i.test(imageUrl)
+                ) {
+                  alert(
+                    "Please enter a valid image URL (jpg, jpeg, png, or gif)"
+                  );
+                  return; // stop the function if invalid
+                }
+
+                // Update the player in Supabase
                 const { data, error } = await supabase
                   .from("players")
-                  .update({ imageUrl }) // match the table column
+                  .update({ imageUrl }) // matches your column name
                   .eq("id", player.id)
                   .select()
                   .single();
