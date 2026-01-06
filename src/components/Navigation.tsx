@@ -66,7 +66,7 @@ const Navigation = () => {
                 className="text-white hover:bg-white hover:text-black border border-white flex items-center"
               >
                 <User className="h-4 w-4 mr-2" />
-                Profile
+                {/* Profile */}
               </Button>
             </Link>
           </div>
