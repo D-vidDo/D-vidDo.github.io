@@ -32,6 +32,7 @@ interface Player {
   teamColor: string;
   teamColor2: string;
   stats: Record<string, number>;
+  stat_visibility: Boolean;
   height?: string;
   dominant_hand?: string;
   reach?: string;
@@ -58,10 +59,16 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     .join("")
     .toUpperCase();
 
-  const overallRating = Math.min(
-    (Object.values(player.stats || {}).reduce((sum, val) => sum + val, 0) / 40) * 100,
-    100
-  );
+  const hasVisibleStats =
+    player.stat_visibility && Object.keys(player.stats || {}).length > 0;
+
+  const overallRating = hasVisibleStats
+    ? Math.min(
+        (Object.values(player.stats).reduce((sum, val) => sum + val, 0) / 40) *
+          100,
+        100
+      )
+    : null;
 
   const chartData = Object.entries(player.stats || {}).map(([key, value]) => ({
     stat: key,
@@ -150,17 +157,17 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
             </div>
           </div>
           {/* CARD OVERALL RATING */}
-            <div className="flex flex-col items-center absolute top-3 right-3">
-              <span className="text-[10px] font-semibold text-muted-foreground mb-0.5">
-                OVR
-              </span>
-              <Badge
-                variant="secondary"
-                className="text-base px-2 py-1 font-bold"
-              >
-                {overallRating}
-              </Badge>
-            </div>
+          <div className="flex flex-col items-center absolute top-3 right-3">
+            <span className="text-[10px] font-semibold text-muted-foreground mb-0.5">
+              OVR
+            </span>
+            <Badge
+              variant="secondary"
+              className="text-base px-2 py-1 font-bold"
+            >
+              {overallRating}
+            </Badge>
+          </div>
         </CardHeader>
 
         <CardContent>
@@ -213,17 +220,23 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
                 <span className="text-primary">{overallRating}</span>
               </div>
             )}
-            {Object.entries(player.stats || {}).map(([stat, value]) => (
-              <div
-                key={stat}
-                className={`flex justify-between items-center rounded px-2 py-1 ${
-                  sortKey === stat ? "bg-yellow-100 font-bold" : "bg-muted/30"
-                }`}
-              >
-                <span className="font-medium capitalize">{stat}</span>
-                <span className="text-primary">{value}</span>
+            {hasVisibleStats &&
+              Object.entries(player.stats).map(([stat, value]) => (
+                <div
+                  key={stat}
+                  className={`flex justify-between items-center rounded px-2 py-1 ${
+                    sortKey === stat ? "bg-yellow-100 font-bold" : "bg-muted/30"
+                  }`}
+                >
+                  <span className="font-medium capitalize">{stat}</span>
+                  <span className="text-primary">{value}</span>
+                </div>
+              ))}
+            {!hasVisibleStats && (
+              <div className="text-xs text-muted-foreground italic text-center">
+                Stats are private
               </div>
-            ))}
+            )}
           </div>
         </CardContent>
       </Card>
