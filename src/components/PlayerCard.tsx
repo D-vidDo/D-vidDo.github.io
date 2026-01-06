@@ -46,9 +46,15 @@ interface PlayerCardProps {
   allPlayers?: Player[];
   sortKey?: string;
   allTeams?: Player[];
+  forceShowStats?: Boolean;
 }
 
-const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
+const PlayerCard = ({
+  player,
+  allPlayers = [],
+  sortKey,
+  forceShowStats = false,
+}: PlayerCardProps) => {
   const [open, setOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [comparePlayer, setComparePlayer] = useState<Player | null>(null);
@@ -60,7 +66,8 @@ const PlayerCard = ({ player, allPlayers = [], sortKey }: PlayerCardProps) => {
     .toUpperCase();
 
   const hasVisibleStats =
-    player.stat_visibility && Object.keys(player.stats || {}).length > 0;
+    (forceShowStats || player.stat_visibility) &&
+    Object.keys(player.stats || {}).length > 0;
 
   const overallRating = hasVisibleStats
     ? Math.min(

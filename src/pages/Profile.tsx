@@ -188,7 +188,7 @@ export default function ProfilePage() {
       ) : (
         <>
           {/* FULL PRIVATE PLAYER CARD (stats always visible) */}
-          <PlayerCard player={player} />
+          <PlayerCard player={player} forceShowStats />
 
           <Card className="mt-6 p-4">
             <p className="font-medium mb-2">Player Image</p>
