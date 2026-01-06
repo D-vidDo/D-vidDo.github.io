@@ -135,6 +135,14 @@ const AdminSetVodLink: React.FC = () => {
     [youtubeUrl]
   );
 
+  const teamsBySeason = teams.reduce((acc, team) => {
+        if (!acc[team.season_id]) {
+          acc[team.season_id] = [];
+        }
+        acc[team.season_id].push(team);
+        return acc;
+      }, {});
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage("");
@@ -207,13 +215,7 @@ const AdminSetVodLink: React.FC = () => {
       setMessage("VOD link saved ✅");
       setYoutubeUrl("");
 
-      const teamsBySeason = teams.reduce((acc, team) => {
-        if (!acc[team.season_id]) {
-          acc[team.season_id] = [];
-        }
-        acc[team.season_id].push(team);
-        return acc;
-      }, {});
+      
 
       // Refresh sets list
       const { data: refreshed } = await supabase
