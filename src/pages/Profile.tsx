@@ -16,6 +16,15 @@ export default function ProfilePage() {
   const [isSignup, setIsSignup] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [imageUrl, setImageUrl] = useState<string>("");
+
+  // Initialize from player when loaded
+  useEffect(() => {
+    if (player?.imageUrl) {
+      setImageUrl(player.imageUrl);
+    }
+  }, [player]);
+
   // Get auth user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -180,6 +189,50 @@ export default function ProfilePage() {
         <>
           {/* FULL PRIVATE PLAYER CARD (stats always visible) */}
           <PlayerCard player={player} />
+
+          <Card className="mt-6 p-4">
+            <p className="font-medium mb-2">Player Image</p>
+
+            {/* Preview */}
+            {imageUrl && (
+              <img
+                src={imageUrl}
+                alt="Player"
+                className="h-32 w-32 object-cover rounded-lg mb-3"
+              />
+            )}
+
+            {/* Input field */}
+            <Input
+              placeholder="Enter image URL"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              className="mb-3"
+            />
+
+            {/* Save button */}
+            <Button
+              onClick={async () => {
+                if (!player) return;
+
+                const { data, error } = await supabase
+                  .from("players")
+                  .update({ imageUrl }) // match the table column
+                  .eq("id", player.id)
+                  .select()
+                  .single();
+
+                if (error) {
+                  alert("Error updating image: " + error.message);
+                } else {
+                  setPlayer(data); // update local state
+                  alert("Player image updated!");
+                }
+              }}
+            >
+              Save Image
+            </Button>
+          </Card>
 
           {/* Visibility Toggle */}
           <Card className="mt-6 p-4 flex items-center justify-between">
