@@ -63,7 +63,7 @@ const Navigation = () => {
             <Link to="/profile">
               <Button
                 variant="ghost"
-                className="flex items-center justify-center text-white w-10 h-10 p-0 rounded-full hover:bg-white hover:text-black border border-white"
+                className="flex items-center justify-center text-white w-10 h-10 p-0 hover:bg-white hover:text-black border border-white"
               >
                 <User className="h-5 w-5" />
               </Button>
