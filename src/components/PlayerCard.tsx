@@ -71,8 +71,11 @@ const PlayerCard = ({
 
   const overallRating = hasVisibleStats
     ? Math.min(
-        (Object.values(player.stats).reduce((sum, val) => sum + val, 0) / 40) *
-          100,
+        Math.round(
+          (Object.values(player.stats).reduce((sum, val) => sum + val, 0) *
+            100) /
+            40
+        ),
         100
       )
     : null;
