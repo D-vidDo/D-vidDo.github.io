@@ -18,6 +18,64 @@ export default function ProfilePage() {
 
   const [imageUrl, setImageUrl] = useState<string>("");
 
+  // match history consts
+  const [matchHistory, setMatchHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  useEffect(() => {
+    if (!player?.sets_played || player.sets_played.length === 0) {
+      setMatchHistory([]);
+      return;
+    }
+
+    const fetchMatchHistory = async () => {
+      setLoadingHistory(true);
+      try {
+        // Fetch the set info
+        const { data: setsData, error: setsError } = await supabase
+          .from("sets")
+          .select(
+            `
+          id,
+          set_no,
+          points_for,
+          points_against,
+          result,
+          game_id,
+          season_id,
+          games (
+            id,
+            opponent,
+            date,
+            time,
+            team_id,
+            teams:teams(name, color)
+          )
+        `
+          )
+          .in("id", player.sets_played);
+
+        if (setsError) throw setsError;
+
+        // Optional: sort by date
+        const sorted = (setsData || []).sort(
+          (a, b) =>
+            new Date(a.games?.date || 0).getTime() -
+            new Date(b.games?.date || 0).getTime()
+        );
+
+        setMatchHistory(sorted);
+      } catch (err: any) {
+        console.error("Error fetching match history:", err.message);
+        setMatchHistory([]);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+
+    fetchMatchHistory();
+  }, [player]);
+
   // Initialize from player when loaded
   useEffect(() => {
     if (player?.imageUrl) {
@@ -189,6 +247,52 @@ export default function ProfilePage() {
         <>
           {/* FULL PRIVATE PLAYER CARD (stats always visible) */}
           <PlayerCard player={player} forceShowStats />
+
+          <Card className="mt-6 p-4">
+            <h2 className="text-xl font-bold mb-4">Match History</h2>
+
+            {/* MATCH HISTORY*/}
+            {loadingHistory ? (
+              <p>Loading match history...</p>
+            ) : matchHistory.length === 0 ? (
+              <p className="text-muted-foreground">No match history yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {matchHistory.map((set) => (
+                  <div
+                    key={set.id}
+                    className="flex justify-between items-center bg-muted/30 border border-muted rounded-lg p-3"
+                  >
+                    <div>
+                      <p className="font-semibold">
+                        {set.games?.opponent || "Unknown Opponent"} — Set{" "}
+                        {set.set_no}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {set.points_for} - {set.points_against} ({set.result})
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {set.games?.date} | Team:{" "}
+                        {set.games?.teams?.name || "?"}
+                      </p>
+                    </div>
+
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-bold ${
+                        set.result === "W"
+                          ? "bg-green-100 text-green-700"
+                          : set.result === "L"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {set.result}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
 
           <Card className="mt-6 p-4">
             <p className="font-medium mb-2">Player Image</p>
