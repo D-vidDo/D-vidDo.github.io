@@ -59,7 +59,10 @@ const AdminGameEntry = () => {
   // Load teams
   useEffect(() => {
     async function loadTeams() {
-      const { data, error } = await supabase.from("teams").select("*").eq("season_id", 2);;
+      const { data, error } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("season_id", 2);
       if (error) setMessage(`Error loading teams: ${error.message}`);
       else {
         setTeams(data ?? []);
@@ -221,14 +224,18 @@ const AdminGameEntry = () => {
     setMessage("");
 
     try {
+      const standInIds = Object.values(standIns).filter((id): id is string =>
+        Boolean(id)
+      );
+
       const setsPayload = sets.map((set) => ({
         game_id: selectedGameId,
         set_no: set.set_no,
         points_for: set.points_for,
         points_against: set.points_against,
         result: set.result,
-        subbed_players: subPlayers,
-        stand_ins: standIns,
+        subbed_players: subPlayers, // array of IDs
+        stand_ins: standInIds, // array of IDs
       }));
 
       const { error: setError } = await supabase
