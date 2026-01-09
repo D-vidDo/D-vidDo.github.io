@@ -172,6 +172,30 @@ export default function ProfilePage() {
     }
   };
 
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+
+  const handleForgotPassword = async () => {
+    setError(null);
+    setResetMessage(null);
+
+    if (!email) {
+      setError("Please enter your email first.");
+      return;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/profile",
+    });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setResetMessage(
+        "Password reset email sent. Check your inbox (and spam folder)."
+      );
+    }
+  };
+
   if (loading) {
     return <p className="text-center mt-20">Loading...</p>;
   }
@@ -205,6 +229,22 @@ export default function ProfilePage() {
             onChange={(e) => setPassword(e.target.value)}
             className="mb-4"
           />
+
+          {/* Forgot password (LOGIN ONLY) */}
+          {!isSignup && (
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="text-sm text-primary hover:underline mb-2"
+            >
+              Forgot password?
+            </button>
+          )}
+
+          {/* Reset success message */}
+          {resetMessage && (
+            <p className="text-sm text-green-600 mb-2">{resetMessage}</p>
+          )}
 
           {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
 
