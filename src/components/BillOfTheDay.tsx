@@ -12,38 +12,35 @@ const BillOfTheDay = () => {
 
   useEffect(() => {
     async function fetchImage() {
-      const { data, error } = await supabase.storage.from(BUCKET_NAME).list("", {
-        //limit: 100,
-        //sortBy: { column: "name", order: "asc" },
-      });
+      const { data, error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .list("", { limit: 100 });
 
       if (error) {
-        console.error("Error fetching images:", error.message);
+        console.error(error.message);
         setLoading(false);
         return;
       }
-      
-if (!data || data.length === 0) {
-  console.warn("Bucket is empty — no images found.");
-  setImageUrl(null); // or set a fallback image URL here
-  setLoading(false);
-  return;
-}
 
+      const images = (data ?? []).filter((item) => item.id !== null);
 
-      if (data && data.length > 0) {
-  const totalImages = data.length;
-  const dayIndex = new Date().getDate() % totalImages;
-  const selectedImage = data[dayIndex];
+      if (images.length === 0) {
+        setImageUrl(null);
+        setLoading(false);
+        return;
+      }
 
-  const { data: publicUrlData } = supabase.storage
-    .from(BUCKET_NAME)
-    .getPublicUrl(selectedImage.name);
+      const today = new Date();
+      const seed =
+        today.getFullYear() * 1000 + today.getMonth() * 50 + today.getDate();
 
-  setImageUrl(publicUrlData?.publicUrl ?? null);
-}
+      const selected = images[seed % images.length];
 
+      const { data: urlData } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(selected.name);
 
+      setImageUrl(urlData?.publicUrl ?? null);
       setLoading(false);
     }
 
