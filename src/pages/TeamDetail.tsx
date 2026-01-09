@@ -90,7 +90,7 @@ useEffect(() => {
       setTeam(teamData);
 
       const { data: playersData } = await supabase
-        .from("players")
+        .from("players_public")
         .select("*")
         .in("id", teamData?.player_ids ?? []);
       setPlayers(playersData ?? []);
