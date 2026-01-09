@@ -12,33 +12,45 @@ const BillOfTheDay = () => {
 
   useEffect(() => {
     async function fetchImage() {
+      setLoading(true);
+
       const { data, error } = await supabase.storage
         .from(BUCKET_NAME)
         .list("", { limit: 100 });
 
       if (error) {
-        console.error(error.message);
+        console.error("Storage list error:", error.message);
         setLoading(false);
         return;
       }
 
-      const images = (data ?? []).filter((item) => item.id !== null);
+      console.log("Raw storage data:", data);
+
+      const images = (data ?? []).filter((item) =>
+        item.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)
+      );
+
+      console.log("Filtered images:", images);
 
       if (images.length === 0) {
+        console.warn("No valid image files found.");
         setImageUrl(null);
         setLoading(false);
         return;
       }
 
       const today = new Date();
-      const seed =
-        today.getFullYear() * 1000 + today.getMonth() * 50 + today.getDate();
+      const index =
+        (today.getFullYear() + today.getMonth() + today.getDate()) %
+        images.length;
 
-      const selected = images[seed % images.length];
+      const selected = images[index];
 
       const { data: urlData } = supabase.storage
         .from(BUCKET_NAME)
-        .getPublicUrl(selected.name);
+        .getPublicUrl(encodeURIComponent(selected.name));
+
+      console.log("Selected image URL:", urlData?.publicUrl);
 
       setImageUrl(urlData?.publicUrl ?? null);
       setLoading(false);
