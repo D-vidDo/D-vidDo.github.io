@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Trophy, Upload, User } from "lucide-react";
+import { Menu, X, Trophy, Upload, User, UserCheck } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { supabase } from "@/lib/supabase";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,6 +19,22 @@ const Navigation = () => {
     { path: "/trades", label: "Trades" },
     { path: "/history/1", label: "History" },
   ];
+
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const isActive = (path: string) =>
     location.pathname === path ||
@@ -65,7 +82,11 @@ const Navigation = () => {
                 variant="ghost"
                 className="flex items-center justify-center text-white w-10 h-10 p-0 hover:bg-white hover:text-black border border-white"
               >
-                <User className="h-5 w-5" />
+                {user ? (
+                  <UserCheck className="h-5 w-5" />
+                ) : (
+                  <User className="h-5 w-5" />
+                )}
               </Button>
             </Link>
           </div>
@@ -110,7 +131,11 @@ const Navigation = () => {
                   variant="ghost"
                   className="w-full flex items-center justify-center text-white hover:bg-white hover:text-black border border-white"
                 >
-                  <User className="h-4 w-4 mr-2" />
+                  {user ? (
+                    <UserCheck className="h-4 w-4 mr-2" />
+                  ) : (
+                    <User className="h-4 w-4 mr-2" />
+                  )}
                   Profile
                 </Button>
               </Link>
