@@ -17,6 +17,8 @@ interface Player {
   games_played: number | null;
 }
 
+const ADMIN_UID = "988a9abb-84a6-4485-99de-9fcf61363dcf";
+
 const AdminGameEntry = () => {
   const [teams, setTeams] = useState<any[]>([]);
   const [teamId, setTeamId] = useState<string>("");
@@ -55,6 +57,34 @@ const AdminGameEntry = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [dupSetNos, setDupSetNos] = useState<number[]>([]);
+
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    async function checkAuth() {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        setAuthorized(false);
+        setAuthChecked(true);
+        return;
+      }
+
+      if (user.id === ADMIN_UID) {
+        setAuthorized(true);
+      } else {
+        setAuthorized(false);
+      }
+
+      setAuthChecked(true);
+    }
+
+    checkAuth();
+  }, []);
 
   // Load teams
   useEffect(() => {
@@ -398,6 +428,27 @@ const AdminGameEntry = () => {
     setShowConfirm(true);
     setLoading(false);
   };
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <span className="text-muted-foreground">Checking access…</span>
+      </div>
+    );
+  }
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <h2 className="text-lg font-bold text-red-700">Access Denied</h2>
+          <p className="text-sm text-red-600 mt-2">
+            You do not have permission to view this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto mt-10 px-4 sm:px-6">
