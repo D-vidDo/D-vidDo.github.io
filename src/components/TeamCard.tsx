@@ -97,11 +97,12 @@ const TeamCard = ({ team }: TeamCardProps) => {
                   {team.name}
                 </h3>
 
-                <span
-                  title={`Season ${team.season_id}`}
-                  className="text-xs px-1.5 py-0.5 rounded bg-muted"
-                >
-                  {team.season_id === 1 ? "🍂" : "❄️"}
+                <span title={`Season ${team.season_id}`} className="text-sm">
+                  {team.season_id === 1
+                    ? "🍂"
+                    : team.season_id === 2
+                    ? "❄️"
+                    : null}
                 </span>
               </div>
 
