@@ -15,6 +15,7 @@ interface TeamCardProps {
     player_ids?: string[];
     wins: number;
     losses: number;
+    season_id?: number;
   };
 }
 
@@ -91,10 +92,22 @@ const TeamCard = ({ team }: TeamCardProps) => {
               className="w-12 h-12 rounded-lg object-contain shadow-md"
             />
             <div>
-              <h3 className="text-lg font-bold text-card-foreground group-hover:text-primary transition-colors">
-                {team.name}
-              </h3>
-              <p className="text-sm text-muted-foreground">Captain: {team.captain}</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-card-foreground group-hover:text-primary transition-colors">
+                  {team.name}
+                </h3>
+
+                <span
+                  title={`Season ${team.season_id}`}
+                  className="text-xs px-1.5 py-0.5 rounded bg-muted"
+                >
+                  {team.season_id === 1 ? "🍂" : "❄️"}
+                </span>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Captain: {team.captain}
+              </p>
             </div>
           </div>
           <Badge variant="secondary" className="font-semibold">
