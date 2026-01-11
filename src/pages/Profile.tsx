@@ -303,7 +303,7 @@ export default function ProfilePage() {
                 {matchHistory.map((set) => (
                   <div
                     key={set.id}
-                    className="flex justify-between items-center bg-muted/30 border border-muted rounded-lg p-3"
+                    className="flex items-center bg-muted/30 border border-muted rounded-lg p-3"
                   >
                     <div>
                       <p className="font-semibold">
@@ -336,7 +336,7 @@ export default function ProfilePage() {
                     )}
 
                     <span
-                      className={`px-2 py-1 rounded text-xs font-bold ${
+                      className={`px-2 py-1 rounded text-xs font-bold ml-auto ${
                         set.result === "W"
                           ? "bg-green-100 text-green-700"
                           : set.result === "L"
