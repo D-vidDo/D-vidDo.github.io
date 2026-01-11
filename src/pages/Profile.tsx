@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PlayerCard from "@/components/PlayerCard";
+import { Play } from "lucide-react";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
@@ -41,6 +42,7 @@ export default function ProfilePage() {
           points_for,
           points_against,
           result,
+          vod_link,
           game_id,
           season_id,
           games (
@@ -316,6 +318,22 @@ export default function ProfilePage() {
                         {set.games?.teams?.name || "?"}
                       </p>
                     </div>
+
+                    {/* VOD BUTTON */}
+                    {set.vod_link ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(set.vod_link, "_blank")}
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        VOD
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">
+                        -
+                      </span>
+                    )}
 
                     <span
                       className={`px-2 py-1 rounded text-xs font-bold ${
