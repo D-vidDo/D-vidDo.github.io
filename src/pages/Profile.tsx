@@ -319,33 +319,31 @@ export default function ProfilePage() {
                       </p>
                     </div>
 
-                    {/* VOD BUTTON */}
-                    {set.vod_link ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(set.vod_link, "_blank")}
+                    {/* RIGHT: Result + VOD (fixed, aligned) */}
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-bold ${
+                          set.result === "W"
+                            ? "bg-green-100 text-green-700"
+                            : set.result === "L"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
                       >
-                        <Play className="h-4 w-4 mr-1" />
-                        VOD
-                      </Button>
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic">
-                        -
+                        {set.result}
                       </span>
-                    )}
 
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-bold ml-auto ${
-                        set.result === "W"
-                          ? "bg-green-100 text-green-700"
-                          : set.result === "L"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-amber-100 text-amber-700"
-                      }`}
-                    >
-                      {set.result}
-                    </span>
+                      {set.vod_link && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(set.vod_link, "_blank")}
+                        >
+                          <Play className="h-4 w-4 mr-1" />
+                          VOD
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
