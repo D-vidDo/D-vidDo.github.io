@@ -303,7 +303,7 @@ export default function ProfilePage() {
                 {matchHistory.map((set) => (
                   <div
                     key={set.id}
-                    className="flex items-center bg-muted/30 border border-muted rounded-lg p-3"
+                    className="flex items-center gap-4 bg-muted/30 border border-muted rounded-lg p-3"
                   >
                     <div>
                       <p className="font-semibold">
