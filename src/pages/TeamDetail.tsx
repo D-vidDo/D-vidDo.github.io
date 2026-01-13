@@ -242,7 +242,7 @@ useEffect(() => {
             <img
               src={`/logos/${team.team_id}.png`}
               alt={`${team.name} logo`}
-              className="w-24 h-24 rounded-xl object-contain shadow-md"
+              className="w-48 h-48 rounded-xl object-contain"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
               }}
