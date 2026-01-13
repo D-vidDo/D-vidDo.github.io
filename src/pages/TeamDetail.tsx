@@ -240,7 +240,7 @@ useEffect(() => {
           </Link>
           <div className="flex items-center space-x-6">
             <img
-              src={`/logos/${team.team_id}.jpg`}
+              src={`/logos/${team.team_id}.png`}
               alt={`${team.name} logo`}
               className="w-24 h-24 rounded-xl object-contain shadow-md"
               onError={(e) => {
