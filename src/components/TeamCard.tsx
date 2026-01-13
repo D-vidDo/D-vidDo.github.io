@@ -84,7 +84,7 @@ const TeamCard = ({ team }: TeamCardProps) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img
-              src={`/logos/${team.team_id}.jpg`}
+              src={`/logos/${team.team_id}.png`}
               alt={`${team.name} logo`}
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
