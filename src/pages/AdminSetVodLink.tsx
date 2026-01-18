@@ -272,7 +272,7 @@ const AdminSetVodLink: React.FC = () => {
                           className="hidden"
                         />
                         <img
-                          src={`/logos/${team.team_id}.jpg`}
+                          src={`/logos/${team.team_id}.png`}
                           alt={team.name}
                           className="w-16 h-16 object-contain mb-2"
                         />
