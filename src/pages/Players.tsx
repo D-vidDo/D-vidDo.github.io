@@ -131,7 +131,7 @@ const sortedPlayers = [...filteredPlayers].sort((a, b) => {
           .map((n: string) => n[0])
           .join("")
           .toUpperCase();
-        const overall = getOverallRating(player);
+        const overall = Math.round(getOverallRating(player));
 
         return (
           <div
