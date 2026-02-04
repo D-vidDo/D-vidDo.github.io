@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Game = {
   id: number;
@@ -16,25 +17,18 @@ type Game = {
   };
 };
 
+const [showAll, setShowAll] = useState(false);
+
+
 const UpcomingGameCard = () => {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
 
 useEffect(() => {
   async function fetchGames() {
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 (Sun) to 6 (Sat)
+    setLoading(true);
 
-    // Get start (Sunday) and end (Saturday) of the current week
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - dayOfWeek);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const endOfWeek = new Date(today);
-    endOfWeek.setDate(today.getDate() + (6 - dayOfWeek));
-    endOfWeek.setHours(23, 59, 59, 999);
-
-    const { data, error } = await supabase
+    let query = supabase
       .from("games")
       .select(`
         id,
@@ -47,21 +41,46 @@ useEffect(() => {
           color
         )
       `)
-      .gte("date", startOfWeek.toISOString().split("T")[0])
-      .lte("date", endOfWeek.toISOString().split("T")[0])
       .order("date", { ascending: true })
       .order("time", { ascending: true });
+
+    if (!showAll) {
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - dayOfWeek);
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const endOfWeek = new Date(today);
+      endOfWeek.setDate(today.getDate() + (6 - dayOfWeek));
+      endOfWeek.setHours(23, 59, 59, 999);
+
+      query = query
+        .gte("date", startOfWeek.toISOString().split("T")[0])
+        .lte("date", endOfWeek.toISOString().split("T")[0]);
+    } else {
+      // ALL upcoming games (today forward)
+      query = query.gte(
+        "date",
+        new Date().toISOString().split("T")[0]
+      );
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error fetching games:", error.message);
     } else {
       setGames(data ?? []);
     }
+
     setLoading(false);
   }
 
   fetchGames();
-}, []);
+}, [showAll]);
+
 
 
   if (loading) return <div>Loading upcoming games...</div>;
@@ -148,6 +167,14 @@ function formatGameTime(time24) {
       ))}
     </ul>
   )}
+  <Button
+  variant="ghost"
+  size="sm"
+  onClick={() => setShowAll((prev) => !prev)}
+>
+  {showAll ? "This Week" : "Show All"}
+</Button>
+
 </CardContent>
 
     </Card>
