@@ -167,6 +167,8 @@ function formatGameTime(time24) {
       ))}
     </ul>
   )}
+
+</CardContent>
   <Button
   variant="ghost"
   size="sm"
@@ -174,9 +176,6 @@ function formatGameTime(time24) {
 >
   {showAll ? "This Week" : "Show All"}
 </Button>
-
-</CardContent>
-
     </Card>
   );
 };
