@@ -17,12 +17,13 @@ type Game = {
   };
 };
 
-const [showAll, setShowAll] = useState(false);
 
 
 const UpcomingGameCard = () => {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+
 
 useEffect(() => {
   async function fetchGames() {
