@@ -166,6 +166,7 @@ const { data: tradeRows } = await supabase
       name
     )
   `)
+  .in("trade_id",[4,5])
   .or(`to_team.eq.${teamData?.name},from_team.eq.${teamData?.name}`)
   .order("created_at", { ascending: false });
 
@@ -390,36 +391,59 @@ setTrades(Object.values(tradeMap));
               <Users className="h-5 w-5 text-primary" /> Roster History
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {trades.length === 0 ? (
-              <div className="text-muted-foreground text-center py-4">
-                No roster changes or trades for this team yet.
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {trades.map((trade) => (
-                  <div key={trade.id} className="border-b pb-4">
-                    <div className="font-semibold text-primary mb-1">
-                      {trade.date} — {trade.description}
-                    </div>
-                    <ul className="ml-2">
-                      {trade.playersTraded.map((pt, idx) => {
-                        const isIncoming = pt.toTeam === team.name;
-                        const isOutgoing = pt.fromTeam === team.name;
-                        if (!isIncoming && !isOutgoing) return null;
-                        return (
-                          <li key={idx} className="text-sm flex items-center gap-2 py-1">
-                            <span className="font-bold">{pt.player.name}</span>
-                            <span>{isIncoming ? `acquired from ${pt.fromTeam}` : `traded to ${pt.toTeam}`}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
+<CardContent>
+  {trades.length === 0 ? (
+    <div className="text-muted-foreground text-center py-4">
+      No roster changes or trades for this team yet.
+    </div>
+  ) : (
+    <div className="space-y-6">
+      {trades.map((trade) => (
+        <div
+          key={trade.id}
+          className="rounded-lg border p-4 shadow-sm"
+          style={{
+            borderColor: team.color + "55",
+            background: `linear-gradient(90deg, ${team.color}15 0%, ${team.color2}15 100%)`,
+          }}
+        >
+          <div className="font-semibold text-primary mb-3">
+            {trade.description}
+          </div>
+
+          <ul className="space-y-2">
+            {trade.playersTraded.map((pt, idx) => {
+              const isIncoming = pt.toTeam === team.name;
+              const isOutgoing = pt.fromTeam === team.name;
+
+              if (!isIncoming && !isOutgoing) return null;
+
+              const bgColor = isIncoming ? team.color : team.color2;
+              const label = isIncoming
+                ? `Acquired from ${pt.fromTeam}`
+                : `Traded to ${pt.toTeam}`;
+
+              return (
+                <li
+                  key={idx}
+                  className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium"
+                  style={{
+                    backgroundColor: bgColor + "22",
+                    border: `1px solid ${bgColor}55`,
+                    color: bgColor,
+                  }}
+                >
+                  <span className="font-bold">{pt.player.name}</span>
+                  <span>{label}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+    </div>
+  )}
+</CardContent>
         </Card>
       </div>
     </div>
