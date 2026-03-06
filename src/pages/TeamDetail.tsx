@@ -385,66 +385,77 @@ setTrades(Object.values(tradeMap));
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" /> Roster History
-            </CardTitle>
-          </CardHeader>
-<CardContent>
-  {trades.length === 0 ? (
-    <div className="text-muted-foreground text-center py-4">
-      No roster changes or trades for this team yet.
-    </div>
-  ) : (
-    <div className="space-y-6">
-      {trades.map((trade) => (
-        <div
-          key={trade.id}
-          className="rounded-lg border p-4 shadow-sm"
-          style={{
-            borderColor: team.color + "55",
-            background: `linear-gradient(90deg, ${team.color}15 0%, ${team.color2}15 100%)`,
-          }}
-        >
-          <div className="font-semibold text-primary mb-3">
-            {trade.description}
+<Card className="bg-gradient-card shadow-card">
+  <CardHeader>
+    <CardTitle className="text-xl flex items-center gap-2">
+      <Users className="h-5 w-5 text-primary" /> Roster History
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    {trades.length === 0 ? (
+      <div className="text-muted-foreground text-center py-4">
+        No roster changes or trades for this team yet.
+      </div>
+    ) : (
+      <div className="space-y-6">
+        {trades.map((trade) => (
+          <div
+            key={trade.id}
+            className="rounded-lg border shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+            style={{
+              borderColor: team.color + "55",
+              background: `linear-gradient(90deg, ${team.color}10 0%, ${team.color2}10 100%)`,
+            }}
+          >
+            {/* Trade header */}
+            <div className="px-4 py-3 bg-gray-100 dark:bg-gray-800 flex justify-between items-center">
+              <span className="font-semibold text-primary">{trade.description}</span>
+              <span className="text-xs text-muted-foreground">{new Date(trade.date).toLocaleDateString()}</span>
+            </div>
+
+            {/* Player changes */}
+            <div className="divide-y">
+              {trade.playersTraded.map((pt, idx) => {
+                const isIncoming = pt.toTeam === team.name;
+                const isOutgoing = pt.fromTeam === team.name;
+
+                if (!isIncoming && !isOutgoing) return null;
+
+                const bgColor = isIncoming ? team.color : team.color2;
+                const label = isIncoming
+                  ? `Acquired from ${pt.fromTeam}`
+                  : `Traded to ${pt.toTeam}`;
+                const arrow = isIncoming ? "↑" : "↓";
+
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors rounded-sm"
+                    style={{
+                      borderLeft: `4px solid ${bgColor}`,
+                      backgroundColor: bgColor + "15",
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-sm font-bold ${isIncoming ? "text-green-600" : "text-red-600"}`}
+                        title={isIncoming ? "Incoming" : "Outgoing"}
+                      >
+                        {arrow}
+                      </span>
+                      <span className="font-bold text-primary">{pt.player.name}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">{label}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-
-          <ul className="space-y-2">
-            {trade.playersTraded.map((pt, idx) => {
-              const isIncoming = pt.toTeam === team.name;
-              const isOutgoing = pt.fromTeam === team.name;
-
-              if (!isIncoming && !isOutgoing) return null;
-
-              const bgColor = isIncoming ? team.color : team.color2;
-              const label = isIncoming
-                ? `Acquired from ${pt.fromTeam}`
-                : `Traded to ${pt.toTeam}`;
-
-              return (
-                <li
-                  key={idx}
-                  className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium"
-                  style={{
-                    backgroundColor: bgColor + "22",
-                    border: `1px solid ${bgColor}55`,
-                    color: bgColor,
-                  }}
-                >
-                  <span className="font-bold">{pt.player.name}</span>
-                  <span>{label}</span>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
-    </div>
-  )}
-</CardContent>
-        </Card>
+        ))}
+      </div>
+    )}
+  </CardContent>
+</Card>
       </div>
     </div>
   );
