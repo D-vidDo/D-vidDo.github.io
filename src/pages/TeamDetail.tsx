@@ -442,9 +442,9 @@ setTrades(Object.values(tradeMap));
                         </div>
                         <span
                           className="text-sm font-medium"
-                          style={{ color: getTeamColor(pt.fromTeam) }}
+                          style={{ color: getTeamColor(pt.toTeam) }}
                         >
-                          {pt.fromTeam}
+                          {pt.toTeam}
                         </span>
                       </div>
                     ))
@@ -468,9 +468,9 @@ setTrades(Object.values(tradeMap));
                         </div>
                         <span
                           className="text-sm font-medium"
-                          style={{ color: getTeamColor(pt.toTeam) }}
+                          style={{ color: getTeamColor(pt.fromTeam) }}
                         >
-                          {pt.toTeam}
+                          {pt.fromTeam}
                         </span>
                       </div>
                     ))
