@@ -74,11 +74,25 @@ const TeamDetail = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [allTeams, setAllTeams] = useState<Team[]>([]);
+
+  useEffect(() => {
+  async function fetchAllTeams() {
+    const { data, error } = await supabase.from("teams").select("*");
+    if (error) {
+      console.error("Error fetching teams:", error);
+      return;
+    }
+    setAllTeams(data ?? []);
+  }
+  fetchAllTeams();
+}, []);
 
 // Maps a team name to a color; current team uses its own color, others default to black
 const getTeamColor = (teamName: string) => {
-  if (!team) return "#000000"; // fallback if team not loaded yet
-  return teamName === team.name ? team.color : "#000000"; // current team colored, others black
+  if (!teamName) return "#000000"; // fallback
+  const foundTeam = allTeams.find((t) => t.name === teamName);
+  return foundTeam?.color ?? "#000000"; // use the team's color if found, else black
 };
 
 useEffect(() => {
