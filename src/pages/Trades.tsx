@@ -19,98 +19,70 @@ interface Trade {
   }[];
 }
 
-// // Replace with your actual team color mapping
-// const teamColorMap: Record<string, string> = {
-//   "Brawl Luu": "#a22418",
-//   "Balls Luu": "#5f1077",
-//   "Bull Luu": "#f77418",
-//   // Add more team name -> color pairs here
-// };
+// Replace with your actual team color mapping
+const teamColorMap: Record<string, string> = {
+  "Brawl Luu": "#a22418",
+  "Balls Luu": "#5f1077",
+  "Bull Luu": "#f77418",
+  // Add more team name -> color pairs here
+};
 
-// const getTeamColorByName = (teamName: string) => {
-//   return teamColorMap[teamName] || "#6b7280"; // fallback: gray-500
-// };
-
-const [teamColors, setTeamColors] = useState<Record<string, string>>({});
 const getTeamColorByName = (teamName: string) => {
-  return teamColors[teamName] || "#6b7280"; // fallback gray
+  return teamColorMap[teamName] || "#6b7280"; // fallback: gray-500
 };
 
 const Trades = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  const fetchTrades = async () => {
-    setLoading(true);
-
-    // Fetch trades
-    const { data: tradeData, error: tradeError } = await supabase
-      .from("trades")
-      .select(`
-        id,
-        date,
-        description,
-        players_traded (
+  useEffect(() => {
+    const fetchTrades = async () => {
+      const { data, error } = await supabase
+        .from("trades")
+        .select(`
           id,
-          from_team,
-          to_team,
-          player:player_id (
+          date,
+          description,
+          players_traded (
             id,
-            name,
-            primary_position
+            from_team,
+            to_team,
+            player:player_id (
+              id,
+              name,
+              primary_position
+            )
           )
-        )
-      `)
-      .order("date", { ascending: false });
+        `)
+        .order("date", { ascending: false });
 
-    if (tradeError) {
-      console.error("Error fetching trades:", tradeError);
-      setLoading(false);
-      return;
-    }
-
-    // Fetch teams for color mapping
-    const { data: teamsData, error: teamsError } = await supabase
-      .from("teams")
-      .select("name, color");
-
-    if (teamsError) {
-      console.error("Error fetching team colors:", teamsError);
-    }
-
-    // Build team color map dynamically
-    const colorMap: Record<string, string> = {};
-    teamsData?.forEach((team) => {
-      if (team.name && team.color) {
-        colorMap[team.name] = team.color;
+      if (error) {
+        console.error("Error fetching trades:", error);
+        setLoading(false);
+        return;
       }
-    });
 
-    setTeamColors(colorMap);
+      const formatted = data.map((trade: any) => ({
+        id: trade.id,
+        date: trade.date,
+        description: trade.description,
+        playersTraded: trade.players_traded.map((pt: any) => ({
+          from_team: pt.from_team,
+          to_team: pt.to_team,
+          player: {
+            id: pt.player.id,
+            name: pt.player.name,
+            position: pt.player.primary_position,
+          },
+        })),
+      }));
 
-    // Format trades
-    const formatted = tradeData.map((trade: any) => ({
-      id: trade.id,
-      date: trade.date,
-      description: trade.description,
-      playersTraded: trade.players_traded.map((pt: any) => ({
-        from_team: pt.from_team,
-        to_team: pt.to_team,
-        player: {
-          id: pt.player.id,
-          name: pt.player.name,
-          position: pt.player.primary_position,
-        },
-      })),
-    }));
+      setTrades(formatted);
+      setLoading(false);
+    };
 
-    setTrades(formatted);
-    setLoading(false);
-  };
-
-  fetchTrades();
-}, []);
+    fetchTrades();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
