@@ -75,6 +75,12 @@ const TeamDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+// Maps a team name to a color; current team uses its own color, others default to black
+const getTeamColor = (teamName: string) => {
+  if (!team) return "#000000"; // fallback if team not loaded yet
+  return teamName === team.name ? team.color : "#000000"; // current team colored, others black
+};
+
 useEffect(() => {
   async function fetchTeamData() {
     setLoading(true);
