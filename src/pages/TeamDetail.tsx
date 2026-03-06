@@ -74,26 +74,6 @@ const TeamDetail = () => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [allTeams, setAllTeams] = useState<Team[]>([]);
-
-  useEffect(() => {
-  async function fetchAllTeams() {
-    const { data, error } = await supabase.from("teams").select("*");
-    if (error) {
-      console.error("Error fetching teams:", error);
-      return;
-    }
-    setAllTeams(data ?? []);
-  }
-  fetchAllTeams();
-}, []);
-
-// Maps a team name to a color; current team uses its own color, others default to black
-const getTeamColor = (teamName: string) => {
-  if (!teamName) return "#000000"; // fallback
-  const foundTeam = allTeams.find((t) => t.name === teamName);
-  return foundTeam?.color ?? "#000000"; // use the team's color if found, else black
-};
 
 useEffect(() => {
   async function fetchTeamData() {
@@ -101,20 +81,26 @@ useEffect(() => {
     setError(null);
 
     try {
+      // 1️⃣ Fetch the main team
       const { data: teamData } = await supabase
         .from("teams")
         .select("*")
         .eq("team_id", teamId)
         .single();
 
+      if (!teamData) throw new Error("Team not found");
+
       setTeam(teamData);
 
+      // 2️⃣ Fetch players
       const { data: playersData } = await supabase
         .from("players_public")
         .select("*")
-        .in("id", teamData?.player_ids ?? []);
+        .in("id", teamData.player_ids ?? []);
+
       setPlayers(playersData ?? []);
 
+      // 3️⃣ Fetch games
       const { data: gameData, error: gameErr } = await supabase
         .from("games")
         .select(`
@@ -131,89 +117,100 @@ useEffect(() => {
           )
         `)
         .eq("team_id", teamId)
-        .order("date", { ascending: true }) // newest games last
-        .order("time", { ascending: false, nullsFirst: false }) // optional
-        .order("set_no", { foreignTable: "sets", ascending: true }); // sets in order
-      if (gameErr) {
-        throw gameErr;
-      }
+        .order("date", { ascending: true })
+        .order("time", { ascending: false, nullsFirst: false })
+        .order("set_no", { foreignTable: "sets", ascending: true });
 
-   const playedGames = (gameData ?? [])
-  .filter((g) => g.sets && g.sets.length > 0)
-  .map((g) => {
-    const orderedSets = [...g.sets].sort((a, b) => {
-      const aNo = typeof a.set_no === "number" ? a.set_no : Number.MAX_SAFE_INTEGER;
-      const bNo = typeof b.set_no === "number" ? b.set_no : Number.MAX_SAFE_INTEGER;
-      return aNo - bNo;
-    });
+      if (gameErr) throw gameErr;
 
-    const totalPF = orderedSets.reduce((sum: number, s: any) => sum + s.points_for, 0);
-    const totalPA = orderedSets.reduce((sum: number, s: any) => sum + s.points_against, 0);
-    const result: "W" | "L" | "T" = totalPF > totalPA ? "W" : totalPF < totalPA ? "L" : "T";
+      const playedGames = (gameData ?? [])
+        .filter((g) => g.sets && g.sets.length > 0)
+        .map((g) => {
+          const orderedSets = [...g.sets].sort((a, b) => (a.set_no ?? 0) - (b.set_no ?? 0));
+          const totalPF = orderedSets.reduce((sum, s) => sum + s.points_for, 0);
+          const totalPA = orderedSets.reduce((sum, s) => sum + s.points_against, 0);
+          const result: "W" | "L" | "T" = totalPF > totalPA ? "W" : totalPF < totalPA ? "L" : "T";
 
-    return {
-      id: String(g.id),
-      date: g.date as string,
-      time: g.time as string, // ✅ added time field
-      opponent: g.opponent as string,
-      points_for: totalPF,
-      points_against: totalPA,
-      result,
-      sets: orderedSets,
-    };
-  })
-  .sort((a, b) => {
-    const aDateTime = new Date(`${a.date}T${a.time}`);
-    const bDateTime = new Date(`${b.date}T${b.time}`);
-    return aDateTime.getTime() - bDateTime.getTime(); // ✅ oldest first
-  });
-
+          return {
+            id: String(g.id),
+            date: g.date as string,
+            time: g.time as string,
+            opponent: g.opponent as string,
+            points_for: totalPF,
+            points_against: totalPA,
+            result,
+            sets: orderedSets,
+          };
+        })
+        .sort((a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime());
 
       setGames(playedGames);
 
-const { data: tradeRows } = await supabase
-  .from("players_traded")
-  .select(`
-    from_team,
-    to_team,
-    trades (
-      id,
-      date,
-      description
-    ),
-    player:player_id (
-      id,
-      name
-    )
-  `)
-  .in("trade_id",[4,5])
-  .or(`to_team.eq.${teamData?.name},from_team.eq.${teamData?.name}`)
-  .order("created_at", { ascending: false });
+      // 4️⃣ Fetch trades involving this team
+      const { data: tradeRows } = await supabase
+        .from("players_traded")
+        .select(`
+          from_team,
+          to_team,
+          trades (
+            id,
+            date,
+            description
+          ),
+          player:player_id (
+            id,
+            name
+          )
+        `)
+        .or(`to_team.eq.${teamData.name},from_team.eq.${teamData.name}`)
+        .order("created_at", { ascending: false });
 
-const tradeMap: Record<string, Trade> = {};
+      // 5️⃣ Get unique team names in trades to fetch colors
+      const tradeTeamNames = Array.from(
+        new Set((tradeRows ?? []).flatMap((row: any) => [row.from_team, row.to_team]))
+      );
 
-(tradeRows ?? []).forEach((row: any) => {
+      const { data: teamsData } = await supabase
+        .from("teams")
+        .select("name,color,color2")
+        .in("name", tradeTeamNames);
 
-  const tradeId = row.trades.id;
+      // Map of teamName → color
+      const teamColorsMap: Record<string, string> = {};
+      (teamsData ?? []).forEach((t: any) => {
+        teamColorsMap[t.name] = t.color;
+      });
 
-  if (!tradeMap[tradeId]) {
-    tradeMap[tradeId] = {
-      id: tradeId,
-      date: row.trades.date,
-      description: row.trades.description,
-      playersTraded: [],
-    };
-  }
+      // 6️⃣ Organize trades
+      const tradeMap: Record<string, Trade> = {};
+      (tradeRows ?? []).forEach((row: any) => {
+        const tradeId = row.trades.id;
+        if (!tradeMap[tradeId]) {
+          tradeMap[tradeId] = {
+            id: tradeId,
+            date: row.trades.date,
+            description: row.trades.description,
+            playersTraded: [],
+          };
+        }
+        tradeMap[tradeId].playersTraded.push({
+          player: row.player,
+          fromTeam: row.from_team,
+          toTeam: row.to_team,
+        });
+      });
 
-  tradeMap[tradeId].playersTraded.push({
-    player: row.player,
-    fromTeam: row.from_team,
-    toTeam: row.to_team,
-  });
+      // Attach team colors to trades for easy use in JSX
+      const tradesWithColors = Object.values(tradeMap).map((trade) => ({
+        ...trade,
+        playersTraded: trade.playersTraded.map((pt) => ({
+          ...pt,
+          fromColor: teamColorsMap[pt.fromTeam] ?? "#000000",
+          toColor: teamColorsMap[pt.toTeam] ?? "#000000",
+        })),
+      }));
 
-});
-
-setTrades(Object.values(tradeMap));
+      setTrades(tradesWithColors);
     } catch (err) {
       setError("Unexpected error: " + (err as Error).message);
     } finally {
@@ -454,12 +451,12 @@ setTrades(Object.values(tradeMap));
                           <span className="text-red-600 font-bold" title="Outgoing">↓</span>
                           <span className="font-bold text-black">{pt.player.name}</span>
                         </div>
-                        <span
-                          className="text-sm font-medium"
-                          style={{ color: getTeamColor(pt.toTeam) }}
-                        >
-                          {pt.toTeam}
-                        </span>
+<span
+  className="text-sm font-medium"
+  style={{ color: pt.toColor }}
+>
+  {pt.toTeam}
+</span>
                       </div>
                     ))
                   )}
@@ -480,12 +477,12 @@ setTrades(Object.values(tradeMap));
                           <span className="text-green-600 font-bold" title="Incoming">↑</span>
                           <span className="font-bold text-black">{pt.player.name}</span>
                         </div>
-                        <span
-                          className="text-sm font-medium"
-                          style={{ color: getTeamColor(pt.fromTeam) }}
-                        >
-                          {pt.fromTeam}
-                        </span>
+<span
+  className="text-sm font-medium"
+  style={{ color: pt.fromColor }}
+>
+  {pt.fromTeam}
+</span>
                       </div>
                     ))
                   )}
