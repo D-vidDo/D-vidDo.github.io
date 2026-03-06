@@ -3,9 +3,10 @@ import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, TrendingUp, Users, CalendarDays, PlayCircle } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, Calendar, Trophy, TrendingUp, Users, CalendarDays, PlayCircle } from "lucide-react";
 import PlayerCard from "@/components/PlayerCard";
 import { supabase } from "@/lib/supabase";
+
 
 interface Set {
   set_no: number;
@@ -39,10 +40,18 @@ interface TradePlayer {
 }
 
 interface Trade {
-  id: string;
+  id: number;
   date: string;
   description: string;
-  playersTraded: TradePlayer[];
+  playersTraded: {
+    from_team: string;
+    to_team: string;
+    player: {
+      id: number;
+      name: string;
+      position: string;
+    };
+  }[];
 }
 
 interface Team {
@@ -63,6 +72,74 @@ const formatTime12H = (time: string) => {
   const suffix = hour >= 12 ? "PM" : "AM";
   const formattedHour = hour % 12 || 12;
   return `${formattedHour}:${minute} ${suffix}`;
+};
+
+const [trades, setTrades] = useState<Trade[]>([]);
+const [teamColorMap, setTeamColorMap] = useState<Record<string, string>>({});
+useEffect(() => {
+  const fetchTrades = async () => {
+
+    const [{ data: tradesData, error: tradeError }, { data: teamsData }] =
+      await Promise.all([
+        supabase
+          .from("trades")
+          .select(`
+            id,
+            date,
+            description,
+            players_traded (
+              from_team,
+              to_team,
+              player:player_id (
+                id,
+                name,
+                primary_position
+              )
+            )
+          `)
+          .in("id", [4, 5])
+          .order("date", { ascending: false }),
+
+        supabase
+          .from("teams")
+          .select("name, color")
+      ]);
+
+    if (tradeError) {
+      console.error("Error fetching trades:", tradeError);
+      return;
+    }
+
+    const colors: Record<string, string> = {};
+    teamsData?.forEach((team) => {
+      colors[team.name] = team.color;
+    });
+
+    setTeamColorMap(colors);
+
+    const formatted = tradesData.map((trade: any) => ({
+      id: trade.id,
+      date: trade.date,
+      description: trade.description,
+      playersTraded: trade.players_traded.map((pt: any) => ({
+        from_team: pt.from_team,
+        to_team: pt.to_team,
+        player: {
+          id: pt.player.id,
+          name: pt.player.name,
+          position: pt.player.primary_position,
+        },
+      })),
+    }));
+
+    setTrades(formatted);
+  };
+
+  fetchTrades();
+}, []);
+
+const getTeamColor = (teamName: string) => {
+  return teamColorMap[teamName] || "#6b7280";
 };
 
 
@@ -392,57 +469,89 @@ setTrades(Object.values(tradeMap));
             </CardTitle>
           </CardHeader>
 <CardContent>
-  {trades.length === 0 ? (
-    <div className="text-muted-foreground text-center py-4">
-      No roster changes or trades for this team yet.
-    </div>
-  ) : (
-    <div className="space-y-6">
-      {trades.map((trade) => (
-        <div
-          key={trade.id}
-          className="rounded-lg border p-4 shadow-sm"
-          style={{
-            borderColor: team.color + "55",
-            background: `linear-gradient(90deg, ${team.color}15 0%, ${team.color2}15 100%)`,
-          }}
-        >
-          <div className="font-semibold text-primary mb-3">
-            {trade.description}
+<div className="space-y-6">
+  {trades
+    .filter((trade) =>
+      trade.playersTraded.some(
+        (pt) => pt.from_team === team.name || pt.to_team === team.name
+      )
+    )
+    .map((trade) => (
+      <Card key={trade.id} className="bg-gradient-card shadow-card">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <ArrowLeftRight className="h-5 w-5 text-primary" />
+              Trade Record
+            </CardTitle>
+
+            <Badge variant="outline" className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {new Date(trade.date).toLocaleDateString()}
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+
+          <div className="p-4 bg-muted/30 rounded-lg">
+            <p className="text-card-foreground font-medium">
+              {trade.description}
+            </p>
           </div>
 
-          <ul className="space-y-2">
-            {trade.playersTraded.map((pt, idx) => {
-              const isIncoming = pt.toTeam === team.name;
-              const isOutgoing = pt.fromTeam === team.name;
+          <div className="space-y-3">
 
-              if (!isIncoming && !isOutgoing) return null;
-
-              const bgColor = isIncoming ? team.color : team.color2;
-              const label = isIncoming
-                ? `Acquired from ${pt.fromTeam}`
-                : `Traded to ${pt.toTeam}`;
-
-              return (
-                <li
-                  key={idx}
-                  className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium"
-                  style={{
-                    backgroundColor: bgColor + "22",
-                    border: `1px solid ${bgColor}55`,
-                    color: bgColor,
-                  }}
+            {trade.playersTraded
+              .filter(
+                (pt) =>
+                  pt.from_team === team.name || pt.to_team === team.name
+              )
+              .map((pt, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gradient-stats rounded-lg"
                 >
-                  <span className="font-bold">{pt.player.name}</span>
-                  <span>{label}</span>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
-    </div>
-  )}
+                  <div className="text-left">
+                    <div className="font-semibold text-card-foreground">
+                      {pt.player.name}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {pt.player.position}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm">
+
+                    <span
+                      style={{
+                        color: getTeamColor(pt.from_team),
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {pt.from_team}
+                    </span>
+
+                    <span className="mx-1">→</span>
+
+                    <span
+                      style={{
+                        color: getTeamColor(pt.to_team),
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {pt.to_team}
+                    </span>
+
+                  </div>
+                </div>
+              ))}
+
+          </div>
+        </CardContent>
+      </Card>
+    ))}
+</div>
 </CardContent>
         </Card>
       </div>
