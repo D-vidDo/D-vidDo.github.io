@@ -74,76 +74,16 @@ const formatTime12H = (time: string) => {
   return `${formattedHour}:${minute} ${suffix}`;
 };
 
-const [trades, setTrades] = useState<Trade[]>([]);
-const [teamColorMap, setTeamColorMap] = useState<Record<string, string>>({});
-useEffect(() => {
-  const fetchTrades = async () => {
 
-    const [{ data: tradesData, error: tradeError }, { data: teamsData }] =
-      await Promise.all([
-        supabase
-          .from("trades")
-          .select(`
-            id,
-            date,
-            description,
-            players_traded (
-              from_team,
-              to_team,
-              player:player_id (
-                id,
-                name,
-                primary_position
-              )
-            )
-          `)
-          .in("id", [4, 5])
-          .order("date", { ascending: false }),
 
-        supabase
-          .from("teams")
-          .select("name, color")
-      ]);
-
-    if (tradeError) {
-      console.error("Error fetching trades:", tradeError);
-      return;
-    }
-
-    const colors: Record<string, string> = {};
-    teamsData?.forEach((team) => {
-      colors[team.name] = team.color;
-    });
-
-    setTeamColorMap(colors);
-
-    const formatted = tradesData.map((trade: any) => ({
-      id: trade.id,
-      date: trade.date,
-      description: trade.description,
-      playersTraded: trade.players_traded.map((pt: any) => ({
-        from_team: pt.from_team,
-        to_team: pt.to_team,
-        player: {
-          id: pt.player.id,
-          name: pt.player.name,
-          position: pt.player.primary_position,
-        },
-      })),
-    }));
-
-    setTrades(formatted);
-  };
-
-  fetchTrades();
-}, []);
-
-const getTeamColor = (teamName: string) => {
-  return teamColorMap[teamName] || "#6b7280";
-};
 
 
 const TeamDetail = () => {
+  const [teamColorMap, setTeamColorMap] = useState<Record<string, string>>({});
+  const getTeamColor = (teamName: string) => {
+  return teamColorMap[teamName] || "#6b7280";
+};
+
   const { teamId } = useParams<{ teamId: string }>();
   const [team, setTeam] = useState<Team | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
