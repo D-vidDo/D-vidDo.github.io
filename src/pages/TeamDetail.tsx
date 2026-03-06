@@ -162,6 +162,7 @@ useEffect(() => {
             name
           )
         `)
+        .in("trade_id", [4,5])
         .or(`to_team.eq.${teamData.name},from_team.eq.${teamData.name}`)
         .order("created_at", { ascending: false });
 
