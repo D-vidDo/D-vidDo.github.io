@@ -151,43 +151,48 @@ useEffect(() => {
 
       setGames(playedGames);
 
-      const { data: tradesData } = await supabase
-        .from("trades")
-        .select("id, date, description")
-        .order("date", { ascending: false });
+const { data: tradeRows } = await supabase
+  .from("players_traded")
+  .select(`
+    from_team,
+    to_team,
+    trades (
+      id,
+      date,
+      description
+    ),
+    player:player_id (
+      id,
+      name
+    )
+  `)
+  .or(`to_team.eq.${teamData?.name},from_team.eq.${teamData?.name}`)
+  .order("created_at", { ascending: false });
 
-      const tradesWithPlayers = await Promise.all(
-        (tradesData ?? []).map(async (trade) => {
-          const { data: playersTradedData } = await supabase
-            .from("players_traded")
-            .select(`
-              from_team,
-              to_team,
-              player:player_id (
-                id,
-                name
-              )
-            `)
-            .eq("trade_id", trade.id);
+const tradeMap: Record<string, Trade> = {};
 
-          return {
-            id: trade.id,
-            date: trade.date,
-            description: trade.description,
-            playersTraded: playersTradedData ?? [],
-          };
-        })
-      );
+(tradeRows ?? []).forEach((row: any) => {
 
-      const teamTrades = tradesWithPlayers
-        .filter(Boolean)
-        .filter((trade) =>
-          trade.playersTraded.some(
-            (pt) => pt.toTeam === teamData?.name || pt.fromTeam === teamData?.name
-          )
-        );
+  const tradeId = row.trades.id;
 
-      setTrades(teamTrades);
+  if (!tradeMap[tradeId]) {
+    tradeMap[tradeId] = {
+      id: tradeId,
+      date: row.trades.date,
+      description: row.trades.description,
+      playersTraded: [],
+    };
+  }
+
+  tradeMap[tradeId].playersTraded.push({
+    player: row.player,
+    fromTeam: row.from_team,
+    toTeam: row.to_team,
+  });
+
+});
+
+setTrades(Object.values(tradeMap));
     } catch (err) {
       setError("Unexpected error: " + (err as Error).message);
     } finally {
