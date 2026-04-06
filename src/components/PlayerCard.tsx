@@ -201,7 +201,7 @@ const PlayerCard = ({
               <div className="text-lg font-bold text-primary">
                 {player.games_played}
               </div>
-              <div className="text-xs text-muted-foreground">Games</div>
+              <div className="text-xs text-muted-foreground">Sets</div>
             </div>
           </div>
           {player.games_played > 0 && (
