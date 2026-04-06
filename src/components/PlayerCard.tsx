@@ -39,6 +39,9 @@ interface Player {
   vertical_jump?: string;
   imageUrl?: string;
   jersey_number?: string;
+  wins?: number;
+  losses?: number;
+  ties?: number;
 }
 
 interface PlayerCardProps {
@@ -98,6 +101,11 @@ const PlayerCard = ({
     }));
   };
 
+  const hasRecord =
+    player.wins !== undefined ||
+    player.losses !== undefined ||
+    player.ties !== undefined;
+
   return (
     <>
       {/* PLAYER CARD */}
@@ -108,8 +116,7 @@ const PlayerCard = ({
         <CardHeader
           className="pb-3 relative rounded-t-lg flex items-start"
           style={{
-            background: `linear-gradient(0deg, #ffffff
-             85%, ${player.teamColor || "#ffffff"} 100%)`,
+            background: `linear-gradient(0deg, #ffffff 85%, ${player.teamColor || "#ffffff"} 100%)`,
           }}
         >
           <div className="flex items-start space-x-3">
@@ -130,7 +137,6 @@ const PlayerCard = ({
             </Avatar>
 
             {/* CARD TITLE */}
-
             <div className="flex-1">
               <div className="flex items-start gap-2">
                 <h3 className="font-semibold text-card-foreground">
@@ -146,9 +152,7 @@ const PlayerCard = ({
                   <Badge
                     variant="default"
                     className="text-sm font-semibold px-2 py-0.5 rounded text-white shadow-sm"
-                    style={{
-                      backgroundColor: "#6b7280", // Tailwind gray-500
-                    }}
+                    style={{ backgroundColor: "#6b7280" }}
                   >
                     FA
                   </Badge>
@@ -166,6 +170,7 @@ const PlayerCard = ({
               </p>
             </div>
           </div>
+
           {/* CARD OVERALL RATING */}
           <div className="flex flex-col items-center absolute top-3 right-3">
             <span className="text-[10px] font-semibold text-muted-foreground mb-0.5">
@@ -204,6 +209,22 @@ const PlayerCard = ({
               <div className="text-xs text-muted-foreground">Sets</div>
             </div>
           </div>
+
+          {/* W-L-T RECORD */}
+          {hasRecord && (
+            <div className="mt-3 pt-3 border-t text-center">
+              <div className="text-xs text-muted-foreground mb-1">Record</div>
+              <div className="text-lg font-bold">
+                <span className="text-green-600">{player.wins ?? 0}</span>
+                <span className="text-muted-foreground font-normal"> - </span>
+                <span className="text-red-500">{player.losses ?? 0}</span>
+                <span className="text-muted-foreground font-normal"> - </span>
+                <span className="text-primary">{player.ties ?? 0}</span>
+              </div>
+              <div className="text-xs text-muted-foreground">W - L - T</div>
+            </div>
+          )}
+
           {player.games_played > 0 && (
             <div className="mt-3 pt-3 border-t text-center">
               <div className="text-sm text-muted-foreground">
@@ -223,6 +244,7 @@ const PlayerCard = ({
               </div>
             </div>
           )}
+
           <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
             {sortKey === "Overall Rating" && (
               <div className="col-span-2 flex justify-between items-center bg-yellow-100 rounded px-2 py-1 font-bold">
@@ -257,12 +279,7 @@ const PlayerCard = ({
           open={open}
           onOpenChange={setOpen}
           className="max-w-3xl p-0 overflow-hidden bg-[#1f1f1f] rounded-lg"
-          style={
-            {
-              // background: "transparent", // make DialogContent itself transparent
-            }
-          }
-          onClick={() => setOpen(false)} // clicking header closes modal
+          onClick={() => setOpen(false)}
         >
           {/* MODAL HEADER */}
           <div
@@ -307,7 +324,6 @@ const PlayerCard = ({
 
               {/* BADGES BELOW NAME */}
               <div className="flex flex-wrap items-center gap-2 mt-2">
-                {/* TITLE BADGE */}
                 {player.title && (
                   <span
                     className="inline-block px-2 py-0.5 rounded text-sm font-semibold shadow max-w-max"
@@ -320,7 +336,6 @@ const PlayerCard = ({
                   </span>
                 )}
 
-                {/* TEAM BADGE */}
                 {player.team && (
                   <span
                     className="inline-block px-2 py-0.5 rounded text-sm font-semibold text-white max-w-max"
@@ -338,7 +353,7 @@ const PlayerCard = ({
                 )}
               </div>
 
-              {/* PLAYER POSITIONS BELOW BADGES */}
+              {/* PLAYER POSITIONS */}
               <div className="mt-2 text-sm text-slate-200">
                 {player.primary_position}
                 {player.secondary_position && (
@@ -352,18 +367,20 @@ const PlayerCard = ({
                 <span className="text-yellow-400">{overallRating}</span>
               </div>
 
-              {/* Compare Button
-    {allPlayers.filter((p) => p.id !== player.id).length > 0 && (
-      <button
-        className="mt-4 px-4 py-2 bg-yellow-400 text-black font-semibold rounded hover:bg-yellow-500 transition"
-        onClick={(e) => {
-          e.stopPropagation();
-          setCompareOpen(true);
-        }}
-      >
-        Compare Stats
-      </button>
-    )} */}
+              {/* W-L-T RECORD IN MODAL HEADER */}
+              {hasRecord && (
+                <div className="mt-2 text-lg font-semibold">
+                  Record:{" "}
+                  <span className="text-green-400">{player.wins ?? 0}</span>
+                  <span className="text-slate-300 font-normal"> - </span>
+                  <span className="text-red-400">{player.losses ?? 0}</span>
+                  <span className="text-slate-300 font-normal"> - </span>
+                  <span className="text-yellow-400">{player.ties ?? 0}</span>
+                  <span className="text-slate-400 text-sm font-normal ml-1">
+                    W - L - T
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* TOP-RIGHT STATS */}
@@ -467,74 +484,25 @@ const PlayerCard = ({
                   <span>{player.vertical_jump}</span>
                 </div>
               )}
+              {/* W-L-T IN MODAL BODY */}
+              {hasRecord && (
+                <div className="flex justify-between border-b pb-1">
+                  <span className="font-medium text-muted-foreground">
+                    Record (W-L-T)
+                  </span>
+                  <span>
+                    <span className="text-green-500">{player.wins ?? 0}</span>
+                    {" - "}
+                    <span className="text-red-500">{player.losses ?? 0}</span>
+                    {" - "}
+                    <span>{player.ties ?? 0}</span>
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* COMPARE MODAL
-      <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
-        <DialogContent className="max-w-3xl p-0 overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>Compare Stats</DialogTitle>
-            <DialogDescription>
-              Compare {player.name} with another player
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="p-6 sm:p-8">
-            <div className="mb-4">
-              <select
-                className="border px-3 py-2 rounded w-full"
-                onChange={(e) =>
-                  setComparePlayer(
-                    allPlayers.find((p) => p.id === e.target.value) || null
-                  )
-                }
-              >
-                <option value="">Select a player to compare</option>
-                {allPlayers
-                  .filter((p) => p.id !== player.id)
-                  .map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            {comparePlayer && compareChartData().length > 0 && (
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={compareChartData()}>
-                    <PolarGrid stroke="#e5e7eb" />
-                    <PolarAngleAxis dataKey="stat" stroke="#374151" />
-                    <PolarRadiusAxis
-                      angle={30}
-                      domain={[0, 5]}
-                      stroke="#9ca3af"
-                    />
-                    <Radar
-                      name={player.name}
-                      dataKey={player.name}
-                      stroke="#facc15"
-                      fill="#facc15"
-                      fillOpacity={0.5}
-                    />
-                    <Radar
-                      name={comparePlayer.name}
-                      dataKey={comparePlayer.name}
-                      stroke="#3b82f6"
-                      fill="#3b82f6"
-                      fillOpacity={0.5}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog> */}
     </>
   );
 };
