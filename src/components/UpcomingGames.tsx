@@ -80,12 +80,17 @@ const UpcomingGameCard = () => {
 
   if (loading) return <div>Loading upcoming games...</div>;
 
-  function formatGameTime(time24: string) {
-    const [hh, mm] = time24.split(":").map(Number);
-    const h12 = ((hh + 11) % 12) + 1;
-    const ampm = hh >= 12 ? "PM" : "AM";
-    return `${h12}:${String(mm).padStart(2, "0")} ${ampm}`;
+function formatGameTime(time24: string | null | undefined) {
+  if (!time24) {
+    console.warn("Invalid time value:", time24);
+    return "TBD";
   }
+
+  const [hh, mm] = time24.split(":").map(Number);
+  const h12 = ((hh + 11) % 12) + 1;
+  const ampm = hh >= 12 ? "PM" : "AM";
+  return `${h12}:${String(mm).padStart(2, "0")} ${ampm}`;
+}
 
   function formatGameDate(date: string) {
     return new Date(date).toLocaleDateString("en-CA", {
