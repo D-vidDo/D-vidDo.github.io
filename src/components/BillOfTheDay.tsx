@@ -26,9 +26,14 @@ const BillOfTheDay = () => {
 
       console.log("Raw storage data:", data);
 
-      const images = (data ?? []).filter((item) =>
-        item.name.match(/\.(jpg|jpeg|png|webp|gif)$/i)
-      );
+const images = (data ?? []).filter((item) => {
+  if (!item?.name || typeof item.name !== "string") {
+    console.warn("Invalid storage item:", item);
+    return false;
+  }
+
+  return /\.(jpg|jpeg|png|webp|gif)$/i.test(item.name);
+});
 
       console.log("Filtered images:", images);
 
@@ -48,8 +53,7 @@ const BillOfTheDay = () => {
 
       const { data: urlData } = supabase.storage
         .from(BUCKET_NAME)
-        .getPublicUrl(encodeURIComponent(selected.name));
-
+.getPublicUrl(selected.name);
       console.log("Selected image URL:", urlData?.publicUrl);
 
       setImageUrl(urlData?.publicUrl ?? null);
