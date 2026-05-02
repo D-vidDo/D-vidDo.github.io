@@ -102,6 +102,9 @@ const TeamCard = ({ team }: TeamCardProps) => {
                     ? "🍂"
                     : team.season_id === 2
                     ? "❄️"
+                    : team.season_id === 3
+                    ? "🌸"
+                    
                     : null}
                 </span>
               </div>
