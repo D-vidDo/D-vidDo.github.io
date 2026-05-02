@@ -143,7 +143,7 @@ function formatGameTime(time24: string | null | undefined) {
                 <li key={game.id}>
                   {showDateHeader && (
                     <div className="text-xs font-semibold text-muted-foreground mt-4 mb-2">
-                      {formatGameDate(game.date)}
+                      {game.time ? formatGameTime(game.time) : "TBD"}
                     </div>
                   )}
 
