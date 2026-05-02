@@ -278,7 +278,7 @@ const Home = () => {
           </Card>
         </section>
 
-        {/* <UpcomingGames /> */}
+        <UpcomingGames />
 
         {/* Top Teams (Standings) */}
         <section>
