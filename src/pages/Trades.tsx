@@ -24,6 +24,9 @@ const teamColorMap: Record<string, string> = {
   "Brawl Luu": "#a22418",
   "Balls Luu": "#5f1077",
   "Bull Luu": "#f77418",
+  "Boscoball": "#2A9D8F",
+  "Rufus' Doofuses": "#457B9D",
+  "Sally Gang": "#E63946"
   // Add more team name -> color pairs here
 };
 
