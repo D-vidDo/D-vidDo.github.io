@@ -62,7 +62,7 @@ const Stats = () => {
   const topAdjusted = [...players]
     .filter(p => p.games_played > 0 || p.plus_minus !== 0)
     .sort((a, b) => adjustedPerGame(b) - adjustedPerGame(a))
-    .slice(0, 20);
+    .slice(0, 22);
 
   const tabs = [
     { id: "plus_minus", label: "Top +/-", icon: TrendingUp, data: topplus_minus },

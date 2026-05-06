@@ -11,7 +11,7 @@ import UpcomingGames from "@/components/UpcomingGames";
 import BillOfTheDay from "@/components/BillOfTheDay";
 
 // active season ID
-const ACTIVE_SEASON_ID = 2;
+const ACTIVE_SEASON_ID = 3;
 
 // Initialize Supabase client
 const supabaseUrl = "https://bqqotvjpvaznkjfldcgm.supabase.co";
