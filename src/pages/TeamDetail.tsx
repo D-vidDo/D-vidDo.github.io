@@ -57,11 +57,20 @@ interface Team {
   points_against: number;
   player_ids: string[];
 }
-const formatTime12H = (time: string) => {
-  const [hourStr, minute] = time.split(":");
+const formatTime12H = (time?: string | null) => {
+  if (!time) return "—"; // or "TBD"
+
+  const parts = time.split(":");
+  if (parts.length < 2) return time; // fallback if malformed
+
+  const [hourStr, minute] = parts;
   const hour = parseInt(hourStr, 10);
+
+  if (isNaN(hour)) return time;
+
   const suffix = hour >= 12 ? "PM" : "AM";
   const formattedHour = hour % 12 || 12;
+
   return `${formattedHour}:${minute} ${suffix}`;
 };
 
