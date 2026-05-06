@@ -171,7 +171,7 @@ useEffect(() => {
             name
           )
         `)
-        .in("trade_id", [4,5,6])
+        .in("trade_id", [7,8,9,10,11,12])
         .or(`to_team.eq.${teamData.name},from_team.eq.${teamData.name}`)
         .order("created_at", { ascending: false });
 
