@@ -137,7 +137,7 @@ const AdminGameEntry = () => {
 
       const now = new Date();
       const threeDaysAgo = new Date();
-      threeDaysAgo.setDate(now.getDate() - 14);
+      threeDaysAgo.setDate(now.getDate() - 7);
 
       const filteredGames = data.filter((g) => {
         if (!g.date) return false;
