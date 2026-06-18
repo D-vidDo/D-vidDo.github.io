@@ -468,30 +468,6 @@ const AdminGameEntry = () => {
               Select Team
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-
-
-          <MatchupCard
-  teamA={{
-    name: "Wildcats",
-    logo: "/logos/wildcats.png",
-    color: "#f59e0b",
-    record: "4-1",
-    players: ["Alex", "Sarah", "Mike"],
-  }}
-  teamB={{
-    name: "Sharks",
-    logo: "/logos/sharks.png",
-    color: "#0ea5e9",
-    record: "3-2",
-    players: ["Jordan", "Emily", "Chris"],
-  }}
-  time="7:00 PM"
-  courts={[3, 5]}
-/>
-
-
-
-
               {teams.map((team) => (
                 <label
                   key={team.team_id}
