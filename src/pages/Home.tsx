@@ -307,7 +307,9 @@ const Home = () => {
                   </Badge>
                 )}
                 <TeamCard team={team} />
-                          <MatchupCard
+              </div>
+            ))}
+                                      <MatchupCard
   teamA={{
     name: "Luna",
     logo: "/logos/wildcats.png",
@@ -325,8 +327,6 @@ const Home = () => {
   time="7:00 PM"
   courts={[3, 5]}
 />
-              </div>
-            ))}
           </div>
         </section>
 
