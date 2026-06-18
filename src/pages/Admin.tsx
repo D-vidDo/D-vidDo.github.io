@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import MatchupCard from "@/components/MatchupCard";
+
 
 interface Game {
   id: string;
@@ -461,6 +463,24 @@ const AdminGameEntry = () => {
 
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-8">
           {/* Team Selection */}
+          <MatchupCard
+  teamA={{
+    name: "Wildcats",
+    logo: "/logos/wildcats.png",
+    color: "#f59e0b",
+    record: "4-1",
+    players: ["Alex", "Sarah", "Mike"],
+  }}
+  teamB={{
+    name: "Sharks",
+    logo: "/logos/sharks.png",
+    color: "#0ea5e9",
+    record: "3-2",
+    players: ["Jordan", "Emily", "Chris"],
+  }}
+  time="7:00 PM"
+  courts={[3, 5]}
+/>
           <div>
             <label className="block mb-3 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
               Select Team
