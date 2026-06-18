@@ -41,7 +41,7 @@ export default function MatchupCard({
         )`,
       }}
     >
-      <Card className="border-0 bg-slate-950 rounded-[22px] overflow-hidden">
+      <Card className="border-0 bg-white text-slate-950 rounded-[22px] overflow-hidden">
         <div
           className="
             grid
