@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import TeamCard from "@/components/TeamCard";
 import UpcomingGames from "@/components/UpcomingGames";
 import BillOfTheDay from "@/components/BillOfTheDay";
+import MatchupCard from "@/components/MatchupCard";
 
 // active season ID
 const ACTIVE_SEASON_ID = 3;
