@@ -463,6 +463,13 @@ const AdminGameEntry = () => {
 
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-8">
           {/* Team Selection */}
+          <div>
+            <label className="block mb-3 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+              Select Team
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+
           <MatchupCard
   teamA={{
     name: "Wildcats",
@@ -481,11 +488,10 @@ const AdminGameEntry = () => {
   time="7:00 PM"
   courts={[3, 5]}
 />
-          <div>
-            <label className="block mb-3 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-              Select Team
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+
+
+
               {teams.map((team) => (
                 <label
                   key={team.team_id}
