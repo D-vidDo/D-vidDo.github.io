@@ -33,20 +33,20 @@ export default function MatchupCard({
       style={{
         background: `linear-gradient(
           90deg,
-          ${teamA.color} 0%,
-          ${teamA.color}80 35%,
-          rgba(255,255,255,.15) 50%,
-          ${teamB.color}80 65%,
-          ${teamB.color} 100%
+          ${teamA.color},
+          ${teamA.color}80,
+          rgba(0,0,0,.1),
+          ${teamB.color}80,
+          ${teamB.color}
         )`,
       }}
     >
-      <Card className="border-0 bg-white text-slate-950 rounded-[22px] overflow-hidden">
+      <Card className="border-0 bg-white text-slate-900 rounded-[22px] overflow-hidden">
         <div
           className="
             grid
             grid-cols-1
-            lg:grid-cols-[minmax(0,1fr)_minmax(170px,260px)_minmax(0,1fr)]
+            lg:grid-cols-[minmax(0,1fr)_minmax(150px,220px)_minmax(0,1fr)]
             gap-4
             md:gap-6
             p-4
@@ -55,10 +55,8 @@ export default function MatchupCard({
             items-center
           "
         >
-
           {/* TEAM A */}
           <div className="order-2 lg:order-1 min-w-0">
-
             <div className="flex items-center gap-3 mb-5">
               <img
                 src={teamA.logo}
@@ -82,7 +80,9 @@ export default function MatchupCard({
                     uppercase
                     tracking-wide
                     truncate
-                    text-[clamp(1.1rem,2vw,2.5rem)]
+                    text-xl
+                    md:text-2xl
+                    lg:text-3xl
                   "
                   style={{
                     color: teamA.color,
@@ -92,12 +92,9 @@ export default function MatchupCard({
                   {teamA.name}
                 </h2>
 
-                <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
-                  {teamA.record} Record
-                </p>
+                <p className="text-sm text-slate-500">{teamA.record} Record</p>
               </div>
             </div>
-
 
             <div className="space-y-3">
               {teamA.players.map((player, i) => (
@@ -108,7 +105,7 @@ export default function MatchupCard({
                     items-center
                     gap-3
                     border-b
-                    border-white/10
+                    border-slate-200
                     pb-3
                     min-w-0
                   "
@@ -125,102 +122,91 @@ export default function MatchupCard({
                       shrink-0
                     "
                     style={{
-                      border:`1px solid ${teamA.color}`,
-                      color:teamA.color,
+                      border: `1px solid ${teamA.color}`,
+                      color: teamA.color,
                     }}
                   >
                     {i + 1}
                   </div>
 
-                  <span className="
-                    truncate
-                    text-sm
-                    md:text-lg
-                  ">
-                    {player}
-                  </span>
+                  <span className="truncate text-sm md:text-lg">{player}</span>
                 </div>
               ))}
             </div>
           </div>
 
-
-
-          {/* CENTER */}
-          <div className="
+          {/* CENTER SCOREBOARD */}
+          <div
+            className="
             order-1
             lg:order-2
             w-full
             min-w-0
             flex
             justify-center
-          ">
+          "
+          >
             <div
               className="
                 w-full
-                rounded-[28px]
+                rounded-[24px]
                 border
-                border-white/10
-                bg-white/[0.03]
-                backdrop-blur-sm
+                border-slate-200
+                bg-slate-50
                 p-3
                 sm:p-4
-                md:p-5
-                shadow-2xl
+                shadow-lg
               "
             >
-
               <div className="flex justify-center mb-3">
                 <div
                   className="
                     w-10 h-10
-                    sm:w-12 sm:h-12
                     rounded-full
-                    bg-white/10
+                    bg-slate-200
                     flex
                     items-center
                     justify-center
                     text-xl
-                    sm:text-2xl
                   "
                 >
                   🏐
                 </div>
               </div>
 
-
               <div className="text-center">
-
                 <div
                   className="
                     font-black
                     leading-none
-                    text-[clamp(2rem,5vw,4rem)]
+                    text-3xl
+                    sm:text-4xl
+                    md:text-5xl
+                    lg:text-6xl
                   "
                 >
                   {timeValue}
                 </div>
 
-
                 <div
                   className="
                     font-semibold
-                    text-[clamp(1rem,2vw,1.75rem)]
+                    text-base
+                    sm:text-lg
+                    md:text-xl
+                    text-slate-600
                   "
                 >
                   {period}
                 </div>
-
               </div>
 
-
-              <div className="my-4 border-t border-white/10" />
-
+              <div className="my-4 border-t border-slate-200" />
 
               <div
                 className="
                   text-center
-                  text-muted-foreground
+                  text-slate-500
                   tracking-[0.25em]
                   text-[10px]
                   md:text-xs
@@ -229,32 +215,28 @@ export default function MatchupCard({
                 COURTS
               </div>
 
-
               <div
                 className="
                   mt-3
                   flex
                   justify-center
                   items-center
-                  flex-wrap
                   gap-2
+                  flex-wrap
                 "
               >
                 {courts.map((court, i) => (
-                  <div
-                    key={court}
-                    className="flex items-center gap-2"
-                  >
-
+                  <div key={court} className="flex items-center gap-2">
                     <div
                       className="
                         font-black
-                        text-[clamp(1.5rem,3vw,3rem)]
+                        text-2xl
+                        sm:text-3xl
+                        md:text-4xl
                       "
                     >
                       {court}
                     </div>
-
 
                     {i !== courts.length - 1 && (
                       <div
@@ -266,52 +248,44 @@ export default function MatchupCard({
                         "
                       />
                     )}
-
                   </div>
                 ))}
               </div>
-
             </div>
           </div>
 
-
-
-
           {/* TEAM B */}
           <div className="order-3 min-w-0">
-
-            <div className="
-              flex
-              items-center
-              justify-end
-              gap-3
-              mb-5
-            ">
-
+            <div
+              className="
+                flex
+                items-center
+                justify-end
+                gap-3
+                mb-5
+              "
+            >
               <div className="text-right min-w-0">
-
                 <h2
                   className="
                     font-black
                     uppercase
                     tracking-wide
                     truncate
-                    text-[clamp(1.1rem,2vw,2.5rem)]
+                    text-xl
+                    md:text-2xl
+                    lg:text-3xl
                   "
                   style={{
-                    color:teamB.color,
-                    textShadow:`0 0 20px ${teamB.color}55`,
+                    color: teamB.color,
+                    textShadow: `0 0 20px ${teamB.color}55`,
                   }}
                 >
                   {teamB.name}
                 </h2>
 
-                <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
-                  {teamB.record} Record
-                </p>
-
+                <p className="text-sm text-slate-500">{teamB.record} Record</p>
               </div>
-
 
               <img
                 src={teamB.logo}
@@ -324,17 +298,13 @@ export default function MatchupCard({
                   shrink-0
                 "
                 style={{
-                  filter:`drop-shadow(0 0 12px ${teamB.color})`,
+                  filter: `drop-shadow(0 0 12px ${teamB.color})`,
                 }}
               />
-
             </div>
 
-
-
             <div className="space-y-3">
-
-              {teamB.players.map((player,i)=>(
+              {teamB.players.map((player, i) => (
                 <div
                   key={player}
                   className="
@@ -343,20 +313,12 @@ export default function MatchupCard({
                     justify-end
                     gap-3
                     border-b
-                    border-white/10
+                    border-slate-200
                     pb-3
                     min-w-0
                   "
                 >
-
-                  <span className="
-                    truncate
-                    text-sm
-                    md:text-lg
-                  ">
-                    {player}
-                  </span>
-
+                  <span className="truncate text-sm md:text-lg">{player}</span>
 
                   <div
                     className="
@@ -370,20 +332,16 @@ export default function MatchupCard({
                       shrink-0
                     "
                     style={{
-                      border:`1px solid ${teamB.color}`,
-                      color:teamB.color,
+                      border: `1px solid ${teamB.color}`,
+                      color: teamB.color,
                     }}
                   >
-                    {i+1}
+                    {i + 1}
                   </div>
-
                 </div>
               ))}
-
             </div>
-
           </div>
-
         </div>
       </Card>
     </div>
