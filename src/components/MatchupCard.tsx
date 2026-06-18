@@ -45,31 +45,28 @@ export default function MatchupCard({
         <div
           className="
             grid
-            grid-cols-1
-            lg:grid-cols-[minmax(0,1fr)_minmax(150px,220px)_minmax(0,1fr)]
+            grid-cols-2
+            lg:grid-cols-[1fr_160px_1fr]
             gap-4
             md:gap-6
             p-4
             md:p-6
-            lg:p-8
-            items-center
           "
         >
           {/* TEAM A */}
-          <div className="order-2 lg:order-1 min-w-0">
-            <div className="flex items-center gap-3 mb-5">
+          <div className="order-1 min-w-0">
+            <div className="flex items-center gap-2 mb-4">
               <img
                 src={teamA.logo}
                 alt={teamA.name}
                 className="
                   w-10 h-10
-                  sm:w-12 sm:h-12
-                  md:w-16 md:h-16
+                  md:w-14 md:h-14
                   object-contain
                   shrink-0
                 "
                 style={{
-                  filter: `drop-shadow(0 0 12px ${teamA.color})`,
+                  filter: `drop-shadow(0 0 10px ${teamA.color})`,
                 }}
               />
 
@@ -78,46 +75,45 @@ export default function MatchupCard({
                   className="
                     font-black
                     uppercase
-                    tracking-wide
                     truncate
-                    text-xl
+                    text-lg
                     md:text-2xl
-                    lg:text-3xl
                   "
                   style={{
                     color: teamA.color,
-                    textShadow: `0 0 20px ${teamA.color}55`,
                   }}
                 >
                   {teamA.name}
                 </h2>
 
-                <p className="text-sm text-slate-500">{teamA.record} Record</p>
+                <p className="text-xs md:text-sm text-slate-500">
+                  {teamA.record} Record
+                </p>
               </div>
             </div>
 
-            <div className="space-y-3">
-              {teamA.players.map((player, i) => (
+            <div className="space-y-2">
+              {teamA.players.map((player, index) => (
                 <div
                   key={player}
                   className="
                     flex
                     items-center
-                    gap-3
+                    gap-2
                     border-b
                     border-slate-200
-                    pb-3
-                    min-w-0
+                    pb-2
                   "
                 >
                   <div
                     className="
-                      w-8 h-8
-                      md:w-10 md:h-10
+                      w-7
+                      h-7
                       rounded-full
                       flex
                       items-center
                       justify-center
+                      text-xs
                       font-bold
                       shrink-0
                     "
@@ -126,165 +122,45 @@ export default function MatchupCard({
                       color: teamA.color,
                     }}
                   >
-                    {i + 1}
+                    {index + 1}
                   </div>
 
-                  <span className="truncate text-sm md:text-lg">{player}</span>
+                  <span className="text-sm truncate">{player}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* CENTER SCOREBOARD */}
-          <div
-            className="
-            order-1
-            lg:order-2
-            w-full
-            min-w-0
-            flex
-            justify-center
-          "
-          >
-            <div
-              className="
-                w-full
-                rounded-[24px]
-                border
-                border-slate-200
-                bg-slate-50
-                p-3
-                sm:p-4
-                shadow-lg
-              "
-            >
-              <div className="flex justify-center mb-3">
-                <div
-                  className="
-                    w-10 h-10
-                    rounded-full
-                    bg-slate-200
-                    flex
-                    items-center
-                    justify-center
-                    text-xl
-                  "
-                >
-                  🏐
-                </div>
-              </div>
-
-              <div className="text-center">
-                <div
-                  className="
-                    font-black
-                    leading-none
-                    text-3xl
-                    sm:text-4xl
-                    md:text-5xl
-                    lg:text-6xl
-                  "
-                >
-                  {timeValue}
-                </div>
-
-                <div
-                  className="
-                    font-semibold
-                    text-base
-                    sm:text-lg
-                    md:text-xl
-                    text-slate-600
-                  "
-                >
-                  {period}
-                </div>
-              </div>
-
-              <div className="my-4 border-t border-slate-200" />
-
-              <div
-                className="
-                  text-center
-                  text-slate-500
-                  tracking-[0.25em]
-                  text-[10px]
-                  md:text-xs
-                "
-              >
-                COURTS
-              </div>
-
-              <div
-                className="
-                  mt-3
-                  flex
-                  justify-center
-                  items-center
-                  gap-2
-                  flex-wrap
-                "
-              >
-                {courts.map((court, i) => (
-                  <div key={court} className="flex items-center gap-2">
-                    <div
-                      className="
-                        font-black
-                        text-2xl
-                        sm:text-3xl
-                        md:text-4xl
-                      "
-                    >
-                      {court}
-                    </div>
-
-                    {i !== courts.length - 1 && (
-                      <div
-                        className="
-                          w-2
-                          h-2
-                          rounded-full
-                          bg-amber-400
-                        "
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
           {/* TEAM B */}
-          <div className="order-3 min-w-0">
+          <div className="order-2 min-w-0 lg:order-3">
             <div
               className="
-                flex
-                items-center
-                justify-end
-                gap-3
-                mb-5
-              "
+              flex
+              items-center
+              justify-end
+              gap-2
+              mb-4
+            "
             >
               <div className="text-right min-w-0">
                 <h2
                   className="
                     font-black
                     uppercase
-                    tracking-wide
                     truncate
-                    text-xl
+                    text-lg
                     md:text-2xl
-                    lg:text-3xl
                   "
                   style={{
                     color: teamB.color,
-                    textShadow: `0 0 20px ${teamB.color}55`,
                   }}
                 >
                   {teamB.name}
                 </h2>
 
-                <p className="text-sm text-slate-500">{teamB.record} Record</p>
+                <p className="text-xs md:text-sm text-slate-500">
+                  {teamB.record} Record
+                </p>
               </div>
 
               <img
@@ -292,42 +168,41 @@ export default function MatchupCard({
                 alt={teamB.name}
                 className="
                   w-10 h-10
-                  sm:w-12 sm:h-12
-                  md:w-16 md:h-16
+                  md:w-14 md:h-14
                   object-contain
                   shrink-0
                 "
                 style={{
-                  filter: `drop-shadow(0 0 12px ${teamB.color})`,
+                  filter: `drop-shadow(0 0 10px ${teamB.color})`,
                 }}
               />
             </div>
 
-            <div className="space-y-3">
-              {teamB.players.map((player, i) => (
+            <div className="space-y-2">
+              {teamB.players.map((player, index) => (
                 <div
                   key={player}
                   className="
                     flex
-                    items-center
                     justify-end
-                    gap-3
+                    items-center
+                    gap-2
                     border-b
                     border-slate-200
-                    pb-3
-                    min-w-0
+                    pb-2
                   "
                 >
-                  <span className="truncate text-sm md:text-lg">{player}</span>
+                  <span className="text-sm truncate">{player}</span>
 
                   <div
                     className="
-                      w-8 h-8
-                      md:w-10 md:h-10
+                      w-7
+                      h-7
                       rounded-full
                       flex
                       items-center
                       justify-center
+                      text-xs
                       font-bold
                       shrink-0
                     "
@@ -336,10 +211,99 @@ export default function MatchupCard({
                       color: teamB.color,
                     }}
                   >
-                    {i + 1}
+                    {index + 1}
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* CENTER INFO */}
+          <div
+            className="
+              col-span-2
+              lg:col-span-1
+              order-3
+              lg:order-2
+              flex
+              items-center
+              justify-center
+            "
+          >
+            <div
+              className="
+                w-full
+                lg:w-[150px]
+                rounded-2xl
+                border
+                border-slate-200
+                bg-slate-50
+                p-3
+                text-center
+                shadow-sm
+              "
+            >
+              <div
+                className="
+                  font-black
+                  text-2xl
+                  md:text-3xl
+                  lg:text-4xl
+                  leading-none
+                "
+              >
+                {timeValue}
+              </div>
+
+              <div
+                className="
+                  text-sm
+                  md:text-base
+                  font-semibold
+                  text-slate-500
+                "
+              >
+                {period}
+              </div>
+
+              <div className="my-3 border-t border-slate-200" />
+
+              <div
+                className="
+                  text-[10px]
+                  tracking-[0.25em]
+                  text-slate-500
+                "
+              >
+                COURTS
+              </div>
+
+              <div
+                className="
+                  flex
+                  justify-center
+                  gap-2
+                  mt-2
+                "
+              >
+                {courts.map((court, index) => (
+                  <div key={court} className="flex items-center gap-2">
+                    <span
+                      className="
+                        text-xl
+                        md:text-2xl
+                        font-black
+                      "
+                    >
+                      {court}
+                    </span>
+
+                    {index !== courts.length - 1 && (
+                      <span className="text-amber-400">•</span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
