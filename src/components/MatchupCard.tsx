@@ -46,24 +46,27 @@ export default function MatchupCard({
           className="
             grid
             grid-cols-1
-            xl:grid-cols-[1fr_auto_1fr]
-            gap-6
+            lg:grid-cols-[minmax(0,1fr)_minmax(170px,260px)_minmax(0,1fr)]
+            gap-4
+            md:gap-6
             p-4
             md:p-6
             lg:p-8
-            items-start
+            items-center
           "
         >
+
           {/* TEAM A */}
-          <div className="order-2 xl:order-1 min-w-0">
-            <div className="flex items-center gap-3 md:gap-4 mb-6">
+          <div className="order-2 lg:order-1 min-w-0">
+
+            <div className="flex items-center gap-3 mb-5">
               <img
                 src={teamA.logo}
                 alt={teamA.name}
                 className="
-                  w-12 h-12
+                  w-10 h-10
+                  sm:w-12 sm:h-12
                   md:w-16 md:h-16
-                  lg:w-20 lg:h-20
                   object-contain
                   shrink-0
                 "
@@ -75,13 +78,11 @@ export default function MatchupCard({
               <div className="min-w-0">
                 <h2
                   className="
-                    text-xl
-                    md:text-2xl
-                    lg:text-4xl
                     font-black
                     uppercase
                     tracking-wide
                     truncate
+                    text-[clamp(1.1rem,2vw,2.5rem)]
                   "
                   style={{
                     color: teamA.color,
@@ -91,13 +92,14 @@ export default function MatchupCard({
                   {teamA.name}
                 </h2>
 
-                <p className="text-sm md:text-base text-muted-foreground">
+                <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                   {teamA.record} Record
                 </p>
               </div>
             </div>
 
-            <div className="space-y-3 md:space-y-4">
+
+            <div className="space-y-3">
               {teamA.players.map((player, i) => (
                 <div
                   key={player}
@@ -108,6 +110,7 @@ export default function MatchupCard({
                     border-b
                     border-white/10
                     pb-3
+                    min-w-0
                   "
                 >
                   <div
@@ -122,14 +125,18 @@ export default function MatchupCard({
                       shrink-0
                     "
                     style={{
-                      border: `1px solid ${teamA.color}`,
-                      color: teamA.color,
+                      border:`1px solid ${teamA.color}`,
+                      color:teamA.color,
                     }}
                   >
                     {i + 1}
                   </div>
 
-                  <span className="text-sm md:text-lg lg:text-xl truncate">
+                  <span className="
+                    truncate
+                    text-sm
+                    md:text-lg
+                  ">
                     {player}
                   </span>
                 </div>
@@ -137,150 +144,197 @@ export default function MatchupCard({
             </div>
           </div>
 
-          {/* CENTER BADGE */}
-          <div className="order-1 xl:order-2 flex justify-center">
+
+
+          {/* CENTER */}
+          <div className="
+            order-1
+            lg:order-2
+            w-full
+            min-w-0
+            flex
+            justify-center
+          ">
             <div
               className="
                 w-full
-                max-w-[320px]
                 rounded-[28px]
-                md:rounded-[36px]
                 border
                 border-white/10
                 bg-white/[0.03]
                 backdrop-blur-sm
-                p-4
-                md:p-6
-                lg:p-8
+                p-3
+                sm:p-4
+                md:p-5
                 shadow-2xl
               "
             >
-              <div className="flex justify-center mb-4">
+
+              <div className="flex justify-center mb-3">
                 <div
                   className="
-                    w-12 h-12
-                    md:w-16 md:h-16
+                    w-10 h-10
+                    sm:w-12 sm:h-12
                     rounded-full
                     bg-white/10
                     flex
                     items-center
                     justify-center
-                    text-2xl
-                    md:text-3xl
+                    text-xl
+                    sm:text-2xl
                   "
                 >
                   🏐
                 </div>
               </div>
 
+
               <div className="text-center">
+
                 <div
                   className="
-                    text-4xl
-                    md:text-5xl
-                    lg:text-7xl
                     font-black
                     leading-none
+                    text-[clamp(2rem,5vw,4rem)]
                   "
                 >
                   {timeValue}
                 </div>
 
+
                 <div
                   className="
-                    text-lg
-                    md:text-2xl
-                    lg:text-3xl
                     font-semibold
-                    mt-1
+                    text-[clamp(1rem,2vw,1.75rem)]
                   "
                 >
                   {period}
                 </div>
+
               </div>
 
-              <div className="my-4 md:my-6 border-t border-white/10" />
+
+              <div className="my-4 border-t border-white/10" />
+
 
               <div
                 className="
                   text-center
                   text-muted-foreground
                   tracking-[0.25em]
-                  text-xs
-                  md:text-sm
+                  text-[10px]
+                  md:text-xs
                 "
               >
                 COURTS
               </div>
 
-              <div className="mt-4 flex justify-center items-center gap-3 md:gap-6 flex-wrap">
+
+              <div
+                className="
+                  mt-3
+                  flex
+                  justify-center
+                  items-center
+                  flex-wrap
+                  gap-2
+                "
+              >
                 {courts.map((court, i) => (
-                  <div key={court} className="flex items-center gap-3">
+                  <div
+                    key={court}
+                    className="flex items-center gap-2"
+                  >
+
                     <div
                       className="
-                        text-2xl
-                        md:text-4xl
-                        lg:text-5xl
                         font-black
+                        text-[clamp(1.5rem,3vw,3rem)]
                       "
                     >
                       {court}
                     </div>
 
+
                     {i !== courts.length - 1 && (
-                      <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-amber-400" />
+                      <div
+                        className="
+                          w-2
+                          h-2
+                          rounded-full
+                          bg-amber-400
+                        "
+                      />
                     )}
+
                   </div>
                 ))}
               </div>
+
             </div>
           </div>
 
+
+
+
           {/* TEAM B */}
           <div className="order-3 min-w-0">
-            <div className="flex items-center justify-end gap-3 md:gap-4 mb-6">
+
+            <div className="
+              flex
+              items-center
+              justify-end
+              gap-3
+              mb-5
+            ">
+
               <div className="text-right min-w-0">
+
                 <h2
                   className="
-                    text-xl
-                    md:text-2xl
-                    lg:text-4xl
                     font-black
                     uppercase
                     tracking-wide
                     truncate
+                    text-[clamp(1.1rem,2vw,2.5rem)]
                   "
                   style={{
-                    color: teamB.color,
-                    textShadow: `0 0 20px ${teamB.color}55`,
+                    color:teamB.color,
+                    textShadow:`0 0 20px ${teamB.color}55`,
                   }}
                 >
                   {teamB.name}
                 </h2>
 
-                <p className="text-sm md:text-base text-muted-foreground">
+                <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
                   {teamB.record} Record
                 </p>
+
               </div>
+
 
               <img
                 src={teamB.logo}
                 alt={teamB.name}
                 className="
-                  w-12 h-12
+                  w-10 h-10
+                  sm:w-12 sm:h-12
                   md:w-16 md:h-16
-                  lg:w-20 lg:h-20
                   object-contain
                   shrink-0
                 "
                 style={{
-                  filter: `drop-shadow(0 0 12px ${teamB.color})`,
+                  filter:`drop-shadow(0 0 12px ${teamB.color})`,
                 }}
               />
+
             </div>
 
-            <div className="space-y-3 md:space-y-4">
-              {teamB.players.map((player, i) => (
+
+
+            <div className="space-y-3">
+
+              {teamB.players.map((player,i)=>(
                 <div
                   key={player}
                   className="
@@ -291,11 +345,18 @@ export default function MatchupCard({
                     border-b
                     border-white/10
                     pb-3
+                    min-w-0
                   "
                 >
-                  <span className="text-sm md:text-lg lg:text-xl truncate">
+
+                  <span className="
+                    truncate
+                    text-sm
+                    md:text-lg
+                  ">
                     {player}
                   </span>
+
 
                   <div
                     className="
@@ -309,16 +370,20 @@ export default function MatchupCard({
                       shrink-0
                     "
                     style={{
-                      border: `1px solid ${teamB.color}`,
-                      color: teamB.color,
+                      border:`1px solid ${teamB.color}`,
+                      color:teamB.color,
                     }}
                   >
-                    {i + 1}
+                    {i+1}
                   </div>
+
                 </div>
               ))}
+
             </div>
+
           </div>
+
         </div>
       </Card>
     </div>
