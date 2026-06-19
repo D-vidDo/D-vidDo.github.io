@@ -173,17 +173,17 @@ setTeamB({
         overflow-hidden
       "
       >
-        <div
-          className="
-            grid
-            grid-cols-2
-            2xl:grid-cols-[1fr_120px_1fr]
-            gap-3
-            md:gap-4
-            p-3
-            md:p-4
-          "
-        >
+<div
+  className="
+    grid
+    grid-cols-2
+    2xl:grid-cols-[minmax(180px,1fr)_120px_minmax(180px,1fr)]
+    gap-3
+    md:gap-4
+    p-3
+    md:p-4
+  "
+>
           {/* MATCH INFO */}
 
           <div
@@ -253,18 +253,19 @@ setTeamB({
           <div className="order-2 2xl:order-1 min-w-0">
             <div className="flex items-center gap-2 mb-3">
               <div className="min-w-0">
-                <h2
-                  className="
-                    font-black
-                    uppercase
-                    truncate
-                    text-sm
-                    md:text-xl
-                  "
-                  style={{
-                    color: teamA.color,
-                  }}
-                >
+<h2
+  className="
+    font-black
+    uppercase
+    break-words
+    text-sm
+    md:text-xl
+    leading-tight
+  "
+  style={{
+    color: teamA.color,
+  }}
+>
                   {teamA.name}
                 </h2>
 
@@ -321,18 +322,19 @@ setTeamB({
           <div className="order-3 min-w-0">
             <div className="flex items-center justify-end gap-2 mb-3">
               <div className="text-right min-w-0">
-                <h2
-                  className="
-                    font-black
-                    uppercase
-                    truncate
-                    text-sm
-                    md:text-xl
-                  "
-                  style={{
-                    color: teamB.color,
-                  }}
-                >
+<h2
+  className="
+    font-black
+    uppercase
+    break-words
+    text-sm
+    md:text-xl
+    leading-tight
+  "
+  style={{
+    color: teamA.color,
+  }}
+>
                   {teamB.name}
                 </h2>
 
