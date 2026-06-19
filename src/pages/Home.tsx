@@ -281,6 +281,12 @@ const Home = () => {
 
         <UpcomingGames />
 
+        <MatchupCard matchupId={49}/>
+<MatchupCard matchupId={50}/>
+<MatchupCard matchupId={51}/>
+
+
+
         {/* Top Teams (Standings) */}
         <section>
           <div className="flex justify-between items-center mb-8">
@@ -311,7 +317,6 @@ const Home = () => {
               </div>
             ))}
 
-<MatchupCard matchupId={49}/>
 
           </div>
         </section>
