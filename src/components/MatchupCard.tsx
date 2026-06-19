@@ -145,13 +145,13 @@ export default function MatchupCard({ matchupId }: MatchupCardProps) {
       className="w-full rounded-3xl p-[3px] shadow-md overflow-hidden"
       style={{
         background: `linear-gradient(
-        90deg,
-        ${teamA.color},
-        ${teamA.color}99,
-        rgba(255,255,255,0.8),
-        ${teamB.color}99,
-        ${teamB.color}
-      )`,
+  135deg,
+  ${teamA.color},
+  ${teamA.color}80 35%,
+  white 50%,
+  ${teamB.color}80 65%,
+  ${teamB.color}
+)`,
       }}
     >
       <Card className="border-0 bg-white text-slate-900 rounded-[22px] overflow-hidden">
