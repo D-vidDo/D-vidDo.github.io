@@ -252,15 +252,17 @@ setTeamB({
 
           <div className="order-2 2xl:order-1 min-w-0">
             <div className="flex items-center gap-2 mb-3">
-              <div className="min-w-0">
+              <div className="min-w-0 max-w-full">
                 <h2
                   className="
-                    font-black
-                    uppercase
-                    truncate
-                    text-sm
-                    md:text-xl
-                  "
+  font-black
+  uppercase
+  break-words
+  text-sm
+  md:text-lg
+  2xl:text-xl
+  leading-tight
+"
                   style={{
                     color: teamA.color,
                   }}
@@ -320,15 +322,17 @@ setTeamB({
 
           <div className="order-3 min-w-0">
             <div className="flex items-center justify-end gap-2 mb-3">
-              <div className="text-right min-w-0">
+              <div className="text-right min-w-0 max-w-full">
                 <h2
                   className="
-                    font-black
-                    uppercase
-                    truncate
-                    text-sm
-                    md:text-xl
-                  "
+  font-black
+  uppercase
+  break-words
+  text-sm
+  md:text-lg
+  2xl:text-xl
+  leading-tight
+"
                   style={{
                     color: teamB.color,
                   }}
