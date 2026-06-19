@@ -310,24 +310,9 @@ const Home = () => {
                 <TeamCard team={team} />
               </div>
             ))}
-                                      <MatchupCard
-  teamA={{
-    name: "Luna",
-    logo: "/logos/wildcats.png",
-    color: "#f59e0b",
-    record: "0-0",
-    players: ["David D", "Travis", "Justine"],
-  }}
-  teamB={{
-    name: "Bosco",
-    logo: "/logos/sharks.png",
-    color: "#0ea5e9",
-    record: "0-0",
-    players: ["Vince", "Ashley", "Tim"],
-  }}
-  time="7:00 PM"
-  courts={[3, 5]}
-/>
+
+<MatchupCard matchupId={49}/>
+
           </div>
         </section>
 
