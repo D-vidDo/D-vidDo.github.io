@@ -76,21 +76,21 @@ export default function MatchupCard({ matchupId }: MatchupCardProps) {
 
         const teamBPlayers = await fetchPlayers(matchup.teamB.player_ids);
 
-        setTeamA({
-          name: matchup.teamA.name,
-          logo: `/logos/${matchup.teamA.team_id}.png`,
-          color: matchup.teamA.color,
-          record: `${matchup.teamA.wins}-${matchup.teamA.losses}`,
-          players: teamAPlayers,
-        });
+setTeamA({
+  name: matchup.teamA.name,
+  logo: `/logos/${matchup.teamA.team_id}.png`,
+  color: matchup.teamA.color || "#64748b",
+  record: `${matchup.teamA.wins}-${matchup.teamA.losses}`,
+  players: teamAPlayers,
+});
 
-        setTeamB({
-          name: matchup.teamB.name,
-          logo: `/logos/${matchup.teamB.team_id}.png`,
-          color: matchup.teamB.color,
-          record: `${matchup.teamB.wins}-${matchup.teamB.losses}`,
-          players: teamBPlayers,
-        });
+setTeamB({
+  name: matchup.teamB.name,
+  logo: `/logos/${matchup.teamB.team_id}.png`,
+  color: matchup.teamB.color || "#64748b",
+  record: `${matchup.teamB.wins}-${matchup.teamB.losses}`,
+  players: teamBPlayers,
+});
 
         // Load games for time + courts
         const gameIds = matchup.game_ids || [];
