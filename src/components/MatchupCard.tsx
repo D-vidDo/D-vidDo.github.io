@@ -6,12 +6,17 @@ interface MatchupCardProps {
   matchupId: number;
 }
 
+interface PlayerData {
+  name: string;
+  jerseyNumber: string | null;
+}
+
 interface TeamData {
   name: string;
   logo: string;
   color: string;
   record: string;
-  players: string[];
+  players: PlayerData[];
 }
 
 export default function MatchupCard({ matchupId }: MatchupCardProps) {
@@ -60,16 +65,19 @@ export default function MatchupCard({ matchupId }: MatchupCardProps) {
             return [];
           }
 
-          const { data, error } = await supabase
-            .from("players")
-            .select("id, name, display_name")
-            .in("id", playerIds);
+        const { data, error } = await supabase
+  .from("players")
+  .select("id, name, display_name, jersey_number")
+  .in("id", playerIds);
 
-          if (error) throw error;
+if (error) throw error;
 
-          return (
-            data?.map((player) => player.display_name || player.name) || []
-          );
+return (
+  data?.map((player) => ({
+    name: player.display_name || player.name,
+    jerseyNumber: player.jersey_number,
+  })) || []
+);
         }
 
         const teamAPlayers = await fetchPlayers(matchup.teamA.player_ids);
@@ -267,9 +275,9 @@ setTeamB({
             </div>
 
             <div className="space-y-1">
-              {teamA.players.map((player, index) => (
+              {teamA.players.map((player) => (
                 <div
-                  key={player}
+                  key={player.name}
                   className="
                     flex
                     items-center
@@ -297,11 +305,11 @@ setTeamB({
                       color: teamA.color,
                     }}
                   >
-                    {index + 1}
+                    {player.jerseyNumber || "-"}
                   </div>
 
                   <span className="text-xs md:text-sm flex-1 truncate">
-                    {player}
+                    {player.name}
                   </span>
                 </div>
               ))}
@@ -335,9 +343,9 @@ setTeamB({
             </div>
 
             <div className="space-y-1">
-              {teamB.players.map((player, index) => (
+              {teamB.players.map((player) => (
                 <div
-                  key={player}
+                  key={player.name}
                   className="
                     flex
                     items-center
@@ -350,7 +358,7 @@ setTeamB({
                   "
                 >
                   <span className="text-xs md:text-sm flex-1 truncate text-right">
-                    {player}
+                    {player.name}
                   </span>
 
                   <div
@@ -370,7 +378,7 @@ setTeamB({
                       color: teamB.color,
                     }}
                   >
-                    {index + 1}
+                    {player.jerseyNumber || "-"}
                   </div>
                 </div>
               ))}
