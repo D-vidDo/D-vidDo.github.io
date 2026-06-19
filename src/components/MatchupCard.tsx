@@ -1,30 +1,143 @@
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase";
 
 interface MatchupCardProps {
-  teamA: {
-    name: string;
-    logo: string;
-    color: string;
-    record: string;
-    players: string[];
-  };
-  teamB: {
-    name: string;
-    logo: string;
-    color: string;
-    record: string;
-    players: string[];
-  };
-  time: string;
-  courts: number[];
+  matchupId: number;
 }
 
-export default function MatchupCard({
-  teamA,
-  teamB,
-  time,
-  courts,
-}: MatchupCardProps) {
+interface TeamData {
+  name: string;
+  logo: string;
+  color: string;
+  record: string;
+  players: string[];
+}
+
+export default function MatchupCard({ matchupId }: MatchupCardProps) {
+  const [teamA, setTeamA] = useState<TeamData | null>(null);
+  const [teamB, setTeamB] = useState<TeamData | null>(null);
+  const [time, setTime] = useState("");
+  const [courts, setCourts] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchMatchup() {
+      try {
+        const { data: matchup, error } = await supabase
+          .from("trios_matchups")
+          .select(
+            `
+            id,
+            game_ids,
+
+            teamA:teams!trios_matchups_team_a_fkey(
+              team_id,
+              name,
+              color,
+              wins,
+              losses,
+              player_ids
+            ),
+
+            teamB:teams!trios_matchups_team_b_fkey(
+              team_id,
+              name,
+              color,
+              wins,
+              losses,
+              player_ids
+            )
+          `,
+          )
+          .eq("id", matchupId)
+          .single();
+
+        if (error) throw error;
+
+        async function fetchPlayers(playerIds: number[]) {
+          if (!playerIds || playerIds.length === 0) {
+            return [];
+          }
+
+          const { data, error } = await supabase
+            .from("players")
+            .select("id, name, display_name")
+            .in("id", playerIds);
+
+          if (error) throw error;
+
+          return (
+            data?.map((player) => player.display_name || player.name) || []
+          );
+        }
+
+        const teamAPlayers = await fetchPlayers(matchup.teamA.player_ids);
+
+        const teamBPlayers = await fetchPlayers(matchup.teamB.player_ids);
+
+        setTeamA({
+          name: matchup.teamA.name,
+          logo: `/logos/${matchup.teamA.team_id}.png`,
+          color: matchup.teamA.color,
+          record: `${matchup.teamA.wins}-${matchup.teamA.losses}`,
+          players: teamAPlayers,
+        });
+
+        setTeamB({
+          name: matchup.teamB.name,
+          logo: `/logos/${matchup.teamB.team_id}.png`,
+          color: matchup.teamB.color,
+          record: `${matchup.teamB.wins}-${matchup.teamB.losses}`,
+          players: teamBPlayers,
+        });
+
+        // Load games for time + courts
+        const gameIds = matchup.game_ids || [];
+
+        if (gameIds.length > 0) {
+          const { data: games, error: gamesError } = await supabase
+            .from("games")
+            .select("time, court")
+            .in("id", gameIds);
+
+          if (gamesError) throw gamesError;
+
+          if (games && games.length > 0) {
+            const firstGameTime = games[0].time;
+
+            if (firstGameTime) {
+              const formattedTime = new Date(
+                `2000-01-01T${firstGameTime}`,
+              ).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+              });
+
+              setTime(formattedTime);
+            }
+
+            setCourts(games.map((game) => game.court).filter(Boolean));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching matchup:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchMatchup();
+  }, [matchupId]);
+
+  if (loading) {
+    return <Card className="p-6">Loading matchup...</Card>;
+  }
+
+  if (!teamA || !teamB) {
+    return null;
+  }
+
   const [timeValue, period] = time.split(" ");
 
   return (
@@ -54,6 +167,7 @@ export default function MatchupCard({
           "
         >
           {/* MATCH INFO */}
+
           <div
             className="
               col-span-2
@@ -117,6 +231,7 @@ export default function MatchupCard({
           </div>
 
           {/* TEAM A */}
+
           <div className="order-2 2xl:order-1 min-w-0">
             <div className="flex items-center gap-2 mb-3">
               <div className="min-w-0">
@@ -184,6 +299,7 @@ export default function MatchupCard({
           </div>
 
           {/* TEAM B */}
+
           <div className="order-3 min-w-0">
             <div className="flex items-center justify-end gap-2 mb-3">
               <div className="text-right min-w-0">
@@ -206,7 +322,6 @@ export default function MatchupCard({
                   {teamB.record}
                 </p>
               </div>
-
             </div>
 
             <div className="space-y-1">
