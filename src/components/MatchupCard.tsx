@@ -240,7 +240,7 @@ setTeamB({
                     </span>
 
                     {index !== courts.length - 1 && (
-                      <span className="text-amber-400">•</span>
+                      <span className="text-amber-400">→</span>
                     )}
                   </div>
                 ))}
