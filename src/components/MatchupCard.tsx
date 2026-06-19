@@ -119,20 +119,6 @@ export default function MatchupCard({
           {/* TEAM A */}
           <div className="order-2 2xl:order-1 min-w-0">
             <div className="flex items-center gap-2 mb-3">
-              <img
-                src={teamA.logo}
-                alt={teamA.name}
-                className="
-                  w-8 h-8
-                  md:w-12 md:h-12
-                  object-contain
-                  shrink-0
-                "
-                style={{
-                  filter: `drop-shadow(0 0 8px ${teamA.color})`,
-                }}
-              />
-
               <div className="min-w-0">
                 <h2
                   className="
@@ -221,19 +207,6 @@ export default function MatchupCard({
                 </p>
               </div>
 
-              <img
-                src={teamB.logo}
-                alt={teamB.name}
-                className="
-                  w-8 h-8
-                  md:w-12 md:h-12
-                  object-contain
-                  shrink-0
-                "
-                style={{
-                  filter: `drop-shadow(0 0 8px ${teamB.color})`,
-                }}
-              />
             </div>
 
             <div className="space-y-1">
