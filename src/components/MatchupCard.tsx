@@ -140,21 +140,21 @@ export default function MatchupCard({ matchupId }: MatchupCardProps) {
 
   const [timeValue, period] = time.split(" ");
 
-  return (
-    <div
-      className="w-full rounded-3xl p-[3px] shadow-md overflow-hidden"
-      style={{
-        background: `linear-gradient(
-  135deg,
-  ${teamA.color},
-  ${teamA.color}80 35%,
-  white 50%,
-  ${teamB.color}80 65%,
-  ${teamB.color}
-)`,
-      }}
-    >
-      <Card className="border-0 bg-white text-slate-900 rounded-[22px] overflow-hidden">
+return (
+  <div
+    className="relative w-full rounded-3xl p-[3px] shadow-lg overflow-hidden"
+    style={{
+      background: `linear-gradient(
+        90deg,
+        ${teamA.color},
+        ${teamA.color}80,
+        white,
+        ${teamB.color}80,
+        ${teamB.color}
+      )`,
+    }}
+  >
+    <Card className="relative border-0 bg-white/95 text-slate-900 rounded-[22px] overflow-hidden">
         <div
           className="
             grid
