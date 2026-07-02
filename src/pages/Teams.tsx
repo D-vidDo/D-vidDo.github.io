@@ -75,7 +75,7 @@ const Teams = () => {
       }
     });
 
-  const CURRENT_SEASON_ID = 3; // adjust if needed
+  const CURRENT_SEASON_ID = 4; // adjust if needed
 
   const currentTeams = filteredAndSortedTeams.filter(
     (team: any) => team.season_id === CURRENT_SEASON_ID
