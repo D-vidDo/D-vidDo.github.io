@@ -21,13 +21,21 @@ interface Trade {
 
 // Replace with your actual team color mapping
 const teamColorMap: Record<string, string> = {
+  // Previous teams
   "Brawl Luu": "#a22418",
   "Balls Luu": "#5f1077",
   "Bull Luu": "#f77418",
   "Boscoball": "#2A9D8F",
   "Rufus' Doofuses": "#457B9D",
-  "Sally Gang": "#E63946"
-  // Add more team name -> color pairs here
+  "Sally Gang": "#E63946",
+
+  // Season 4 teams
+  "Phở-lippines": "#EF0107",
+  "Sweet Spaghetti Spikers": "#A81C07",
+  "Cucking Kirkified Coolies": "#f7cfb4",
+  "Hoang Bao": "#FF69B4",
+  "Big Bad Bitties": "#99ccff",
+  "ATAK": "#50314c",
 };
 
 const getTeamColorByName = (teamName: string) => {
