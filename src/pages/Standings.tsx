@@ -17,7 +17,7 @@ interface Team {
   player_ids: string[];
 }
 
-const CURRENT_SEASON_ID = 3;
+const CURRENT_SEASON_ID = 4;
 
 const Standings = () => {
   const [teams, setTeams] = useState<Team[]>([]);

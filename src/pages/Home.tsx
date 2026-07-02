@@ -12,7 +12,7 @@ import BillOfTheDay from "@/components/BillOfTheDay";
 import MatchupCard from "@/components/MatchupCard";
 
 // active season ID
-const ACTIVE_SEASON_ID = 3;
+const ACTIVE_SEASON_ID = 4;
 
 // Initialize Supabase client
 const supabaseUrl = "https://bqqotvjpvaznkjfldcgm.supabase.co";

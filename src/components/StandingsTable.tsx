@@ -108,7 +108,7 @@ const StandingsTable = () => {
       setSeasons(data);
 
       // Ensure default season exists in options
-      const defaultSeason = data.find((s) => s.season_id === 3);
+      const defaultSeason = data.find((s) => s.season_id === 4);
       setSeasonId(defaultSeason ? defaultSeason.season_id : data[0].season_id);
     }
 
