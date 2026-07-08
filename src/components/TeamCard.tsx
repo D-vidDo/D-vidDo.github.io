@@ -50,6 +50,22 @@ const TeamCard = ({ team }: TeamCardProps) => {
       //         .eq("team_id", team.team_id)
       //     ).data?.map((g) => g.id) ?? []
       //   );
+
+      // if (setsError) {
+      //   console.error("Error fetching sets:", setsError.message);
+      //   return;
+      // }
+
+      // let pf = 0;
+      // let pa = 0;
+
+      // (setsData ?? []).forEach((set) => {
+      //   pf += set.points_for;
+      //   pa += set.points_against;
+      // });
+
+      // setPointsFor(pf);
+      // setPointsAgainst(pa);
       // Fetch sets for this team through trios_team_id
 const { data: gameData, error: gamesError } = await supabase
   .from("games")
@@ -83,22 +99,6 @@ let pa = 0;
 
 setPointsFor(pf);
 setPointsAgainst(pa);
-
-      if (setsError) {
-        console.error("Error fetching sets:", setsError.message);
-        return;
-      }
-
-      let pf = 0;
-      let pa = 0;
-
-      (setsData ?? []).forEach((set) => {
-        pf += set.points_for;
-        pa += set.points_against;
-      });
-
-      setPointsFor(pf);
-      setPointsAgainst(pa);
     }
 
     fetchStats();
