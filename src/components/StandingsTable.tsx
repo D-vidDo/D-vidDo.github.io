@@ -144,6 +144,7 @@ const StandingsTable = () => {
           time,
           opponent,
           team_id,
+          trios_team_id,
           sets (
             set_no,
             points_for,
@@ -171,43 +172,48 @@ const StandingsTable = () => {
         };
       });
 
-      gameData.forEach((game) => {
-        const team = teamMap[game.team_id];
-        if (!team || !game.sets?.length) return;
+gameData.forEach((game) => {
+  if (!game.trios_team_id?.length || !game.sets?.length) return;
 
-        let wins = 0;
-        let losses = 0;
-        let ties = 0;
-        let pf = 0;
-        let pa = 0;
+  let wins = 0;
+  let losses = 0;
+  let ties = 0;
+  let pf = 0;
+  let pa = 0;
 
-        game.sets.forEach((set) => {
-          pf += set.points_for;
-          pa += set.points_against;
+  game.sets.forEach((set) => {
+    pf += set.points_for;
+    pa += set.points_against;
 
-          if (set.points_for === set.points_against) ties++;
-          else if (set.points_for > set.points_against) wins++;
-          else losses++;
-        });
+    if (set.points_for === set.points_against) ties++;
+    else if (set.points_for > set.points_against) wins++;
+    else losses++;
+  });
 
-        team.points_for += pf;
-        team.points_against += pa;
+  const dateTime = new Date(`${game.date}T${game.time ?? "00:00:00"}`);
 
-        if (wins > losses) team.wins++;
-        else if (losses > wins) team.losses++;
-        else team.ties++;
+  // Add this game to BOTH trio teams
+  game.trios_team_id.forEach((teamId: string | number) => {
+    const team = teamMap[String(teamId)];
+    if (!team) return;
 
-        const dateTime = new Date(`${game.date}T${game.time ?? "00:00:00"}`);
+    team.points_for += pf;
+    team.points_against += pa;
 
-        team.games.push({
-          id: game.id,
-          date: game.date,
-          time: game.time,
-          dateTime,
-          opponent: game.opponent,
-          sets: [...game.sets].sort((a, b) => a.set_no - b.set_no),
-        });
-      });
+    if (wins > losses) team.wins++;
+    else if (losses > wins) team.losses++;
+    else team.ties++;
+
+    team.games.push({
+      id: game.id,
+      date: game.date,
+      time: game.time,
+      dateTime,
+      opponent: game.opponent,
+      sets: [...game.sets].sort((a, b) => a.set_no - b.set_no),
+    });
+  });
+});
 
       Object.values(teamMap).forEach((team) => {
         team.games.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
