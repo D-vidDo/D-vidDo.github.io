@@ -55,7 +55,8 @@ const Standings = () => {
       id,
       team_id,
       date,
-      season_id
+      season_id,
+      trios_team_id
     )
   `
           )
@@ -76,29 +77,47 @@ const Standings = () => {
           games: {
             id: number;
             team_id: string | number | null;
+            trios_team_id: (string | number)[] | null;
             date: string | null;
           } | null;
         };
 
         // 3) Build: teamKey -> chronological [{date,set_no,result}]
-        const teamResultsMap: Record<
-          string,
-          { date: string; set_no: number; result: "W" | "L" }[]
-        > = {};
-        for (const row of (setsData ?? []) as JoinedSet[]) {
-          const g = row.games;
-          if (!g || g.team_id == null || !g.date) continue;
+const teamResultsMap: Record<
+  string,
+  { date: string; set_no: number; result: "W" | "L" }[]
+> = {};
 
-          const teamKey = keyOf(g.team_id);
-          const res = (row.result ?? "").trim().toUpperCase();
-          if (res !== "W" && res !== "L") continue;
+for (const row of (setsData ?? []) as JoinedSet[]) {
+        //   const g = row.games;
+        //   if (!g || g.team_id == null || !g.date) continue;
 
-          (teamResultsMap[teamKey] ||= []).push({
-            date: g.date, // DATE type ('YYYY-MM-DD'); lexical order works
-            set_no: Number(row.set_no) || 0, // ensure numeric
-            result: res as "W" | "L",
-          });
-        }
+        //   const teamKey = keyOf(g.team_id);
+        //   const res = (row.result ?? "").trim().toUpperCase();
+        //   if (res !== "W" && res !== "L") continue;
+
+        //   (teamResultsMap[teamKey] ||= []).push({
+        //     date: g.date, // DATE type ('YYYY-MM-DD'); lexical order works
+        //     set_no: Number(row.set_no) || 0, // ensure numeric
+        //     result: res as "W" | "L",
+        //   });
+        // }
+        const g = row.games;
+if (!g || !g.trios_team_id?.length || !g.date) continue;
+
+const res = (row.result ?? "").trim().toUpperCase();
+if (res !== "W" && res !== "L") continue;
+
+// Add this set to every team in the array
+for (const teamId of g.trios_team_id) {
+  const teamKey = keyOf(teamId);
+
+  (teamResultsMap[teamKey] ||= []).push({
+    date: g.date,
+    set_no: Number(row.set_no) || 0,
+    result: res as "W" | "L",
+  });
+}
 
         // 4) Compute longest W streak per team
         let maxStreak = 0;
@@ -131,7 +150,7 @@ const Standings = () => {
             streakTeamKey = tKey;
           }
         }
-
+      }
         const team = (teamData as any[]).find(
           (t) => keyOf(t.team_id) === streakTeamKey
         );
