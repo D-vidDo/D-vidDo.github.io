@@ -38,18 +38,51 @@ const TeamCard = ({ team }: TeamCardProps) => {
       }
 
       // Fetch sets for this team
-      const { data: setsData, error: setsError } = await supabase
-        .from("sets")
-        .select("points_for, points_against, game_id")
-        .in(
-          "game_id",
-          (
-            await supabase
-              .from("games")
-              .select("id")
-              .eq("team_id", team.team_id)
-          ).data?.map((g) => g.id) ?? []
-        );
+      // const { data: setsData, error: setsError } = await supabase
+      //   .from("sets")
+      //   .select("points_for, points_against, game_id")
+      //   .in(
+      //     "game_id",
+      //     (
+      //       await supabase
+      //         .from("games")
+      //         .select("id")
+      //         .eq("team_id", team.team_id)
+      //     ).data?.map((g) => g.id) ?? []
+      //   );
+      // Fetch sets for this team through trios_team_id
+const { data: gameData, error: gamesError } = await supabase
+  .from("games")
+  .select("id, trios_team_id")
+  .contains("trios_team_id", [Number(team.team_id)]);
+
+if (gamesError) {
+  console.error("Error fetching games:", gamesError.message);
+  return;
+}
+
+const gameIds = gameData?.map((g) => g.id) ?? [];
+
+const { data: setsData, error: setsError } = await supabase
+  .from("sets")
+  .select("points_for, points_against")
+  .in("game_id", gameIds);
+
+if (setsError) {
+  console.error("Error fetching sets:", setsError.message);
+  return;
+}
+
+let pf = 0;
+let pa = 0;
+
+(setsData ?? []).forEach((set) => {
+  pf += set.points_for ?? 0;
+  pa += set.points_against ?? 0;
+});
+
+setPointsFor(pf);
+setPointsAgainst(pa);
 
       if (setsError) {
         console.error("Error fetching sets:", setsError.message);
