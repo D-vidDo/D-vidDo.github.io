@@ -118,7 +118,7 @@ for (const teamId of g.trios_team_id) {
     result: res as "W" | "L",
   });
 }
-
+}
         // 4) Compute longest W streak per team
         let maxStreak = 0;
         let streakTeamKey = "";
@@ -150,7 +150,7 @@ for (const teamId of g.trios_team_id) {
             streakTeamKey = tKey;
           }
         }
-      }
+      
         const team = (teamData as any[]).find(
           (t) => keyOf(t.team_id) === streakTeamKey
         );
