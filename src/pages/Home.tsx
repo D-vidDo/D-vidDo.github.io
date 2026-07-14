@@ -281,9 +281,9 @@ const Home = () => {
 
         {/* <UpcomingGames /> */}
 
-<MatchupCard matchupId={76}/>
-<MatchupCard matchupId={77}/>
-<MatchupCard matchupId={78}/>
+<MatchupCard matchupId={79}/>
+<MatchupCard matchupId={80}/>
+<MatchupCard matchupId={81}/>
 
 
 
