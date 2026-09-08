@@ -48,7 +48,7 @@ const TeamCard = ({ team }: TeamCardProps) => {
               .from("games")
               .select("id")
               .eq("team_id", team.team_id)
-          ).data?.map((g) => g.id) ?? []
+          ).data?.map((g) => g.id) ?? [],
         );
 
       if (setsError) {
@@ -101,13 +101,14 @@ const TeamCard = ({ team }: TeamCardProps) => {
                   {team.season_id === 1
                     ? "🍂"
                     : team.season_id === 2
-                    ? "❄️"
-                    : team.season_id === 3
-                    ? "🌸"
-                    : team.season_id === 4
-                    ? "☀️"
-                    
-                    : null}
+                      ? "❄️"
+                      : team.season_id === 3
+                        ? "🌸"
+                        : team.season_id === 4
+                          ? "☀️"
+                          : team.season_id === 5
+                            ? "🍂"
+                            : null}
                 </span>
               </div>
 
