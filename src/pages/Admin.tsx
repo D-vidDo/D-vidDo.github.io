@@ -94,7 +94,7 @@ const AdminGameEntry = () => {
       const { data, error } = await supabase
         .from("teams")
         .select("*")
-        .eq("season_id", 4);
+        .eq("season_id", 5);
       if (error) setMessage(`Error loading teams: ${error.message}`);
       else {
         setTeams(data ?? []);

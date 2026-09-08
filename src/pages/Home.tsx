@@ -12,7 +12,7 @@ import BillOfTheDay from "@/components/BillOfTheDay";
 import MatchupCard from "@/components/MatchupCard";
 
 // active season ID
-const ACTIVE_SEASON_ID = 4;
+const ACTIVE_SEASON_ID = 5;
 
 // Initialize Supabase client
 const supabaseUrl = "https://bqqotvjpvaznkjfldcgm.supabase.co";
@@ -279,13 +279,7 @@ const Home = () => {
           </Card>
         </section>
 
-        {/* <UpcomingGames /> */}
-
-<MatchupCard matchupId={73}/>
-<MatchupCard matchupId={74}/>
-<MatchupCard matchupId={75}/>
-
-
+        <UpcomingGames />
 
         {/* Top Teams (Standings) */}
         <section>
