@@ -36,6 +36,11 @@ const teamColorMap: Record<string, string> = {
   "Hoang Bao": "#FF69B4",
   "Big Bad Bitties": "#99ccff",
   "ATAK": "#50314c",
+
+  // season 5 teams
+  "Barangay Blockers": "#5974D9",
+  "Puto Party": "#97E378",
+  "Sisig Spikers": "#FF3300",
 };
 
 const getTeamColorByName = (teamName: string) => {
