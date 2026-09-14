@@ -1,11 +1,28 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, TrendingUp, Users, CalendarDays, PlayCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Trophy,
+  TrendingUp,
+  Users,
+  CalendarDays,
+  PlayCircle,
+  ArrowUpRight,
+  ArrowDownRight,
+  Swords,
+} from "lucide-react";
 import PlayerCard from "@/components/PlayerCard";
 import { supabase } from "@/lib/supabase";
+
+/* ================= TYPES ================= */
 
 interface Set {
   set_no: number;
@@ -36,6 +53,8 @@ interface TradePlayer {
   player: { name: string };
   fromTeam: string;
   toTeam: string;
+  fromColor?: string;
+  toColor?: string;
 }
 
 interface Trade {
@@ -57,11 +76,14 @@ interface Team {
   points_against: number;
   player_ids: string[];
 }
+
+/* ================= HELPERS ================= */
+
 const formatTime12H = (time?: string | null) => {
-  if (!time) return "—"; // or "TBD"
+  if (!time) return "—";
 
   const parts = time.split(":");
-  if (parts.length < 2) return time; // fallback if malformed
+  if (parts.length < 2) return time;
 
   const [hourStr, minute] = parts;
   const hour = parseInt(hourStr, 10);
@@ -74,9 +96,25 @@ const formatTime12H = (time?: string | null) => {
   return `${formattedHour}:${minute} ${suffix}`;
 };
 
+const formatDate = (date?: string | null) => {
+  if (!date) return "—";
+
+  const parsed = new Date(`${date}T00:00:00`);
+
+  if (isNaN(parsed.getTime())) return date;
+
+  return parsed.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+/* ================= MAIN COMPONENT ================= */
 
 const TeamDetail = () => {
   const { teamId } = useParams<{ teamId: string }>();
+
   const [team, setTeam] = useState<Team | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [games, setGames] = useState<Game[]>([]);
@@ -84,269 +122,525 @@ const TeamDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-useEffect(() => {
-  async function fetchTeamData() {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    async function fetchTeamData() {
+      setLoading(true);
+      setError(null);
 
-    try {
-      // 1️⃣ Fetch the main team
-      const { data: teamData } = await supabase
-        .from("teams")
-        .select("*")
-        .eq("team_id", teamId)
-        .single();
+      try {
+        /* ================= TEAM ================= */
 
-      if (!teamData) throw new Error("Team not found");
+        const { data: teamData, error: teamErr } = await supabase
+          .from("teams")
+          .select("*")
+          .eq("team_id", teamId)
+          .single();
 
-      setTeam(teamData);
+        if (teamErr) throw teamErr;
 
-      // 2️⃣ Fetch players
-      const { data: playersData } = await supabase
-        .from("players_public")
-        .select("*")
-        .in("id", teamData.player_ids ?? []);
+        if (!teamData) {
+          throw new Error("Team not found");
+        }
 
-      setPlayers(playersData ?? []);
+        setTeam(teamData);
 
-      // 3️⃣ Fetch games
-      const { data: gameData, error: gameErr } = await supabase
-        .from("games")
-        .select(`
-          id,
-          date,
-          time,
-          opponent,
-          team_id,
-          sets (
-            set_no,
-            points_for,
-            points_against,
-            vod_link
-          )
-        `)
-        .eq("team_id", teamId)
-        .order("date", { ascending: true })
-        .order("time", { ascending: false, nullsFirst: false })
-        .order("set_no", { foreignTable: "sets", ascending: true });
+        /* ================= PLAYERS ================= */
 
-      if (gameErr) throw gameErr;
+        const { data: playersData, error: playersErr } = await supabase
+          .from("players_public")
+          .select("*")
+          .in("id", teamData.player_ids ?? []);
 
-      const playedGames = (gameData ?? [])
-        .filter((g) => g.sets && g.sets.length > 0)
-        .map((g) => {
-          const orderedSets = [...g.sets].sort((a, b) => (a.set_no ?? 0) - (b.set_no ?? 0));
-          const totalPF = orderedSets.reduce((sum, s) => sum + s.points_for, 0);
-          const totalPA = orderedSets.reduce((sum, s) => sum + s.points_against, 0);
-          const result: "W" | "L" | "T" = totalPF > totalPA ? "W" : totalPF < totalPA ? "L" : "T";
+        if (playersErr) throw playersErr;
 
-          return {
-            id: String(g.id),
-            date: g.date as string,
-            time: g.time as string,
-            opponent: g.opponent as string,
-            points_for: totalPF,
-            points_against: totalPA,
-            result,
-            sets: orderedSets,
-          };
-        })
-        .sort((a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime());
+        setPlayers(playersData ?? []);
 
-      setGames(playedGames);
+        /* ================= GAMES ================= */
 
-      // 4️⃣ Fetch trades involving this team
-      const { data: tradeRows } = await supabase
-        .from("players_traded")
-        .select(`
-          from_team,
-          to_team,
-          trades (
+        const { data: gameData, error: gameErr } = await supabase
+          .from("games")
+          .select(
+            `
             id,
             date,
-            description
-          ),
-          player:player_id (
-            id,
-            name
+            time,
+            opponent,
+            team_id,
+            sets (
+              set_no,
+              points_for,
+              points_against,
+              vod_link
+            )
+          `
           )
-        `)
-        .in("trade_id", [7,8,9,10,11,12])
-        .or(`to_team.eq.${teamData.name},from_team.eq.${teamData.name}`)
-        .order("created_at", { ascending: false });
+          .eq("team_id", teamId)
+          .order("date", { ascending: true })
+          .order("time", {
+            ascending: false,
+            nullsFirst: false,
+          });
 
-      // 5️⃣ Get unique team names in trades to fetch colors
-      const tradeTeamNames = Array.from(
-        new Set((tradeRows ?? []).flatMap((row: any) => [row.from_team, row.to_team]))
-      );
+        if (gameErr) throw gameErr;
 
-      const { data: teamsData } = await supabase
-        .from("teams")
-        .select("name,color,color2")
-        .in("name", tradeTeamNames);
+        const playedGames = (gameData ?? [])
+          .filter((g) => g.sets && g.sets.length > 0)
+          .map((g) => {
+            const orderedSets = [...g.sets].sort(
+              (a, b) => (a.set_no ?? 0) - (b.set_no ?? 0)
+            );
 
-      // Map of teamName → color
-      const teamColorsMap: Record<string, string> = {};
-      (teamsData ?? []).forEach((t: any) => {
-        teamColorsMap[t.name] = t.color;
-      });
+            const totalPF = orderedSets.reduce(
+              (sum, s) => sum + s.points_for,
+              0
+            );
 
-      // 6️⃣ Organize trades
-      const tradeMap: Record<string, Trade> = {};
-      (tradeRows ?? []).forEach((row: any) => {
-        const tradeId = row.trades.id;
-        if (!tradeMap[tradeId]) {
-          tradeMap[tradeId] = {
-            id: tradeId,
-            date: row.trades.date,
-            description: row.trades.description,
-            playersTraded: [],
-          };
+            const totalPA = orderedSets.reduce(
+              (sum, s) => sum + s.points_against,
+              0
+            );
+
+            const result: "W" | "L" | "T" =
+              totalPF > totalPA
+                ? "W"
+                : totalPF < totalPA
+                ? "L"
+                : "T";
+
+            return {
+              id: String(g.id),
+              date: g.date as string,
+              time: g.time as string,
+              opponent: g.opponent as string,
+              points_for: totalPF,
+              points_against: totalPA,
+              result,
+              sets: orderedSets,
+            };
+          })
+          .sort(
+            (a, b) =>
+              new Date(`${a.date}T${a.time ?? "00:00:00"}`).getTime() -
+              new Date(`${b.date}T${b.time ?? "00:00:00"}`).getTime()
+          );
+
+        setGames(playedGames);
+
+        /* ================= TRADES ================= */
+
+        const { data: tradeRows, error: tradeErr } = await supabase
+          .from("players_traded")
+          .select(
+            `
+            from_team,
+            to_team,
+            trades (
+              id,
+              date,
+              description
+            ),
+            player:player_id (
+              id,
+              name
+            )
+          `
+          )
+          .in("trade_id", [7, 8, 9, 10, 11, 12])
+          .or(
+            `to_team.eq.${teamData.name},from_team.eq.${teamData.name}`
+          )
+          .order("created_at", { ascending: false });
+
+        if (tradeErr) {
+          console.warn("Trade history could not be loaded:", tradeErr);
         }
-        tradeMap[tradeId].playersTraded.push({
-          player: row.player,
-          fromTeam: row.from_team,
-          toTeam: row.to_team,
+
+        /* ================= TRADE TEAM COLORS ================= */
+
+        const tradeTeamNames = Array.from(
+          new Set(
+            (tradeRows ?? []).flatMap((row: any) => [
+              row.from_team,
+              row.to_team,
+            ])
+          )
+        );
+
+        let teamsData: any[] = [];
+
+        if (tradeTeamNames.length > 0) {
+          const { data } = await supabase
+            .from("teams")
+            .select("name,color,color2")
+            .in("name", tradeTeamNames);
+
+          teamsData = data ?? [];
+        }
+
+        const teamColorsMap: Record<string, string> = {};
+
+        teamsData.forEach((t: any) => {
+          teamColorsMap[t.name] = t.color;
         });
-      });
 
-      // Attach team colors to trades for easy use in JSX
-      const tradesWithColors = Object.values(tradeMap).map((trade) => ({
-        ...trade,
-        playersTraded: trade.playersTraded.map((pt) => ({
-          ...pt,
-          fromColor: teamColorsMap[pt.fromTeam] ?? "#000000",
-          toColor: teamColorsMap[pt.toTeam] ?? "#000000",
-        })),
-      }));
+        /* ================= ORGANIZE TRADES ================= */
 
-      setTrades(tradesWithColors);
-    } catch (err) {
-      setError("Unexpected error: " + (err as Error).message);
-    } finally {
-      setLoading(false);
+        const tradeMap: Record<string, Trade> = {};
+
+        (tradeRows ?? []).forEach((row: any) => {
+          if (!row.trades) return;
+
+          const tradeId = String(row.trades.id);
+
+          if (!tradeMap[tradeId]) {
+            tradeMap[tradeId] = {
+              id: tradeId,
+              date: row.trades.date,
+              description: row.trades.description,
+              playersTraded: [],
+            };
+          }
+
+          tradeMap[tradeId].playersTraded.push({
+            player: row.player,
+            fromTeam: row.from_team,
+            toTeam: row.to_team,
+            fromColor: teamColorsMap[row.from_team] ?? "#64748b",
+            toColor: teamColorsMap[row.to_team] ?? "#64748b",
+          });
+        });
+
+        setTrades(Object.values(tradeMap));
+      } catch (err) {
+        setError(
+          "Unexpected error: " +
+            ((err as Error)?.message || "Something went wrong")
+        );
+      } finally {
+        setLoading(false);
+      }
     }
-  }
 
-  fetchTeamData();
-}, [teamId]);
+    if (teamId) {
+      fetchTeamData();
+    }
+  }, [teamId]);
 
+  /* ================= LOADING ================= */
 
-  if (loading)
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">
-        Loading team details...
-      </div>
-    );
-
-  if (error || !team)
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">{error || "Team not found"}.</h1>
+          <div className="mx-auto mb-4 h-12 w-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+          <p className="text-muted-foreground">
+            Loading team details...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  /* ================= ERROR ================= */
+
+  if (error || !team) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🏒</div>
+
+          <h1 className="text-2xl font-bold mb-4">
+            {error || "Team not found"}.
+          </h1>
+
           <Link to="/teams">
-            <Button>Back to Teams</Button>
+            <Button>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Teams
+            </Button>
           </Link>
         </div>
       </div>
     );
+  }
 
-  const winPercentage = ((team.wins / (team.wins + team.losses)) * 100).toFixed(1);
-  const teamplus_minus = players.reduce((sum, p) => sum + (p.plus_minus || 0), 0);
-  const teamGames = players.reduce((sum, p) => sum + (p.games_played || 0), 0);
-  const teamAverage = teamGames > 0 ? parseFloat((teamplus_minus / teamGames).toFixed(1)) : 0;
+  /* ================= CALCULATIONS ================= */
+
+  const totalGames = team.wins + team.losses;
+
+  const winPercentage =
+    totalGames > 0
+      ? ((team.wins / totalGames) * 100).toFixed(1)
+      : "0.0";
+
+  const pointDifferential =
+    (team.points_for ?? 0) - (team.points_against ?? 0);
+
+  const teamPlusMinus = players.reduce(
+    (sum, player) => sum + (player.plus_minus || 0),
+    0
+  );
+
+  const teamGames = players.reduce(
+    (sum, player) => sum + (player.games_played || 0),
+    0
+  );
+
+  const teamAverage =
+    teamGames > 0
+      ? parseFloat((teamPlusMinus / teamGames).toFixed(1))
+      : 0;
 
   return (
     <div className="min-h-screen bg-background">
+      {/* ================= HERO ================= */}
+
       <section
-        className="relative isolate py-16 px-4 min-h-[280px] md:min-h-[360px] rounded-none"
+        className="relative overflow-hidden"
         style={{
           background: `linear-gradient(135deg, ${team.color} 0%, ${team.color2} 100%)`,
         }}
       >
-        <div className="max-w-6xl mx-auto">
+        {/* Decorative glow */}
+        <div
+          className="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-3xl opacity-20"
+          style={{
+            backgroundColor: "#ffffff",
+          }}
+        />
+
+        <div
+          className="absolute -bottom-40 -left-20 w-96 h-96 rounded-full blur-3xl opacity-10"
+          style={{
+            backgroundColor: "#ffffff",
+          }}
+        />
+
+        <div className="relative max-w-7xl mx-auto px-4 py-8 md:py-12">
+          {/* Back button */}
+
           <Link
             to="/teams"
-            className="inline-flex items-center text-primary-foreground hover:text-primary-foreground/80 mb-6"
+            className="inline-flex items-center text-primary-foreground/90 hover:text-primary-foreground mb-10 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Teams
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Teams
           </Link>
-          <div className="flex items-center space-x-6">
-            <img
-              src={`/logos/${team.team_id}.png`}
-              alt={`${team.name} logo`}
-              className="w-48 h-48 rounded-xl object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
-            <div>
-              <h1 className="text-5xl font-bold text-primary-foreground mb-2">{team.name}</h1>
-              <p className="text-lg text-primary-foreground/90 mb-4">Captain: {team.captain}</p>
-              <div className="flex gap-3 flex-wrap">
-                <Badge variant="secondary" className="text-lg px-4 py-2">
+
+          {/* Team identity */}
+
+          <div className="flex flex-col md:flex-row md:items-center gap-8">
+            {/* Logo */}
+
+            <div className="shrink-0">
+              <div className="w-36 h-36 md:w-48 md:h-48 rounded-3xl bg-white/15 backdrop-blur-sm border border-white/20 shadow-2xl flex items-center justify-center p-5">
+                <img
+                  src={`/logos/${team.team_id}.png`}
+                  alt={`${team.name} logo`}
+                  className="w-full h-full object-contain drop-shadow-xl"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display =
+                      "none";
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Team info */}
+
+            <div className="flex-1">
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Badge className="bg-white/15 text-white border-white/20 backdrop-blur-sm">
+                  <Swords className="h-3.5 w-3.5 mr-1.5" />
+                  NCL Team
+                </Badge>
+
+                {team.wins > team.losses && (
+                  <Badge className="bg-white text-black">
+                    <Trophy className="h-3.5 w-3.5 mr-1.5" />
+                    Winning Record
+                  </Badge>
+                )}
+              </div>
+
+              <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white mb-3">
+                {team.name}
+              </h1>
+
+              <p className="text-lg md:text-xl text-white/80 mb-6">
+                Captain:{" "}
+                <span className="font-semibold text-white">
+                  {team.captain}
+                </span>
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                <div className="px-5 py-2.5 rounded-full bg-white text-black font-bold shadow-lg">
                   {team.wins}W - {team.losses}L
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className="text-lg px-4 py-2 bg-primary-foreground/10 border-primary-foreground/30 text-primary-foreground"
-                >
+                </div>
+
+                <div className="px-5 py-2.5 rounded-full bg-black/15 text-white border border-white/20 backdrop-blur-sm font-semibold">
                   {winPercentage}% Win Rate
-                </Badge>
+                </div>
+
+                <div
+                  className={`px-5 py-2.5 rounded-full border border-white/20 backdrop-blur-sm font-semibold ${
+                    pointDifferential > 0
+                      ? "bg-green-500/20 text-white"
+                      : pointDifferential < 0
+                      ? "bg-red-500/20 text-white"
+                      : "bg-white/10 text-white"
+                  }`}
+                >
+                  {pointDifferential > 0 ? "+" : ""}
+                  {pointDifferential} Diff
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
-        <div className="grid md:grid-cols-4 gap-6">
-          <StatCard title="Points For" icon={<Trophy />} value={team.points_for} />
-          <StatCard title="Team +/-" icon={<TrendingUp />} value={teamplus_minus} isplus_minus />
-          <StatCard title="Total Games" icon={<Users />} value={teamGames} />
-          <StatCard title="Team Average" icon={<Trophy />} value={teamAverage.toFixed(1)} isplus_minus />
-        </div>
+      {/* ================= CONTENT ================= */}
 
-        <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
+      <div className="max-w-7xl mx-auto px-4 py-10 md:py-12 space-y-10">
+        {/* ================= STATS ================= */}
+
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <StatCard
+            title="Points For"
+            icon={<Trophy />}
+            value={team.points_for}
+            accent="primary"
+          />
+
+          <StatCard
+            title="Team +/-"
+            icon={<TrendingUp />}
+            value={teamPlusMinus}
+            isPlusMinus
+            accent="green"
+          />
+
+          <StatCard
+            title="Total Games"
+            icon={<Users />}
+            value={teamGames}
+            accent="blue"
+          />
+
+          <StatCard
+            title="Team Average"
+            icon={<TrendingUp />}
+            value={teamAverage.toFixed(1)}
+            isPlusMinus
+            accent="purple"
+          />
+        </section>
+
+        {/* ================= ROSTER ================= */}
+
+        <Card className="bg-gradient-card shadow-card border-border/60 overflow-hidden">
+          <CardHeader className="border-b border-border/50 bg-muted/20">
             <CardTitle className="text-xl flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" /> Team Roster ({players.length} players)
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+
+              Team Roster
+
+              <Badge variant="secondary" className="ml-1">
+                {players.length}
+              </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {players.map((player) => (
-                <PlayerCard key={player.id} player={{ ...player, isCaptain: player.name === team.captain }} />
-              ))}
-            </div>
+
+          <CardContent className="p-6">
+            {players.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No players on this roster yet.
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {players.map((player) => (
+                  <PlayerCard
+                    key={player.id}
+                    player={{
+                      ...player,
+                      isCaptain: player.name === team.captain,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-card shadow-card">
-          <CardHeader>
+        {/* ================= MATCH HISTORY ================= */}
+
+        <Card className="bg-gradient-card shadow-card border-border/60 overflow-hidden">
+          <CardHeader className="border-b border-border/50 bg-muted/20">
             <CardTitle className="text-xl flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-primary" /> Match History (Set-by-Set)
+              <div className="p-2 rounded-lg bg-primary/10">
+                <CalendarDays className="h-5 w-5 text-primary" />
+              </div>
+
+              Match History
+
+              <Badge variant="secondary" className="ml-1">
+                Set-by-Set
+              </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+
+          <CardContent className="p-0">
             {games.length === 0 ? (
-              <div className="text-muted-foreground text-center py-4">No games played yet.</div>
+              <div className="text-muted-foreground text-center py-12">
+                No games played yet.
+              </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left border-collapse">
+                <table className="w-full text-sm border-collapse">
                   <thead>
-                    <tr className="border-b border-muted">
-                      <th className="px-4 py-2">Date</th>
-                      <th className="px-4 py-2">Time</th>
-                      <th className="px-4 py-2">Opponent</th>
-                      <th className="px-4 py-2 text-center">Set</th>
-                      <th className="px-4 py-2 text-center">PF</th>
-                      <th className="px-4 py-2 text-center">PA</th>
-                      <th className="px-4 py-2 text-center">Diff</th>
-                      <th className="px-4 py-2 text-center">Result</th>
-                      <th className="px-4 py-2 text-center">VOD</th> {/* 👈 new column */}
+                    <tr className="bg-muted/50 border-b border-border">
+                      <th className="px-4 py-4 text-left font-semibold text-muted-foreground">
+                        Date
+                      </th>
+
+                      <th className="px-4 py-4 text-left font-semibold text-muted-foreground">
+                        Time
+                      </th>
+
+                      <th className="px-4 py-4 text-left font-semibold text-muted-foreground">
+                        Opponent
+                      </th>
+
+                      <th className="px-4 py-4 text-center font-semibold text-muted-foreground">
+                        Set
+                      </th>
+
+                      <th className="px-4 py-4 text-center font-semibold text-green-600">
+                        PF
+                      </th>
+
+                      <th className="px-4 py-4 text-center font-semibold text-red-500">
+                        PA
+                      </th>
+
+                      <th className="px-4 py-4 text-center font-semibold text-muted-foreground">
+                        Diff
+                      </th>
+
+                      <th className="px-4 py-4 text-center font-semibold text-muted-foreground">
+                        Result
+                      </th>
+
+                      <th className="px-4 py-4 text-center font-semibold text-muted-foreground">
+                        VOD
+                      </th>
                     </tr>
                   </thead>
+
                   <tbody>
                     {games.map((game) =>
                       game.sets.map((set, idx) => {
@@ -357,48 +651,102 @@ useEffect(() => {
                             ? "W"
                             : "L";
 
+                        const diff =
+                          set.points_for - set.points_against;
+
                         return (
-                          <tr key={`${game.id}-set-${set.set_no}`} className={idx % 2 === 0 ? "bg-muted/10" : ""}>
-                            <td className="px-4 py-2">{game.date}</td>
-                            <td className="px-4 py-2">{formatTime12H(game.time)}</td> {/* 👈 Formatted time */}
-                            <td className="px-4 py-2 font-semibold">{game.opponent}</td>
-                            <td className="px-4 py-2 text-center">{set.set_no}</td>
-                            <td className="px-4 py-2 text-center text-green-700 font-bold">{set.points_for}</td>
-                            <td className="px-4 py-2 text-center text-red-600 font-bold">{set.points_against}</td>
-                            <td className="px-4 py-2 text-center font-semibold">
-  {set.points_for - set.points_against}
-</td>
-                            <td className="px-4 py-2 text-center">
+                          <tr
+                            key={`${game.id}-set-${set.set_no}`}
+                            className={`
+                              border-b border-border/40
+                              transition-colors
+                              hover:bg-muted/40
+                              ${
+                                idx % 2 === 0
+                                  ? "bg-muted/10"
+                                  : ""
+                              }
+                            `}
+                          >
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {formatDate(game.date)}
+                            </td>
+
+                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                              {formatTime12H(game.time)}
+                            </td>
+
+                            <td className="px-4 py-3 font-semibold whitespace-nowrap">
+                              {game.opponent}
+                            </td>
+
+                            <td className="px-4 py-3 text-center">
+                              <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-muted text-xs font-bold">
+                                {set.set_no}
+                              </span>
+                            </td>
+
+                            <td className="px-4 py-3 text-center text-green-600 font-bold">
+                              {set.points_for}
+                            </td>
+
+                            <td className="px-4 py-3 text-center text-red-500 font-bold">
+                              {set.points_against}
+                            </td>
+
+                            <td
+                              className={`px-4 py-3 text-center font-bold ${
+                                diff > 0
+                                  ? "text-green-600"
+                                  : diff < 0
+                                  ? "text-red-500"
+                                  : "text-muted-foreground"
+                              }`}
+                            >
+                              {diff > 0 ? "+" : ""}
+                              {diff}
+                            </td>
+
+                            <td className="px-4 py-3 text-center">
                               <Badge
-                                className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                  result === "W"
-                                    ? "bg-green-100 text-green-700"
-                                    : result === "L"
-                                    ? "bg-red-100 text-red-700"
-                                    : "bg-yellow-100 text-yellow-700"
-                                }`}
+                                className={`
+                                  px-3 py-1 rounded-full text-xs font-bold border
+                                  ${
+                                    result === "W"
+                                      ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-900"
+                                      : result === "L"
+                                      ? "bg-red-100 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900"
+                                      : "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-400 dark:border-yellow-900"
+                                  }
+                                `}
                               >
                                 {result}
                               </Badge>
                             </td>
 
-                            {/* VOD cell with brand-colored button */}
-                            <td className="px-4 py-2 text-center">
+                            <td className="px-4 py-3 text-center">
                               {set.vod_link ? (
                                 <Button
                                   size="sm"
-                                  variant="default"
-                                  className="inline-flex items-center gap-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                                  className="inline-flex items-center gap-1.5 shadow-sm"
                                   onClick={() =>
-                                    window.open(set.vod_link as string, "_blank", "noopener,noreferrer")
+                                    window.open(
+                                      set.vod_link as string,
+                                      "_blank",
+                                      "noopener,noreferrer"
+                                    )
                                   }
                                   title="Watch VOD"
                                 >
                                   <PlayCircle className="h-4 w-4" />
-                                  Watch
+                                  <span className="hidden sm:inline">
+                                    Watch
+                                  </span>
                                 </Button>
                               ) : (
-                                <span className="text-muted-foreground text-xs">—</span>
+                                <span className="text-muted-foreground text-xs">
+                                  —
+                                </span>
                               )}
                             </td>
                           </tr>
@@ -412,126 +760,259 @@ useEffect(() => {
           </CardContent>
         </Card>
 
-<Card className="bg-gradient-card shadow-card">
-  <CardHeader>
-    <CardTitle className="text-xl flex items-center gap-2">
-      <Users className="h-5 w-5 text-primary" /> Roster History
-    </CardTitle>
-  </CardHeader>
-  <CardContent>
-    {trades.length === 0 ? (
-      <div className="text-muted-foreground text-center py-4">
-        No roster changes or trades for this team yet.
-      </div>
-    ) : (
-      <div className="space-y-6">
-        {trades.map((trade) => {
-          const outgoingPlayers = trade.playersTraded.filter(pt => pt.fromTeam === team.name);
-          const incomingPlayers = trade.playersTraded.filter(pt => pt.toTeam === team.name);
+        {/* ================= ROSTER HISTORY ================= */}
 
-          return (
-            <div
-              key={trade.id}
-              className="rounded-lg border shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-              style={{
-                borderColor: team.color + "55",
-                background: `linear-gradient(90deg, ${team.color}10 0%, ${team.color2}10 100%)`,
-              }}
-            >
-              {/* Trade header */}
-              <div className="px-4 py-3 bg-gray-100 dark:bg-gray-50 flex justify-between items-center">
-                <span className="font-semibold text-black">{trade.description}</span>
-                <span className="text-xs text-muted-foreground">{new Date(trade.date).toLocaleDateString()}</span>
+        <Card className="bg-gradient-card shadow-card border-border/60 overflow-hidden">
+          <CardHeader className="border-b border-border/50 bg-muted/20">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Users className="h-5 w-5 text-primary" />
               </div>
 
-              {/* Players grid: Outgoing vs Incoming */}
-              <div className="grid grid-cols-2 divide-x">
-                {/* Outgoing */}
-                <div className="px-4 py-2">
-                  <h4 className="text-sm font-semibold mb-2">Outgoing</h4>
-                  {outgoingPlayers.length === 0 ? (
-                    <div className="text-sm text-black/50">—</div>
-                  ) : (
-                    outgoingPlayers.map((pt, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between py-1 border-b border-muted/20"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-red-600 font-bold" title="Outgoing">↓</span>
-                          <span className="font-bold text-black">{pt.player.name}</span>
-                        </div>
-<span
-  className="text-sm font-medium"
-  style={{ color: pt.toColor }}
->
-  {pt.toTeam}
-</span>
-                      </div>
-                    ))
-                  )}
-                </div>
+              Roster History
+            </CardTitle>
+          </CardHeader>
 
-                {/* Incoming */}
-                <div className="px-4 py-2">
-                  <h4 className="text-sm font-semibold mb-2">Incoming</h4>
-                  {incomingPlayers.length === 0 ? (
-                    <div className="text-sm text-black/50">—</div>
-                  ) : (
-                    incomingPlayers.map((pt, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between py-1 border-b border-muted/20"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-green-600 font-bold" title="Incoming">↑</span>
-                          <span className="font-bold text-black">{pt.player.name}</span>
-                        </div>
-<span
-  className="text-sm font-medium"
-  style={{ color: pt.fromColor }}
->
-  {pt.fromTeam}
-</span>
-                      </div>
-                    ))
-                  )}
-                </div>
+          <CardContent className="p-6">
+            {trades.length === 0 ? (
+              <div className="text-muted-foreground text-center py-10">
+                No roster changes or trades for this team yet.
               </div>
-            </div>
-          );
-        })}
-      </div>
-    )}
-  </CardContent>
-</Card>
+            ) : (
+              <div className="space-y-6">
+                {trades.map((trade) => {
+                  const outgoingPlayers =
+                    trade.playersTraded.filter(
+                      (pt) => pt.fromTeam === team.name
+                    );
+
+                  const incomingPlayers =
+                    trade.playersTraded.filter(
+                      (pt) => pt.toTeam === team.name
+                    );
+
+                  return (
+                    <div
+                      key={trade.id}
+                      className="rounded-2xl border overflow-hidden shadow-sm hover:shadow-md transition-all"
+                      style={{
+                        borderColor: `${team.color}55`,
+                        background: `linear-gradient(135deg, ${team.color}08 0%, ${team.color2}08 100%)`,
+                      }}
+                    >
+                      {/* Trade header */}
+
+                      <div
+                        className="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b"
+                        style={{
+                          background: `linear-gradient(90deg, ${team.color}15 0%, ${team.color2}15 100%)`,
+                          borderColor: `${team.color}20`,
+                        }}
+                      >
+                        <div>
+                          <div className="font-bold text-base">
+                            {trade.description}
+                          </div>
+
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Roster transaction
+                          </div>
+                        </div>
+
+                        <Badge
+                          variant="secondary"
+                          className="w-fit"
+                        >
+                          {formatDate(trade.date)}
+                        </Badge>
+                      </div>
+
+                      {/* Players */}
+
+                      <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
+                        {/* Outgoing */}
+
+                        <div className="p-5">
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="p-1.5 rounded-full bg-red-100 dark:bg-red-950/40">
+                              <ArrowUpRight className="h-4 w-4 text-red-600" />
+                            </div>
+
+                            <h4 className="font-bold">
+                              Outgoing
+                            </h4>
+
+                            {outgoingPlayers.length > 0 && (
+                              <Badge
+                                variant="secondary"
+                                className="text-xs"
+                              >
+                                {outgoingPlayers.length}
+                              </Badge>
+                            )}
+                          </div>
+
+                          {outgoingPlayers.length === 0 ? (
+                            <div className="text-sm text-muted-foreground py-3">
+                              No players sent out.
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {outgoingPlayers.map((pt, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center justify-between gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-950/40"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-950/50 flex items-center justify-center shrink-0">
+                                      <ArrowDownRight className="h-4 w-4 text-red-600" />
+                                    </div>
+
+                                    <span className="font-semibold truncate">
+                                      {pt.player.name}
+                                    </span>
+                                  </div>
+
+                                  <span
+                                    className="text-sm font-semibold whitespace-nowrap"
+                                    style={{
+                                      color:
+                                        pt.toColor ??
+                                        "#64748b",
+                                    }}
+                                  >
+                                    {pt.toTeam}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Incoming */}
+
+                        <div className="p-5">
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="p-1.5 rounded-full bg-green-100 dark:bg-green-950/40">
+                              <ArrowDownRight className="h-4 w-4 text-green-600" />
+                            </div>
+
+                            <h4 className="font-bold">
+                              Incoming
+                            </h4>
+
+                            {incomingPlayers.length > 0 && (
+                              <Badge
+                                variant="secondary"
+                                className="text-xs"
+                              >
+                                {incomingPlayers.length}
+                              </Badge>
+                            )}
+                          </div>
+
+                          {incomingPlayers.length === 0 ? (
+                            <div className="text-sm text-muted-foreground py-3">
+                              No players received.
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {incomingPlayers.map((pt, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center justify-between gap-3 p-3 rounded-xl bg-green-50 dark:bg-green-950/20 border border-green-100 dark:border-green-950/40"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-950/50 flex items-center justify-center shrink-0">
+                                      <ArrowUpRight className="h-4 w-4 text-green-600" />
+                                    </div>
+
+                                    <span className="font-semibold truncate">
+                                      {pt.player.name}
+                                    </span>
+                                  </div>
+
+                                  <span
+                                    className="text-sm font-semibold whitespace-nowrap"
+                                    style={{
+                                      color:
+                                        pt.fromColor ??
+                                        "#64748b",
+                                    }}
+                                  >
+                                    {pt.fromTeam}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 };
 
+/* ================= STAT CARD ================= */
+
 const StatCard = ({
   title,
   icon,
   value,
-  isplus_minus = false,
+  isPlusMinus = false,
+  accent = "primary",
 }: {
   title: string;
   icon: JSX.Element;
   value: number | string;
-  isplus_minus?: boolean;
+  isPlusMinus?: boolean;
+  accent?: "primary" | "green" | "blue" | "purple";
 }) => {
-  const numeric = typeof value === "number" ? value : parseFloat(value);
-  const color = numeric > 0 ? "text-green-600" : numeric < 0 ? "text-red-500" : "text-muted-foreground";
+  const numeric =
+    typeof value === "number" ? value : parseFloat(value);
+
+  const color =
+    numeric > 0
+      ? "text-green-600"
+      : numeric < 0
+      ? "text-red-500"
+      : "text-muted-foreground";
+
+  const accentClasses = {
+    primary: "bg-primary/10 text-primary",
+    green: "bg-green-100 text-green-600 dark:bg-green-950/40",
+    blue: "bg-blue-100 text-blue-600 dark:bg-blue-950/40",
+    purple: "bg-purple-100 text-purple-600 dark:bg-purple-950/40",
+  };
+
   return (
-    <Card className="bg-gradient-stats shadow-card">
-      <CardContent className="p-6 text-center">
-        <div className="h-8 w-8 mx-auto mb-2 text-primary">{icon}</div>
-        <div className={`text-2xl font-bold text-card-foreground ${isplus_minus ? color : ""}`}>
-          {isplus_minus && numeric > 0 ? "+" : ""}
+    <Card className="bg-gradient-stats shadow-card border-border/60 hover:shadow-md transition-shadow">
+      <CardContent className="p-5 md:p-6 text-center">
+        <div
+          className={`h-10 w-10 rounded-xl mx-auto mb-3 flex items-center justify-center ${accentClasses[accent]}`}
+        >
+          {icon}
+        </div>
+
+        <div
+          className={`text-2xl md:text-3xl font-black ${
+            isPlusMinus ? color : "text-card-foreground"
+          }`}
+        >
+          {isPlusMinus && numeric > 0 ? "+" : ""}
           {value}
         </div>
-        <div className="text-sm text-muted-foreground">{title}</div>
+
+        <div className="text-sm text-muted-foreground mt-1">
+          {title}
+        </div>
       </CardContent>
     </Card>
   );
