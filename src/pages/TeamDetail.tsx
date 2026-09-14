@@ -15,9 +15,8 @@ import {
   Users,
   CalendarDays,
   PlayCircle,
-  ArrowUpRight,
-  ArrowDownRight,
-  Swords,
+  ArrowDown,
+  ArrowUp,
 } from "lucide-react";
 import PlayerCard from "@/components/PlayerCard";
 import { supabase } from "@/lib/supabase";
@@ -50,7 +49,9 @@ interface Player {
 }
 
 interface TradePlayer {
-  player: { name: string };
+  player: {
+    name: string;
+  };
   fromTeam: string;
   toTeam: string;
   fromColor?: string;
@@ -83,6 +84,7 @@ const formatTime12H = (time?: string | null) => {
   if (!time) return "—";
 
   const parts = time.split(":");
+
   if (parts.length < 2) return time;
 
   const [hourStr, minute] = parts;
@@ -130,7 +132,10 @@ const TeamDetail = () => {
       try {
         /* ================= TEAM ================= */
 
-        const { data: teamData, error: teamErr } = await supabase
+        const {
+          data: teamData,
+          error: teamErr,
+        } = await supabase
           .from("teams")
           .select("*")
           .eq("team_id", teamId)
@@ -146,7 +151,10 @@ const TeamDetail = () => {
 
         /* ================= PLAYERS ================= */
 
-        const { data: playersData, error: playersErr } = await supabase
+        const {
+          data: playersData,
+          error: playersErr,
+        } = await supabase
           .from("players_public")
           .select("*")
           .in("id", teamData.player_ids ?? []);
@@ -157,7 +165,10 @@ const TeamDetail = () => {
 
         /* ================= GAMES ================= */
 
-        const { data: gameData, error: gameErr } = await supabase
+        const {
+          data: gameData,
+          error: gameErr,
+        } = await supabase
           .from("games")
           .select(
             `
@@ -179,6 +190,10 @@ const TeamDetail = () => {
           .order("time", {
             ascending: false,
             nullsFirst: false,
+          })
+          .order("set_no", {
+            foreignTable: "sets",
+            ascending: true,
           });
 
         if (gameErr) throw gameErr;
@@ -220,15 +235,18 @@ const TeamDetail = () => {
           })
           .sort(
             (a, b) =>
-              new Date(`${a.date}T${a.time ?? "00:00:00"}`).getTime() -
-              new Date(`${b.date}T${b.time ?? "00:00:00"}`).getTime()
+              new Date(`${a.date}T${a.time}`).getTime() -
+              new Date(`${b.date}T${b.time}`).getTime()
           );
 
         setGames(playedGames);
 
         /* ================= TRADES ================= */
 
-        const { data: tradeRows, error: tradeErr } = await supabase
+        const {
+          data: tradeRows,
+          error: tradeErr,
+        } = await supabase
           .from("players_traded")
           .select(
             `
@@ -251,9 +269,7 @@ const TeamDetail = () => {
           )
           .order("created_at", { ascending: false });
 
-        if (tradeErr) {
-          console.warn("Trade history could not be loaded:", tradeErr);
-        }
+        if (tradeErr) throw tradeErr;
 
         /* ================= TRADE TEAM COLORS ================= */
 
@@ -266,20 +282,14 @@ const TeamDetail = () => {
           )
         );
 
-        let teamsData: any[] = [];
-
-        if (tradeTeamNames.length > 0) {
-          const { data } = await supabase
-            .from("teams")
-            .select("name,color,color2")
-            .in("name", tradeTeamNames);
-
-          teamsData = data ?? [];
-        }
+        const { data: teamsData } = await supabase
+          .from("teams")
+          .select("name,color,color2")
+          .in("name", tradeTeamNames);
 
         const teamColorsMap: Record<string, string> = {};
 
-        teamsData.forEach((t: any) => {
+        (teamsData ?? []).forEach((t: any) => {
           teamColorsMap[t.name] = t.color;
         });
 
@@ -305,25 +315,24 @@ const TeamDetail = () => {
             player: row.player,
             fromTeam: row.from_team,
             toTeam: row.to_team,
-            fromColor: teamColorsMap[row.from_team] ?? "#64748b",
-            toColor: teamColorsMap[row.to_team] ?? "#64748b",
+            fromColor:
+              teamColorsMap[row.from_team] ?? "#64748b",
+            toColor:
+              teamColorsMap[row.to_team] ?? "#64748b",
           });
         });
 
         setTrades(Object.values(tradeMap));
       } catch (err) {
         setError(
-          "Unexpected error: " +
-            ((err as Error)?.message || "Something went wrong")
+          "Unexpected error: " + (err as Error).message
         );
       } finally {
         setLoading(false);
       }
     }
 
-    if (teamId) {
-      fetchTeamData();
-    }
+    fetchTeamData();
   }, [teamId]);
 
   /* ================= LOADING ================= */
@@ -332,7 +341,7 @@ const TeamDetail = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+          <div className="h-10 w-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto mb-4" />
           <p className="text-muted-foreground">
             Loading team details...
           </p>
@@ -347,218 +356,246 @@ const TeamDetail = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="text-6xl mb-4">🏒</div>
-
           <h1 className="text-2xl font-bold mb-4">
             {error || "Team not found"}.
           </h1>
 
           <Link to="/teams">
-            <Button>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Teams
-            </Button>
+            <Button>Back to Teams</Button>
           </Link>
         </div>
       </div>
     );
   }
 
-  /* ================= CALCULATIONS ================= */
+  /* ================= TEAM STATS ================= */
 
-  const totalGames = team.wins + team.losses;
+  const totalTeamGames = team.wins + team.losses;
 
   const winPercentage =
-    totalGames > 0
-      ? ((team.wins / totalGames) * 100).toFixed(1)
+    totalTeamGames > 0
+      ? ((team.wins / totalTeamGames) * 100).toFixed(1)
       : "0.0";
 
-  const pointDifferential =
-    (team.points_for ?? 0) - (team.points_against ?? 0);
-
-  const teamPlusMinus = players.reduce(
-    (sum, player) => sum + (player.plus_minus || 0),
+  const teamplus_minus = players.reduce(
+    (sum, p) => sum + (p.plus_minus || 0),
     0
   );
 
   const teamGames = players.reduce(
-    (sum, player) => sum + (player.games_played || 0),
+    (sum, p) => sum + (p.games_played || 0),
     0
   );
 
   const teamAverage =
     teamGames > 0
-      ? parseFloat((teamPlusMinus / teamGames).toFixed(1))
+      ? parseFloat(
+          (teamplus_minus / teamGames).toFixed(1)
+        )
       : 0;
+
+  const pointDifferential =
+    (team.points_for ?? 0) -
+    (team.points_against ?? 0);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* ================= HERO ================= */}
+      {/* =====================================================
+          HERO
+      ===================================================== */}
 
       <section
-        className="relative overflow-hidden"
+        className="relative isolate py-12 md:py-16 px-4 min-h-[300px] md:min-h-[370px] overflow-hidden"
         style={{
           background: `linear-gradient(135deg, ${team.color} 0%, ${team.color2} 100%)`,
         }}
       >
         {/* Decorative glow */}
         <div
-          className="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-3xl opacity-20"
+          className="absolute -top-32 -right-32 h-80 w-80 rounded-full opacity-20 blur-3xl"
           style={{
             backgroundColor: "#ffffff",
           }}
         />
 
         <div
-          className="absolute -bottom-40 -left-20 w-96 h-96 rounded-full blur-3xl opacity-10"
+          className="absolute -bottom-40 -left-20 h-96 w-96 rounded-full opacity-10 blur-3xl"
           style={{
             backgroundColor: "#ffffff",
           }}
         />
 
-        <div className="relative max-w-7xl mx-auto px-4 py-8 md:py-12">
-          {/* Back button */}
-
+        <div className="relative max-w-6xl mx-auto">
           <Link
             to="/teams"
-            className="inline-flex items-center text-primary-foreground/90 hover:text-primary-foreground mb-10 transition-colors"
+            className="inline-flex items-center text-primary-foreground/90 hover:text-primary-foreground mb-8 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Teams
           </Link>
 
-          {/* Team identity */}
-
-          <div className="flex flex-col md:flex-row md:items-center gap-8">
-            {/* Logo */}
+          <div className="flex flex-col md:flex-row items-center md:items-center gap-6 md:gap-8">
+            {/* Team Logo */}
 
             <div className="shrink-0">
-              <div className="w-36 h-36 md:w-48 md:h-48 rounded-3xl bg-white/15 backdrop-blur-sm border border-white/20 shadow-2xl flex items-center justify-center p-5">
+              <div className="w-36 h-36 md:w-48 md:h-48 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-2xl flex items-center justify-center p-4">
                 <img
                   src={`/logos/${team.team_id}.png`}
                   alt={`${team.name} logo`}
                   className="w-full h-full object-contain drop-shadow-xl"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).style.display =
-                      "none";
+                    (
+                      e.target as HTMLImageElement
+                    ).style.display = "none";
                   }}
                 />
               </div>
             </div>
 
-            {/* Team info */}
+            {/* Team Info */}
 
-            <div className="flex-1">
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge className="bg-white/15 text-white border-white/20 backdrop-blur-sm">
-                  <Swords className="h-3.5 w-3.5 mr-1.5" />
-                  NCL Team
+            <div className="text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                <Badge className="bg-white/15 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm">
+                  TEAM PROFILE
                 </Badge>
-
-                {team.wins > team.losses && (
-                  <Badge className="bg-white text-black">
-                    <Trophy className="h-3.5 w-3.5 mr-1.5" />
-                    Winning Record
-                  </Badge>
-                )}
               </div>
 
-              <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white mb-3">
+              <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-3 tracking-tight">
                 {team.name}
               </h1>
 
-              <p className="text-lg md:text-xl text-white/80 mb-6">
+              <p className="text-base md:text-lg text-primary-foreground/85 mb-5">
                 Captain:{" "}
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-primary-foreground">
                   {team.captain}
                 </span>
               </p>
 
-              <div className="flex flex-wrap gap-3">
-                <div className="px-5 py-2.5 rounded-full bg-white text-black font-bold shadow-lg">
-                  {team.wins}W - {team.losses}L
-                </div>
-
-                <div className="px-5 py-2.5 rounded-full bg-black/15 text-white border border-white/20 backdrop-blur-sm font-semibold">
-                  {winPercentage}% Win Rate
-                </div>
-
-                <div
-                  className={`px-5 py-2.5 rounded-full border border-white/20 backdrop-blur-sm font-semibold ${
-                    pointDifferential > 0
-                      ? "bg-green-500/20 text-white"
-                      : pointDifferential < 0
-                      ? "bg-red-500/20 text-white"
-                      : "bg-white/10 text-white"
-                  }`}
+              <div className="flex gap-3 flex-wrap justify-center md:justify-start">
+                <Badge
+                  variant="secondary"
+                  className="text-base md:text-lg px-4 py-2 shadow-sm"
                 >
-                  {pointDifferential > 0 ? "+" : ""}
-                  {pointDifferential} Diff
-                </div>
+                  <Trophy className="h-4 w-4 mr-2" />
+                  {team.wins}W - {team.losses}L
+                </Badge>
+
+                <Badge
+                  variant="outline"
+                  className="text-base md:text-lg px-4 py-2 bg-white/10 border-white/25 text-white backdrop-blur-sm"
+                >
+                  {winPercentage}% Win Rate
+                </Badge>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ================= CONTENT ================= */}
+      {/* =====================================================
+          MAIN CONTENT
+      ===================================================== */}
 
-      <div className="max-w-7xl mx-auto px-4 py-10 md:py-12 space-y-10">
-        {/* ================= STATS ================= */}
+      <div className="max-w-7xl mx-auto px-4 py-10 md:py-12 space-y-8">
 
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {/* ===================================================
+            STAT CARDS
+        =================================================== */}
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           <StatCard
             title="Points For"
             icon={<Trophy />}
             value={team.points_for}
-            accent="primary"
           />
 
           <StatCard
             title="Team +/-"
             icon={<TrendingUp />}
-            value={teamPlusMinus}
-            isPlusMinus
-            accent="green"
+            value={teamplus_minus}
+            isplus_minus
           />
 
           <StatCard
             title="Total Games"
             icon={<Users />}
             value={teamGames}
-            accent="blue"
           />
 
           <StatCard
             title="Team Average"
-            icon={<TrendingUp />}
+            icon={<Trophy />}
             value={teamAverage.toFixed(1)}
-            isPlusMinus
-            accent="purple"
+            isplus_minus
           />
-        </section>
+        </div>
 
-        {/* ================= ROSTER ================= */}
+        {/* ===================================================
+            QUICK TEAM SUMMARY
+        =================================================== */}
 
-        <Card className="bg-gradient-card shadow-card border-border/60 overflow-hidden">
-          <CardHeader className="border-b border-border/50 bg-muted/20">
+        <Card className="bg-gradient-card shadow-card border-border/50 overflow-hidden">
+          <CardContent className="p-0">
+            <div className="grid grid-cols-2 md:grid-cols-4">
+              <SummaryItem
+                label="Wins"
+                value={team.wins}
+                color="text-green-600"
+              />
+
+              <SummaryItem
+                label="Losses"
+                value={team.losses}
+                color="text-red-500"
+              />
+
+              <SummaryItem
+                label="Points Against"
+                value={team.points_against}
+              />
+
+              <SummaryItem
+                label="Point Differential"
+                value={
+                  pointDifferential > 0
+                    ? `+${pointDifferential}`
+                    : pointDifferential
+                }
+                color={
+                  pointDifferential > 0
+                    ? "text-green-600"
+                    : pointDifferential < 0
+                    ? "text-red-500"
+                    : "text-muted-foreground"
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ===================================================
+            ROSTER
+        =================================================== */}
+
+        <Card className="bg-gradient-card shadow-card border-border/50">
+          <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Users className="h-5 w-5 text-primary" />
-              </div>
-
+              <Users className="h-5 w-5 text-primary" />
               Team Roster
-
-              <Badge variant="secondary" className="ml-1">
+              <Badge
+                variant="secondary"
+                className="ml-1"
+              >
                 {players.length}
               </Badge>
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="p-6">
+          <CardContent>
             {players.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No players on this roster yet.
+              <div className="text-muted-foreground text-center py-8">
+                No players currently listed.
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -567,7 +604,8 @@ const TeamDetail = () => {
                     key={player.id}
                     player={{
                       ...player,
-                      isCaptain: player.name === team.captain,
+                      isCaptain:
+                        player.name === team.captain,
                     }}
                   />
                 ))}
@@ -576,66 +614,73 @@ const TeamDetail = () => {
           </CardContent>
         </Card>
 
-        {/* ================= MATCH HISTORY ================= */}
+        {/* ===================================================
+            MATCH HISTORY
+        =================================================== */}
 
-        <Card className="bg-gradient-card shadow-card border-border/60 overflow-hidden">
-          <CardHeader className="border-b border-border/50 bg-muted/20">
+        <Card className="bg-gradient-card shadow-card border-border/50">
+          <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <CalendarDays className="h-5 w-5 text-primary" />
-              </div>
-
+              <CalendarDays className="h-5 w-5 text-primary" />
               Match History
-
-              <Badge variant="secondary" className="ml-1">
-                Set-by-Set
-              </Badge>
+              {games.length > 0 && (
+                <Badge
+                  variant="secondary"
+                  className="ml-1"
+                >
+                  {games.length}
+                </Badge>
+              )}
             </CardTitle>
+
+            <p className="text-sm text-muted-foreground">
+              Set-by-set results and available game VODs.
+            </p>
           </CardHeader>
 
-          <CardContent className="p-0">
+          <CardContent>
             {games.length === 0 ? (
-              <div className="text-muted-foreground text-center py-12">
+              <div className="text-muted-foreground text-center py-8">
                 No games played yet.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
+              <div className="overflow-x-auto rounded-xl border border-border/50">
+                <table className="w-full text-sm text-left border-collapse">
                   <thead>
-                    <tr className="bg-muted/50 border-b border-border">
-                      <th className="px-4 py-4 text-left font-semibold text-muted-foreground">
+                    <tr className="bg-muted/50 border-b border-border/50">
+                      <th className="px-4 py-3 font-semibold text-muted-foreground">
                         Date
                       </th>
 
-                      <th className="px-4 py-4 text-left font-semibold text-muted-foreground">
+                      <th className="px-4 py-3 font-semibold text-muted-foreground">
                         Time
                       </th>
 
-                      <th className="px-4 py-4 text-left font-semibold text-muted-foreground">
+                      <th className="px-4 py-3 font-semibold text-muted-foreground">
                         Opponent
                       </th>
 
-                      <th className="px-4 py-4 text-center font-semibold text-muted-foreground">
+                      <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
                         Set
                       </th>
 
-                      <th className="px-4 py-4 text-center font-semibold text-green-600">
+                      <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
                         PF
                       </th>
 
-                      <th className="px-4 py-4 text-center font-semibold text-red-500">
+                      <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
                         PA
                       </th>
 
-                      <th className="px-4 py-4 text-center font-semibold text-muted-foreground">
+                      <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
                         Diff
                       </th>
 
-                      <th className="px-4 py-4 text-center font-semibold text-muted-foreground">
+                      <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
                         Result
                       </th>
 
-                      <th className="px-4 py-4 text-center font-semibold text-muted-foreground">
+                      <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
                         VOD
                       </th>
                     </tr>
@@ -645,26 +690,29 @@ const TeamDetail = () => {
                     {games.map((game) =>
                       game.sets.map((set, idx) => {
                         const result =
-                          set.points_for === set.points_against
+                          set.points_for ===
+                          set.points_against
                             ? "T"
-                            : set.points_for > set.points_against
+                            : set.points_for >
+                              set.points_against
                             ? "W"
                             : "L";
 
-                        const diff =
-                          set.points_for - set.points_against;
+                        const difference =
+                          set.points_for -
+                          set.points_against;
 
                         return (
                           <tr
                             key={`${game.id}-set-${set.set_no}`}
                             className={`
-                              border-b border-border/40
+                              border-b border-border/30
                               transition-colors
-                              hover:bg-muted/40
+                              hover:bg-muted/30
                               ${
                                 idx % 2 === 0
-                                  ? "bg-muted/10"
-                                  : ""
+                                  ? "bg-muted/5"
+                                  : "bg-transparent"
                               }
                             `}
                           >
@@ -676,12 +724,12 @@ const TeamDetail = () => {
                               {formatTime12H(game.time)}
                             </td>
 
-                            <td className="px-4 py-3 font-semibold whitespace-nowrap">
+                            <td className="px-4 py-3 font-semibold">
                               {game.opponent}
                             </td>
 
                             <td className="px-4 py-3 text-center">
-                              <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-muted text-xs font-bold">
+                              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-semibold">
                                 {set.set_no}
                               </span>
                             </td>
@@ -696,27 +744,30 @@ const TeamDetail = () => {
 
                             <td
                               className={`px-4 py-3 text-center font-bold ${
-                                diff > 0
+                                difference > 0
                                   ? "text-green-600"
-                                  : diff < 0
+                                  : difference < 0
                                   ? "text-red-500"
                                   : "text-muted-foreground"
                               }`}
                             >
-                              {diff > 0 ? "+" : ""}
-                              {diff}
+                              {difference > 0
+                                ? "+"
+                                : ""}
+                              {difference}
                             </td>
 
                             <td className="px-4 py-3 text-center">
                               <Badge
                                 className={`
-                                  px-3 py-1 rounded-full text-xs font-bold border
+                                  px-3 py-1 rounded-full
+                                  text-xs font-bold border-0
                                   ${
                                     result === "W"
-                                      ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-900"
+                                      ? "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400"
                                       : result === "L"
-                                      ? "bg-red-100 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900"
-                                      : "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-400 dark:border-yellow-900"
+                                      ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400"
+                                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400"
                                   }
                                 `}
                               >
@@ -728,7 +779,8 @@ const TeamDetail = () => {
                               {set.vod_link ? (
                                 <Button
                                   size="sm"
-                                  className="inline-flex items-center gap-1.5 shadow-sm"
+                                  variant="outline"
+                                  className="inline-flex items-center gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
                                   onClick={() =>
                                     window.open(
                                       set.vod_link as string,
@@ -760,57 +812,57 @@ const TeamDetail = () => {
           </CardContent>
         </Card>
 
-        {/* ================= ROSTER HISTORY ================= */}
+        {/* ===================================================
+            ROSTER HISTORY
+        =================================================== */}
 
-        <Card className="bg-gradient-card shadow-card border-border/60 overflow-hidden">
-          <CardHeader className="border-b border-border/50 bg-muted/20">
+        <Card className="bg-gradient-card shadow-card border-border/50">
+          <CardHeader>
             <CardTitle className="text-xl flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Users className="h-5 w-5 text-primary" />
-              </div>
-
+              <Users className="h-5 w-5 text-primary" />
               Roster History
             </CardTitle>
+
+            <p className="text-sm text-muted-foreground">
+              Player movements and trades involving this team.
+            </p>
           </CardHeader>
 
-          <CardContent className="p-6">
+          <CardContent>
             {trades.length === 0 ? (
-              <div className="text-muted-foreground text-center py-10">
+              <div className="text-muted-foreground text-center py-8">
                 No roster changes or trades for this team yet.
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {trades.map((trade) => {
                   const outgoingPlayers =
                     trade.playersTraded.filter(
-                      (pt) => pt.fromTeam === team.name
+                      (pt) =>
+                        pt.fromTeam === team.name
                     );
 
                   const incomingPlayers =
                     trade.playersTraded.filter(
-                      (pt) => pt.toTeam === team.name
+                      (pt) =>
+                        pt.toTeam === team.name
                     );
 
                   return (
                     <div
                       key={trade.id}
-                      className="rounded-2xl border overflow-hidden shadow-sm hover:shadow-md transition-all"
-                      style={{
-                        borderColor: `${team.color}55`,
-                        background: `linear-gradient(135deg, ${team.color}08 0%, ${team.color2}08 100%)`,
-                      }}
+                      className="rounded-2xl overflow-hidden border border-border/50 bg-background/40 shadow-sm hover:shadow-md transition-all duration-200"
                     >
-                      {/* Trade header */}
+                      {/* Trade Header */}
 
                       <div
-                        className="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b"
+                        className="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
                         style={{
-                          background: `linear-gradient(90deg, ${team.color}15 0%, ${team.color2}15 100%)`,
-                          borderColor: `${team.color}20`,
+                          background: `linear-gradient(90deg, ${team.color}12 0%, ${team.color2}12 100%)`,
                         }}
                       >
                         <div>
-                          <div className="font-bold text-base">
+                          <div className="font-semibold text-foreground">
                             {trade.description}
                           </div>
 
@@ -827,123 +879,121 @@ const TeamDetail = () => {
                         </Badge>
                       </div>
 
-                      {/* Players */}
+                      {/* Trade Content */}
 
-                      <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
-                        {/* Outgoing */}
+                      <div className="grid md:grid-cols-2">
+                        {/* OUTGOING */}
 
-                        <div className="p-5">
+                        <div className="p-5 border-t md:border-t-0 md:border-r border-border/40">
                           <div className="flex items-center gap-2 mb-4">
-                            <div className="p-1.5 rounded-full bg-red-100 dark:bg-red-950/40">
-                              <ArrowUpRight className="h-4 w-4 text-red-600" />
+                            <div className="h-8 w-8 rounded-lg bg-red-100 dark:bg-red-950/40 flex items-center justify-center">
+                              <ArrowDown className="h-4 w-4 text-red-600" />
                             </div>
 
-                            <h4 className="font-bold">
-                              Outgoing
-                            </h4>
+                            <div>
+                              <h4 className="font-semibold text-foreground">
+                                Outgoing
+                              </h4>
 
-                            {outgoingPlayers.length > 0 && (
-                              <Badge
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                {outgoingPlayers.length}
-                              </Badge>
-                            )}
+                              <p className="text-xs text-muted-foreground">
+                                Players leaving
+                              </p>
+                            </div>
                           </div>
 
-                          {outgoingPlayers.length === 0 ? (
-                            <div className="text-sm text-muted-foreground py-3">
-                              No players sent out.
+                          {outgoingPlayers.length ===
+                          0 ? (
+                            <div className="rounded-xl bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+                              No outgoing players
                             </div>
                           ) : (
                             <div className="space-y-2">
-                              {outgoingPlayers.map((pt, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-center justify-between gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-950/40"
-                                >
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-950/50 flex items-center justify-center shrink-0">
-                                      <ArrowDownRight className="h-4 w-4 text-red-600" />
+                              {outgoingPlayers.map(
+                                (pt, idx) => (
+                                  <div
+                                    key={`${trade.id}-out-${idx}`}
+                                    className="flex items-center justify-between gap-3 rounded-xl bg-muted/25 hover:bg-muted/40 transition-colors px-4 py-3"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <div className="h-8 w-8 shrink-0 rounded-full bg-red-100 dark:bg-red-950/40 flex items-center justify-center">
+                                        <ArrowDown className="h-4 w-4 text-red-600" />
+                                      </div>
+
+                                      <span className="font-semibold truncate">
+                                        {pt.player.name}
+                                      </span>
                                     </div>
 
-                                    <span className="font-semibold truncate">
-                                      {pt.player.name}
+                                    <span
+                                      className="text-sm font-medium text-right shrink-0"
+                                      style={{
+                                        color:
+                                          pt.toColor,
+                                      }}
+                                    >
+                                      {pt.toTeam}
                                     </span>
                                   </div>
-
-                                  <span
-                                    className="text-sm font-semibold whitespace-nowrap"
-                                    style={{
-                                      color:
-                                        pt.toColor ??
-                                        "#64748b",
-                                    }}
-                                  >
-                                    {pt.toTeam}
-                                  </span>
-                                </div>
-                              ))}
+                                )
+                              )}
                             </div>
                           )}
                         </div>
 
-                        {/* Incoming */}
+                        {/* INCOMING */}
 
-                        <div className="p-5">
+                        <div className="p-5 border-t border-border/40">
                           <div className="flex items-center gap-2 mb-4">
-                            <div className="p-1.5 rounded-full bg-green-100 dark:bg-green-950/40">
-                              <ArrowDownRight className="h-4 w-4 text-green-600" />
+                            <div className="h-8 w-8 rounded-lg bg-green-100 dark:bg-green-950/40 flex items-center justify-center">
+                              <ArrowUp className="h-4 w-4 text-green-600" />
                             </div>
 
-                            <h4 className="font-bold">
-                              Incoming
-                            </h4>
+                            <div>
+                              <h4 className="font-semibold text-foreground">
+                                Incoming
+                              </h4>
 
-                            {incomingPlayers.length > 0 && (
-                              <Badge
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                {incomingPlayers.length}
-                              </Badge>
-                            )}
+                              <p className="text-xs text-muted-foreground">
+                                Players joining
+                              </p>
+                            </div>
                           </div>
 
-                          {incomingPlayers.length === 0 ? (
-                            <div className="text-sm text-muted-foreground py-3">
-                              No players received.
+                          {incomingPlayers.length ===
+                          0 ? (
+                            <div className="rounded-xl bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+                              No incoming players
                             </div>
                           ) : (
                             <div className="space-y-2">
-                              {incomingPlayers.map((pt, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-center justify-between gap-3 p-3 rounded-xl bg-green-50 dark:bg-green-950/20 border border-green-100 dark:border-green-950/40"
-                                >
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-950/50 flex items-center justify-center shrink-0">
-                                      <ArrowUpRight className="h-4 w-4 text-green-600" />
+                              {incomingPlayers.map(
+                                (pt, idx) => (
+                                  <div
+                                    key={`${trade.id}-in-${idx}`}
+                                    className="flex items-center justify-between gap-3 rounded-xl bg-muted/25 hover:bg-muted/40 transition-colors px-4 py-3"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <div className="h-8 w-8 shrink-0 rounded-full bg-green-100 dark:bg-green-950/40 flex items-center justify-center">
+                                        <ArrowUp className="h-4 w-4 text-green-600" />
+                                      </div>
+
+                                      <span className="font-semibold truncate">
+                                        {pt.player.name}
+                                      </span>
                                     </div>
 
-                                    <span className="font-semibold truncate">
-                                      {pt.player.name}
+                                    <span
+                                      className="text-sm font-medium text-right shrink-0"
+                                      style={{
+                                        color:
+                                          pt.fromColor,
+                                      }}
+                                    >
+                                      {pt.fromTeam}
                                     </span>
                                   </div>
-
-                                  <span
-                                    className="text-sm font-semibold whitespace-nowrap"
-                                    style={{
-                                      color:
-                                        pt.fromColor ??
-                                        "#64748b",
-                                    }}
-                                  >
-                                    {pt.fromTeam}
-                                  </span>
-                                </div>
-                              ))}
+                                )
+                              )}
                             </div>
                           )}
                         </div>
@@ -960,23 +1010,25 @@ const TeamDetail = () => {
   );
 };
 
-/* ================= STAT CARD ================= */
+/* ============================================================
+   STAT CARD
+============================================================ */
 
 const StatCard = ({
   title,
   icon,
   value,
-  isPlusMinus = false,
-  accent = "primary",
+  isplus_minus = false,
 }: {
   title: string;
   icon: JSX.Element;
   value: number | string;
-  isPlusMinus?: boolean;
-  accent?: "primary" | "green" | "blue" | "purple";
+  isplus_minus?: boolean;
 }) => {
   const numeric =
-    typeof value === "number" ? value : parseFloat(value);
+    typeof value === "number"
+      ? value
+      : parseFloat(value);
 
   const color =
     numeric > 0
@@ -985,28 +1037,19 @@ const StatCard = ({
       ? "text-red-500"
       : "text-muted-foreground";
 
-  const accentClasses = {
-    primary: "bg-primary/10 text-primary",
-    green: "bg-green-100 text-green-600 dark:bg-green-950/40",
-    blue: "bg-blue-100 text-blue-600 dark:bg-blue-950/40",
-    purple: "bg-purple-100 text-purple-600 dark:bg-purple-950/40",
-  };
-
   return (
-    <Card className="bg-gradient-stats shadow-card border-border/60 hover:shadow-md transition-shadow">
+    <Card className="bg-gradient-stats shadow-card border-border/50 hover:shadow-md transition-shadow">
       <CardContent className="p-5 md:p-6 text-center">
-        <div
-          className={`h-10 w-10 rounded-xl mx-auto mb-3 flex items-center justify-center ${accentClasses[accent]}`}
-        >
+        <div className="h-9 w-9 mx-auto mb-3 text-primary">
           {icon}
         </div>
 
         <div
-          className={`text-2xl md:text-3xl font-black ${
-            isPlusMinus ? color : "text-card-foreground"
+          className={`text-2xl md:text-3xl font-bold text-card-foreground ${
+            isplus_minus ? color : ""
           }`}
         >
-          {isPlusMinus && numeric > 0 ? "+" : ""}
+          {isplus_minus && numeric > 0 ? "+" : ""}
           {value}
         </div>
 
@@ -1015,6 +1058,34 @@ const StatCard = ({
         </div>
       </CardContent>
     </Card>
+  );
+};
+
+/* ============================================================
+   SUMMARY ITEM
+============================================================ */
+
+const SummaryItem = ({
+  label,
+  value,
+  color = "text-foreground",
+}: {
+  label: string;
+  value: number | string;
+  color?: string;
+}) => {
+  return (
+    <div className="p-5 text-center border-b md:border-b-0 md:border-r last:border-r-0 border-border/40">
+      <div
+        className={`text-2xl font-bold ${color}`}
+      >
+        {value}
+      </div>
+
+      <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wide">
+        {label}
+      </div>
+    </div>
   );
 };
 
