@@ -408,25 +408,25 @@ const TeamDetail = () => {
     (team.points_for ?? 0) -
     (team.points_against ?? 0);
 
-  return (
-    <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#050506] text-black dark:text-white overflow-hidden">
+   return (
+    <div className="min-h-screen text-foreground overflow-hidden">
       {/* =====================================================
-          AMBIENT BACKGROUND
+          AMBIENT TEAM ATMOSPHERE
       ===================================================== */}
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full blur-[140px] opacity-[0.13]"
+          className="absolute -top-48 left-[15%] h-[600px] w-[600px] rounded-full blur-[150px] opacity-[0.14]"
           style={{ backgroundColor: team.color }}
         />
 
         <div
-          className="absolute top-1/3 -right-40 h-[550px] w-[550px] rounded-full blur-[160px] opacity-[0.10]"
+          className="absolute top-[35%] -right-48 h-[650px] w-[650px] rounded-full blur-[170px] opacity-[0.10]"
           style={{ backgroundColor: team.color2 }}
         />
 
         <div
-          className="absolute bottom-0 left-0 h-[450px] w-[450px] rounded-full blur-[150px] opacity-[0.06]"
+          className="absolute -bottom-48 left-[10%] h-[550px] w-[550px] rounded-full blur-[170px] opacity-[0.07]"
           style={{ backgroundColor: team.color }}
         />
       </div>
@@ -437,84 +437,138 @@ const TeamDetail = () => {
 
       <section className="relative px-4 pt-5 md:pt-8">
         <div
-          className="relative max-w-7xl mx-auto overflow-hidden rounded-[32px] md:rounded-[42px] border border-white/30 dark:border-white/10 shadow-[0_25px_80px_rgba(0,0,0,0.12)]"
+          className="relative max-w-7xl mx-auto overflow-hidden rounded-[32px] md:rounded-[40px] shadow-[0_30px_100px_rgba(0,0,0,0.14)]"
           style={{
             background: `
               linear-gradient(
                 135deg,
-                ${team.color}f2 0%,
-                ${team.color2}e8 100%
+                ${team.color} 0%,
+                ${team.color2} 100%
               )
             `,
           }}
         >
-          {/* Glass highlight */}
+          {/* Material layers */}
 
-          <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-white/5 to-black/10 pointer-events-none" />
+          <div className="absolute inset-0 bg-white/[0.08]" />
 
-          <div className="absolute -top-40 -right-20 h-[500px] w-[500px] rounded-full bg-white/20 blur-[100px]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-black/15" />
 
-          <div className="absolute -bottom-60 -left-20 h-[500px] w-[500px] rounded-full bg-white/10 blur-[120px]" />
+          <div className="absolute -top-48 -right-20 h-[550px] w-[550px] rounded-full bg-white/20 blur-[120px]" />
 
-          <div className="relative px-6 py-7 md:px-12 md:py-10">
+          <div className="absolute -bottom-56 -left-24 h-[500px] w-[500px] rounded-full bg-black/10 blur-[120px]" />
+
+          {/* Decorative rings */}
+
+          <div className="absolute -right-20 top-1/2 hidden md:block h-[360px] w-[360px] -translate-y-1/2 rounded-full border border-white/10" />
+
+          <div className="absolute -right-8 top-1/2 hidden md:block h-[270px] w-[270px] -translate-y-1/2 rounded-full border border-white/[0.08]" />
+
+          <div className="relative px-6 py-6 md:px-12 md:py-9">
             <Link
               to="/teams"
-              className="inline-flex items-center gap-2 text-white/75 hover:text-white text-sm font-medium transition-colors mb-10"
+              className="group inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3.5 py-2 text-sm font-medium text-white/80 backdrop-blur-xl hover:bg-white/20 hover:text-white transition-all"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
               Back to Teams
             </Link>
 
-            <div className="flex flex-col md:flex-row items-center md:items-end gap-7 md:gap-10">
-              {/* Team Logo */}
+            <div className="mt-10 md:mt-14 flex flex-col md:flex-row md:items-center gap-7 md:gap-10">
+              {/* Logo */}
 
-              <div className="shrink-0">
-                <div className="relative w-32 h-32 md:w-44 md:h-44 rounded-[30px] md:rounded-[38px] bg-white/15 backdrop-blur-2xl border border-white/25 shadow-2xl flex items-center justify-center p-5">
-                  <div className="absolute inset-2 rounded-[24px] md:rounded-[30px] border border-white/10" />
+              <div className="relative shrink-0 mx-auto md:mx-0">
+                <div className="relative h-32 w-32 md:h-44 md:w-44 rounded-[30px] md:rounded-[38px] bg-white/15 border border-white/25 backdrop-blur-2xl shadow-2xl flex items-center justify-center p-5">
+                  <div className="absolute inset-2.5 rounded-[24px] md:rounded-[30px] border border-white/10" />
+
+                  <div className="absolute inset-0 rounded-[30px] md:rounded-[38px] bg-gradient-to-br from-white/20 to-transparent" />
 
                   <img
                     src={`/logos/${team.team_id}.png`}
                     alt={`${team.name} logo`}
-                    className="relative w-full h-full object-contain drop-shadow-2xl"
+                    className="relative z-10 h-full w-full object-contain drop-shadow-[0_12px_20px_rgba(0,0,0,0.25)]"
                     onError={(e) => {
-                      (
-                        e.target as HTMLImageElement
-                      ).style.display = "none";
+                      (e.target as HTMLImageElement).style.display = "none";
                     }}
                   />
                 </div>
               </div>
 
-              {/* Team Info */}
+              {/* Team identity */}
 
-              <div className="text-center md:text-left flex-1">
-                <div className="inline-flex items-center rounded-full bg-white/15 border border-white/20 backdrop-blur-xl px-3.5 py-1.5 mb-4">
-                  <span className="text-[11px] font-semibold tracking-[0.16em] text-white/90">
+              <div className="relative flex-1 text-center md:text-left">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-xl px-3 py-1.5 mb-4">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+
+                  <span className="text-[10px] font-bold tracking-[0.18em] text-white/85">
                     TEAM PROFILE
                   </span>
                 </div>
 
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold tracking-[-0.04em] text-white mb-3">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold tracking-[-0.055em] text-white leading-[0.95]">
                   {team.name}
                 </h1>
 
-                <p className="text-base md:text-lg text-white/70 mb-6">
-                  Captain{" "}
+                <p className="mt-4 text-sm md:text-base text-white/65">
+                  Captained by{" "}
                   <span className="font-semibold text-white">
                     {team.captain}
                   </span>
                 </p>
 
-                <div className="flex flex-wrap gap-2.5 justify-center md:justify-start">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/15 border border-white/20 backdrop-blur-xl px-4 py-2.5 text-sm font-semibold text-white shadow-lg">
+                <div className="mt-6 flex flex-wrap justify-center md:justify-start gap-2.5">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-white/15 border border-white/20 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-xl shadow-lg">
                     <Trophy className="h-4 w-4" />
                     {team.wins}W – {team.losses}L
                   </div>
 
-                  <div className="inline-flex items-center rounded-full bg-black/10 border border-white/20 backdrop-blur-xl px-4 py-2.5 text-sm font-semibold text-white">
-                    {winPercentage}% Win Rate
+                  <div className="inline-flex items-center gap-2 rounded-full bg-black/10 border border-white/15 px-4 py-2.5 text-sm font-semibold text-white/85 backdrop-blur-xl">
+                    <span className="text-white/60">Win rate</span>
+                    {winPercentage}%
                   </div>
                 </div>
+              </div>
+
+              {/* Desktop record */}
+
+              <div className="hidden lg:flex shrink-0 flex-col items-end text-right">
+                <div className="text-[10px] uppercase tracking-[0.18em] font-semibold text-white/50">
+                  Season Record
+                </div>
+
+                <div className="mt-1 text-5xl font-semibold tracking-tight text-white">
+                  {team.wins}
+                  <span className="text-white/35">–</span>
+                  {team.losses}
+                </div>
+
+                <div className="mt-2 text-xs text-white/50">
+                  {teamGames} player games
+                </div>
+              </div>
+            </div>
+
+            {/* Hero bottom stats */}
+
+            <div className="relative mt-10 md:mt-14 pt-5 md:pt-6 border-t border-white/15">
+              <div className="grid grid-cols-3 gap-3 md:gap-8">
+                <HeroMiniStat
+                  label="Points For"
+                  value={team.points_for}
+                />
+
+                <HeroMiniStat
+                  label="Points Against"
+                  value={team.points_against}
+                />
+
+                <HeroMiniStat
+                  label="Point Diff"
+                  value={
+                    pointDifferential > 0
+                      ? `+${pointDifferential}`
+                      : pointDifferential
+                  }
+                />
               </div>
             </div>
           </div>
@@ -522,20 +576,21 @@ const TeamDetail = () => {
       </section>
 
       {/* =====================================================
-          MAIN CONTENT
+          MAIN
       ===================================================== */}
 
-      <main className="relative max-w-7xl mx-auto px-4 py-8 md:py-12 space-y-6 md:space-y-8">
+      <main className="relative max-w-7xl mx-auto px-4 py-7 md:py-10 space-y-5 md:space-y-7">
 
         {/* ===================================================
-            STAT CARDS
+            STATS
         =================================================== */}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
           <GlassStatCard
             title="Points For"
             icon={<Trophy />}
             value={team.points_for}
+            accent={team.color}
           />
 
           <GlassStatCard
@@ -543,28 +598,31 @@ const TeamDetail = () => {
             icon={<TrendingUp />}
             value={teamplus_minus}
             isplus_minus
+            accent={team.color}
           />
 
           <GlassStatCard
             title="Total Games"
             icon={<Users />}
             value={teamGames}
+            accent={team.color2}
           />
 
           <GlassStatCard
             title="Team Average"
-            icon={<Trophy />}
+            icon={<TrendingUp />}
             value={teamAverage.toFixed(1)}
             isplus_minus
+            accent={team.color2}
           />
         </div>
 
         {/* ===================================================
-            QUICK SUMMARY
+            RECORD SUMMARY
         =================================================== */}
 
         <GlassPanel>
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-black/5 dark:divide-white/10">
+          <div className="grid grid-cols-2 md:grid-cols-4">
             <SummaryItem
               label="Wins"
               value={team.wins}
@@ -594,7 +652,7 @@ const TeamDetail = () => {
                   ? "text-emerald-500"
                   : pointDifferential < 0
                   ? "text-red-500"
-                  : "text-black/40 dark:text-white/40"
+                  : "text-muted-foreground"
               }
             />
           </div>
@@ -611,7 +669,7 @@ const TeamDetail = () => {
             count={players.length}
           />
 
-          <p className="text-sm text-black/45 dark:text-white/45 mb-6">
+          <p className="text-sm text-muted-foreground mt-2 mb-6">
             Current players on the team.
           </p>
 
@@ -622,13 +680,21 @@ const TeamDetail = () => {
               {players.map((player) => (
                 <div
                   key={player.id}
-                  className="rounded-[24px] overflow-hidden border border-black/5 dark:border-white/10 bg-white/35 dark:bg-white/[0.04] backdrop-blur-xl shadow-sm hover:shadow-xl hover:bg-white/50 dark:hover:bg-white/[0.07] transition-all duration-300"
+                  className="group relative overflow-hidden rounded-[24px] border border-border/50 bg-white/35 dark:bg-white/[0.035] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/55 dark:hover:bg-white/[0.06] hover:shadow-[0_16px_45px_rgba(0,0,0,0.08)]"
                 >
+                  {/* Accent line */}
+
+                  <div
+                    className="absolute left-0 top-0 bottom-0 w-1 opacity-60"
+                    style={{
+                      background: `linear-gradient(to bottom, ${team.color}, ${team.color2})`,
+                    }}
+                  />
+
                   <PlayerCard
                     player={{
                       ...player,
-                      isCaptain:
-                        player.name === team.captain,
+                      isCaptain: player.name === team.captain,
                     }}
                   />
                 </div>
@@ -648,51 +714,51 @@ const TeamDetail = () => {
             count={games.length}
           />
 
-          <p className="text-sm text-black/45 dark:text-white/45 mb-6">
+          <p className="text-sm text-muted-foreground mt-2 mb-6">
             Set-by-set results and available game VODs.
           </p>
 
           {games.length === 0 ? (
             <EmptyState text="No games played yet." />
           ) : (
-            <div className="overflow-hidden rounded-[24px] border border-black/5 dark:border-white/10 bg-white/25 dark:bg-white/[0.025] backdrop-blur-xl">
+            <div className="overflow-hidden rounded-[24px] border border-border/50 bg-white/20 dark:bg-white/[0.025]">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left border-collapse">
                   <thead>
-                    <tr className="bg-black/[0.025] dark:bg-white/[0.035] border-b border-black/5 dark:border-white/10">
-                      <th className="px-5 py-4 font-medium text-black/45 dark:text-white/45">
+                    <tr className="bg-black/[0.025] dark:bg-white/[0.035] border-b border-border/50">
+                      <th className="px-5 py-4 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                         Date
                       </th>
 
-                      <th className="px-5 py-4 font-medium text-black/45 dark:text-white/45">
+                      <th className="px-5 py-4 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                         Time
                       </th>
 
-                      <th className="px-5 py-4 font-medium text-black/45 dark:text-white/45">
+                      <th className="px-5 py-4 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                         Opponent
                       </th>
 
-                      <th className="px-5 py-4 text-center font-medium text-black/45 dark:text-white/45">
+                      <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                         Set
                       </th>
 
-                      <th className="px-5 py-4 text-center font-medium text-black/45 dark:text-white/45">
+                      <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                         PF
                       </th>
 
-                      <th className="px-5 py-4 text-center font-medium text-black/45 dark:text-white/45">
+                      <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                         PA
                       </th>
 
-                      <th className="px-5 py-4 text-center font-medium text-black/45 dark:text-white/45">
+                      <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                         Diff
                       </th>
 
-                      <th className="px-5 py-4 text-center font-medium text-black/45 dark:text-white/45">
+                      <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                         Result
                       </th>
 
-                      <th className="px-5 py-4 text-center font-medium text-black/45 dark:text-white/45">
+                      <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                         VOD
                       </th>
                     </tr>
@@ -702,37 +768,25 @@ const TeamDetail = () => {
                     {games.map((game) =>
                       game.sets.map((set, idx) => {
                         const result =
-                          set.points_for ===
-                          set.points_against
+                          set.points_for === set.points_against
                             ? "T"
-                            : set.points_for >
-                              set.points_against
+                            : set.points_for > set.points_against
                             ? "W"
                             : "L";
 
                         const difference =
-                          set.points_for -
-                          set.points_against;
+                          set.points_for - set.points_against;
 
                         return (
                           <tr
                             key={`${game.id}-set-${set.set_no}`}
-                            className={`
-                              border-b border-black/5 dark:border-white/5
-                              transition-colors
-                              hover:bg-black/[0.025] dark:hover:bg-white/[0.035]
-                              ${
-                                idx % 2 === 0
-                                  ? "bg-black/[0.01] dark:bg-white/[0.01]"
-                                  : ""
-                              }
-                            `}
+                            className="group/row border-b border-border/30 last:border-0 hover:bg-white/30 dark:hover:bg-white/[0.035] transition-colors"
                           >
-                            <td className="px-5 py-4 whitespace-nowrap">
+                            <td className="px-5 py-4 whitespace-nowrap font-medium">
                               {formatDate(game.date)}
                             </td>
 
-                            <td className="px-5 py-4 whitespace-nowrap text-black/45 dark:text-white/45">
+                            <td className="px-5 py-4 whitespace-nowrap text-muted-foreground">
                               {formatTime12H(game.time)}
                             </td>
 
@@ -741,54 +795,40 @@ const TeamDetail = () => {
                             </td>
 
                             <td className="px-5 py-4 text-center">
-                              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-black/5 dark:bg-white/10 text-xs font-semibold">
+                              <span className="inline-flex items-center justify-center h-7 min-w-7 px-2 rounded-full bg-black/[0.04] dark:bg-white/[0.08] text-xs font-bold">
                                 {set.set_no}
                               </span>
                             </td>
 
-                            <td className="px-5 py-4 text-center text-emerald-500 font-semibold">
-                              {set.points_for}
+                            <td className="px-5 py-4 text-center">
+                              <span className="font-bold text-emerald-500">
+                                {set.points_for}
+                              </span>
                             </td>
 
-                            <td className="px-5 py-4 text-center text-red-500 font-semibold">
-                              {set.points_against}
-                            </td>
-
-                            <td
-                              className={`px-5 py-4 text-center font-semibold ${
-                                difference > 0
-                                  ? "text-emerald-500"
-                                  : difference < 0
-                                  ? "text-red-500"
-                                  : "text-black/40 dark:text-white/40"
-                              }`}
-                            >
-                              {difference > 0
-                                ? "+"
-                                : ""}
-                              {difference}
+                            <td className="px-5 py-4 text-center">
+                              <span className="font-bold text-red-500">
+                                {set.points_against}
+                              </span>
                             </td>
 
                             <td className="px-5 py-4 text-center">
                               <span
-                                className={`
-                                  inline-flex items-center justify-center
-                                  min-w-9 px-3 py-1.5
-                                  rounded-full
-                                  text-xs font-semibold
-                                  backdrop-blur-xl
-                                  border
-                                  ${
-                                    result === "W"
-                                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/15"
-                                      : result === "L"
-                                      ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/15"
-                                      : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/15"
-                                  }
-                                `}
+                                className={`font-bold ${
+                                  difference > 0
+                                    ? "text-emerald-500"
+                                    : difference < 0
+                                    ? "text-red-500"
+                                    : "text-muted-foreground"
+                                }`}
                               >
-                                {result}
+                                {difference > 0 ? "+" : ""}
+                                {difference}
                               </span>
+                            </td>
+
+                            <td className="px-5 py-4 text-center">
+                              <ResultBadge result={result} />
                             </td>
 
                             <td className="px-5 py-4 text-center">
@@ -796,7 +836,7 @@ const TeamDetail = () => {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="rounded-full h-9 px-3 bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
+                                  className="rounded-full h-9 px-3 bg-black/[0.04] hover:bg-black/[0.08] dark:bg-white/[0.05] dark:hover:bg-white/[0.10]"
                                   onClick={() =>
                                     window.open(
                                       set.vod_link as string,
@@ -812,7 +852,7 @@ const TeamDetail = () => {
                                   </span>
                                 </Button>
                               ) : (
-                                <span className="text-black/25 dark:text-white/25">
+                                <span className="text-muted-foreground/40">
                                   —
                                 </span>
                               )}
@@ -838,7 +878,7 @@ const TeamDetail = () => {
             title="Roster History"
           />
 
-          <p className="text-sm text-black/45 dark:text-white/45 mb-6">
+          <p className="text-sm text-muted-foreground mt-2 mb-6">
             Player movements and trades involving this team.
           </p>
 
@@ -847,57 +887,62 @@ const TeamDetail = () => {
           ) : (
             <div className="space-y-4">
               {trades.map((trade) => {
-                const outgoingPlayers =
-                  trade.playersTraded.filter(
-                    (pt) =>
-                      pt.fromTeam === team.name
-                  );
+                const outgoingPlayers = trade.playersTraded.filter(
+                  (pt) => pt.fromTeam === team.name
+                );
 
-                const incomingPlayers =
-                  trade.playersTraded.filter(
-                    (pt) =>
-                      pt.toTeam === team.name
-                  );
+                const incomingPlayers = trade.playersTraded.filter(
+                  (pt) => pt.toTeam === team.name
+                );
 
                 return (
                   <div
                     key={trade.id}
-                    className="overflow-hidden rounded-[28px] border border-black/5 dark:border-white/10 bg-white/30 dark:bg-white/[0.035] backdrop-blur-2xl shadow-sm hover:shadow-xl transition-all duration-300"
+                    className="overflow-hidden rounded-[28px] border border-border/50 bg-white/25 dark:bg-white/[0.035] backdrop-blur-2xl shadow-sm hover:shadow-xl transition-all duration-300"
                   >
-                    {/* Trade Header */}
-
                     <div
-                      className="px-5 py-5 md:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-black/5 dark:border-white/10"
+                      className="relative px-5 py-5 md:px-6 border-b border-border/40 overflow-hidden"
                       style={{
-                        background: `linear-gradient(90deg, ${team.color}10 0%, ${team.color2}10 100%)`,
+                        background: `linear-gradient(
+                          100deg,
+                          ${team.color}12 0%,
+                          ${team.color2}12 100%
+                        )`,
                       }}
                     >
-                      <div>
-                        <div className="font-semibold tracking-tight">
-                          {trade.description}
+                      <div
+                        className="absolute left-0 top-0 bottom-0 w-1"
+                        style={{
+                          background: `linear-gradient(
+                            to bottom,
+                            ${team.color},
+                            ${team.color2}
+                          )`,
+                        }}
+                      />
+
+                      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                          <div className="font-semibold tracking-tight">
+                            {trade.description}
+                          </div>
+
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Roster transaction
+                          </div>
                         </div>
 
-                        <div className="text-xs text-black/40 dark:text-white/40 mt-1">
-                          Roster transaction
-                        </div>
+                        <span className="inline-flex w-fit rounded-full bg-black/[0.04] dark:bg-white/[0.08] px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+                          {formatDate(trade.date)}
+                        </span>
                       </div>
-
-                      <span className="inline-flex w-fit rounded-full bg-black/5 dark:bg-white/10 px-3 py-1.5 text-xs font-medium text-black/55 dark:text-white/55">
-                        {formatDate(trade.date)}
-                      </span>
                     </div>
 
-                    {/* Trade Content */}
-
-                    <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-black/5 dark:divide-white/10">
-                      {/* OUTGOING */}
-
+                    <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border/40">
                       <TradeColumn
                         type="outgoing"
                         players={outgoingPlayers}
                       />
-
-                      {/* INCOMING */}
 
                       <TradeColumn
                         type="incoming"
@@ -916,6 +961,28 @@ const TeamDetail = () => {
 };
 
 /* ============================================================
+   HERO MINI STAT
+============================================================ */
+
+const HeroMiniStat = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: number | string;
+}) => (
+  <div className="text-center md:text-left">
+    <div className="text-lg md:text-xl font-semibold text-white">
+      {value}
+    </div>
+
+    <div className="mt-0.5 text-[10px] md:text-xs uppercase tracking-[0.12em] text-white/50">
+      {label}
+    </div>
+  </div>
+);
+
+/* ============================================================
    GLASS PANEL
 ============================================================ */
 
@@ -923,15 +990,13 @@ const GlassPanel = ({
   children,
 }: {
   children: React.ReactNode;
-}) => {
-  return (
-    <section className="rounded-[30px] md:rounded-[34px] border border-black/5 dark:border-white/10 bg-white/55 dark:bg-white/[0.045] backdrop-blur-2xl shadow-[0_10px_50px_rgba(0,0,0,0.06)] overflow-hidden">
-      <div className="p-5 md:p-7">
-        {children}
-      </div>
-    </section>
-  );
-};
+}) => (
+  <section className="glass">
+    <div className="p-5 md:p-7">
+      {children}
+    </div>
+  </section>
+);
 
 /* ============================================================
    GLASS STAT CARD
@@ -942,11 +1007,13 @@ const GlassStatCard = ({
   icon,
   value,
   isplus_minus = false,
+  accent,
 }: {
   title: string;
   icon: JSX.Element;
   value: number | string;
   isplus_minus?: boolean;
+  accent?: string;
 }) => {
   const numeric =
     typeof value === "number"
@@ -958,29 +1025,38 @@ const GlassStatCard = ({
       ? "text-emerald-500"
       : numeric < 0
       ? "text-red-500"
-      : "text-black/35 dark:text-white/35";
+      : "text-muted-foreground";
 
   return (
-    <div className="group relative overflow-hidden rounded-[26px] border border-black/5 dark:border-white/10 bg-white/55 dark:bg-white/[0.045] backdrop-blur-2xl p-5 md:p-6 shadow-[0_8px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_15px_45px_rgba(0,0,0,0.10)] hover:-translate-y-0.5 transition-all duration-300">
-      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/[0.06] pointer-events-none" />
+    <div className="glass-stat group relative overflow-hidden p-5 md:p-6 hover:-translate-y-0.5 transition-all duration-300">
+      {accent && (
+        <div
+          className="absolute -right-8 -top-8 h-28 w-28 rounded-full blur-[35px] opacity-20 transition-opacity group-hover:opacity-35"
+          style={{ backgroundColor: accent }}
+        />
+      )}
 
       <div className="relative">
-        <div className="h-9 w-9 mb-4 text-black/40 dark:text-white/40">
-          {icon}
+        <div
+          className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-black/[0.035] dark:bg-white/[0.07] text-muted-foreground"
+        >
+          <div className="h-4.5 w-4.5">
+            {icon}
+          </div>
         </div>
 
         <div
           className={`text-2xl md:text-3xl font-semibold tracking-tight ${
             isplus_minus
               ? color
-              : "text-black dark:text-white"
+              : "text-foreground"
           }`}
         >
           {isplus_minus && numeric > 0 ? "+" : ""}
           {value}
         </div>
 
-        <div className="text-xs md:text-sm text-black/40 dark:text-white/40 mt-1.5">
+        <div className="text-xs md:text-sm text-muted-foreground mt-1.5">
           {title}
         </div>
       </div>
@@ -1000,25 +1076,23 @@ const SectionHeader = ({
   icon: JSX.Element;
   title: string;
   count?: number;
-}) => {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="h-10 w-10 rounded-2xl bg-black/[0.04] dark:bg-white/[0.07] flex items-center justify-center text-black/55 dark:text-white/60">
-        {icon}
-      </div>
-
-      <h2 className="text-xl md:text-2xl font-semibold tracking-tight">
-        {title}
-      </h2>
-
-      {count !== undefined && (
-        <span className="rounded-full bg-black/[0.04] dark:bg-white/[0.07] px-2.5 py-1 text-xs font-medium text-black/45 dark:text-white/45">
-          {count}
-        </span>
-      )}
+}) => (
+  <div className="flex items-center gap-3">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-black/[0.04] dark:bg-white/[0.07] text-muted-foreground">
+      {icon}
     </div>
-  );
-};
+
+    <h2 className="text-xl md:text-2xl font-semibold tracking-tight">
+      {title}
+    </h2>
+
+    {count !== undefined && (
+      <span className="rounded-full bg-black/[0.04] dark:bg-white/[0.07] px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+        {count}
+      </span>
+    )}
+  </div>
+);
 
 /* ============================================================
    SUMMARY ITEM
@@ -1027,24 +1101,53 @@ const SectionHeader = ({
 const SummaryItem = ({
   label,
   value,
-  color = "text-black dark:text-white",
+  color = "text-foreground",
 }: {
   label: string;
   value: number | string;
   color?: string;
-}) => {
-  return (
-    <div className="p-5 md:p-6 text-center">
-      <div
-        className={`text-2xl md:text-3xl font-semibold tracking-tight ${color}`}
-      >
-        {value}
-      </div>
-
-      <div className="text-[10px] md:text-xs text-black/40 dark:text-white/40 mt-1.5 uppercase tracking-[0.12em]">
-        {label}
-      </div>
+}) => (
+  <div className="relative p-5 md:p-6 text-center">
+    <div
+      className={`text-2xl md:text-3xl font-semibold tracking-tight ${color}`}
+    >
+      {value}
     </div>
+
+    <div className="text-[10px] md:text-xs text-muted-foreground mt-1.5 uppercase tracking-[0.12em]">
+      {label}
+    </div>
+  </div>
+);
+
+/* ============================================================
+   RESULT BADGE
+============================================================ */
+
+const ResultBadge = ({
+  result,
+}: {
+  result: "W" | "L" | "T";
+}) => {
+  const styles = {
+    W: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/15",
+    L: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/15",
+    T: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/15",
+  };
+
+  return (
+    <span
+      className={`
+        inline-flex items-center justify-center
+        min-w-9 px-3 py-1.5
+        rounded-full
+        text-xs font-bold
+        border backdrop-blur-xl
+        ${styles[result]}
+      `}
+    >
+      {result}
+    </span>
   );
 };
 
@@ -1052,15 +1155,17 @@ const SummaryItem = ({
    EMPTY STATE
 ============================================================ */
 
-const EmptyState = ({ text }: { text: string }) => {
-  return (
-    <div className="rounded-[24px] border border-dashed border-black/10 dark:border-white/10 bg-black/[0.015] dark:bg-white/[0.02] py-12 text-center">
-      <p className="text-sm text-black/40 dark:text-white/40">
-        {text}
-      </p>
+const EmptyState = ({ text }: { text: string }) => (
+  <div className="rounded-[24px] border border-dashed border-border/60 bg-black/[0.015] dark:bg-white/[0.02] py-12 text-center">
+    <div className="mx-auto mb-3 h-9 w-9 rounded-xl bg-black/[0.035] dark:bg-white/[0.06] flex items-center justify-center">
+      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
     </div>
-  );
-};
+
+    <p className="text-sm text-muted-foreground">
+      {text}
+    </p>
+  </div>
+);
 
 /* ============================================================
    TRADE COLUMN
@@ -1100,7 +1205,7 @@ const TradeColumn = ({
             {outgoing ? "Outgoing" : "Incoming"}
           </h4>
 
-          <p className="text-xs text-black/40 dark:text-white/40">
+          <p className="text-xs text-muted-foreground">
             {outgoing
               ? "Players leaving"
               : "Players joining"}
@@ -1109,7 +1214,7 @@ const TradeColumn = ({
       </div>
 
       {players.length === 0 ? (
-        <div className="rounded-2xl bg-black/[0.025] dark:bg-white/[0.035] px-4 py-4 text-sm text-black/35 dark:text-white/35">
+        <div className="rounded-2xl border border-border/30 bg-black/[0.02] dark:bg-white/[0.025] px-4 py-4 text-sm text-muted-foreground">
           No {outgoing ? "outgoing" : "incoming"} players
         </div>
       ) : (
@@ -1117,7 +1222,7 @@ const TradeColumn = ({
           {players.map((pt, idx) => (
             <div
               key={`${type}-${idx}`}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-black/5 dark:border-white/5 bg-white/30 dark:bg-white/[0.025] px-4 py-3.5 hover:bg-white/55 dark:hover:bg-white/[0.05] transition-colors"
+              className="group/player flex items-center justify-between gap-3 rounded-2xl border border-border/40 bg-white/25 dark:bg-white/[0.025] px-4 py-3.5 hover:bg-white/50 dark:hover:bg-white/[0.055] transition-all"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div
@@ -1144,7 +1249,7 @@ const TradeColumn = ({
               </div>
 
               <span
-                className="text-sm font-medium text-right shrink-0"
+                className="text-xs md:text-sm font-semibold text-right shrink-0"
                 style={{
                   color: outgoing
                     ? pt.toColor
