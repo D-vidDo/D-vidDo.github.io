@@ -339,11 +339,15 @@ const TeamDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#050506] flex items-center justify-center">
         <div className="text-center">
-          <div className="h-10 w-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">
-            Loading team details...
+          <div className="relative h-12 w-12 mx-auto mb-5">
+            <div className="absolute inset-0 rounded-full border-[3px] border-black/5 dark:border-white/10" />
+            <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-black dark:border-t-white animate-spin" />
+          </div>
+
+          <p className="text-sm text-black/50 dark:text-white/50">
+            Loading team details…
           </p>
         </div>
       </div>
@@ -354,14 +358,20 @@ const TeamDetail = () => {
 
   if (error || !team) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#050506] flex items-center justify-center px-4">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">
+          <div className="mx-auto mb-6 h-16 w-16 rounded-3xl bg-white/70 dark:bg-white/10 border border-black/5 dark:border-white/10 backdrop-blur-xl flex items-center justify-center shadow-xl">
+            <Trophy className="h-7 w-7 text-black/40 dark:text-white/40" />
+          </div>
+
+          <h1 className="text-2xl font-semibold tracking-tight mb-5 text-black dark:text-white">
             {error || "Team not found"}.
           </h1>
 
           <Link to="/teams">
-            <Button>Back to Teams</Button>
+            <Button className="rounded-full px-6 shadow-lg">
+              Back to Teams
+            </Button>
           </Link>
         </div>
       </div>
@@ -399,94 +409,112 @@ const TeamDetail = () => {
     (team.points_against ?? 0);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#050506] text-black dark:text-white overflow-hidden">
+      {/* =====================================================
+          AMBIENT BACKGROUND
+      ===================================================== */}
+
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full blur-[140px] opacity-[0.13]"
+          style={{ backgroundColor: team.color }}
+        />
+
+        <div
+          className="absolute top-1/3 -right-40 h-[550px] w-[550px] rounded-full blur-[160px] opacity-[0.10]"
+          style={{ backgroundColor: team.color2 }}
+        />
+
+        <div
+          className="absolute bottom-0 left-0 h-[450px] w-[450px] rounded-full blur-[150px] opacity-[0.06]"
+          style={{ backgroundColor: team.color }}
+        />
+      </div>
+
       {/* =====================================================
           HERO
       ===================================================== */}
 
-      <section
-        className="relative isolate py-12 md:py-16 px-4 min-h-[300px] md:min-h-[370px] overflow-hidden"
-        style={{
-          background: `linear-gradient(135deg, ${team.color} 0%, ${team.color2} 100%)`,
-        }}
-      >
-        {/* Decorative glow */}
+      <section className="relative px-4 pt-5 md:pt-8">
         <div
-          className="absolute -top-32 -right-32 h-80 w-80 rounded-full opacity-20 blur-3xl"
+          className="relative max-w-7xl mx-auto overflow-hidden rounded-[32px] md:rounded-[42px] border border-white/30 dark:border-white/10 shadow-[0_25px_80px_rgba(0,0,0,0.12)]"
           style={{
-            backgroundColor: "#ffffff",
+            background: `
+              linear-gradient(
+                135deg,
+                ${team.color}f2 0%,
+                ${team.color2}e8 100%
+              )
+            `,
           }}
-        />
+        >
+          {/* Glass highlight */}
 
-        <div
-          className="absolute -bottom-40 -left-20 h-96 w-96 rounded-full opacity-10 blur-3xl"
-          style={{
-            backgroundColor: "#ffffff",
-          }}
-        />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-white/5 to-black/10 pointer-events-none" />
 
-        <div className="relative max-w-6xl mx-auto">
-          <Link
-            to="/teams"
-            className="inline-flex items-center text-primary-foreground/90 hover:text-primary-foreground mb-8 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Teams
-          </Link>
+          <div className="absolute -top-40 -right-20 h-[500px] w-[500px] rounded-full bg-white/20 blur-[100px]" />
 
-          <div className="flex flex-col md:flex-row items-center md:items-center gap-6 md:gap-8">
-            {/* Team Logo */}
+          <div className="absolute -bottom-60 -left-20 h-[500px] w-[500px] rounded-full bg-white/10 blur-[120px]" />
 
-            <div className="shrink-0">
-              <div className="w-36 h-36 md:w-48 md:h-48 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-2xl flex items-center justify-center p-4">
-                <img
-                  src={`/logos/${team.team_id}.png`}
-                  alt={`${team.name} logo`}
-                  className="w-full h-full object-contain drop-shadow-xl"
-                  onError={(e) => {
-                    (
-                      e.target as HTMLImageElement
-                    ).style.display = "none";
-                  }}
-                />
-              </div>
-            </div>
+          <div className="relative px-6 py-7 md:px-12 md:py-10">
+            <Link
+              to="/teams"
+              className="inline-flex items-center gap-2 text-white/75 hover:text-white text-sm font-medium transition-colors mb-10"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Teams
+            </Link>
 
-            {/* Team Info */}
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-7 md:gap-10">
+              {/* Team Logo */}
 
-            <div className="text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                <Badge className="bg-white/15 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm">
-                  TEAM PROFILE
-                </Badge>
+              <div className="shrink-0">
+                <div className="relative w-32 h-32 md:w-44 md:h-44 rounded-[30px] md:rounded-[38px] bg-white/15 backdrop-blur-2xl border border-white/25 shadow-2xl flex items-center justify-center p-5">
+                  <div className="absolute inset-2 rounded-[24px] md:rounded-[30px] border border-white/10" />
+
+                  <img
+                    src={`/logos/${team.team_id}.png`}
+                    alt={`${team.name} logo`}
+                    className="relative w-full h-full object-contain drop-shadow-2xl"
+                    onError={(e) => {
+                      (
+                        e.target as HTMLImageElement
+                      ).style.display = "none";
+                    }}
+                  />
+                </div>
               </div>
 
-              <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-3 tracking-tight">
-                {team.name}
-              </h1>
+              {/* Team Info */}
 
-              <p className="text-base md:text-lg text-primary-foreground/85 mb-5">
-                Captain:{" "}
-                <span className="font-semibold text-primary-foreground">
-                  {team.captain}
-                </span>
-              </p>
+              <div className="text-center md:text-left flex-1">
+                <div className="inline-flex items-center rounded-full bg-white/15 border border-white/20 backdrop-blur-xl px-3.5 py-1.5 mb-4">
+                  <span className="text-[11px] font-semibold tracking-[0.16em] text-white/90">
+                    TEAM PROFILE
+                  </span>
+                </div>
 
-              <div className="flex gap-3 flex-wrap justify-center md:justify-start">
-                <Badge
-                  variant="secondary"
-                  className="text-base md:text-lg px-4 py-2 shadow-sm"
-                >
-                  <Trophy className="h-4 w-4 mr-2" />
-                  {team.wins}W - {team.losses}L
-                </Badge>
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold tracking-[-0.04em] text-white mb-3">
+                  {team.name}
+                </h1>
 
-                <Badge
-                  variant="outline"
-                  className="text-base md:text-lg px-4 py-2 bg-white/10 border-white/25 text-white backdrop-blur-sm"
-                >
-                  {winPercentage}% Win Rate
-                </Badge>
+                <p className="text-base md:text-lg text-white/70 mb-6">
+                  Captain{" "}
+                  <span className="font-semibold text-white">
+                    {team.captain}
+                  </span>
+                </p>
+
+                <div className="flex flex-wrap gap-2.5 justify-center md:justify-start">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-white/15 border border-white/20 backdrop-blur-xl px-4 py-2.5 text-sm font-semibold text-white shadow-lg">
+                    <Trophy className="h-4 w-4" />
+                    {team.wins}W – {team.losses}L
+                  </div>
+
+                  <div className="inline-flex items-center rounded-full bg-black/10 border border-white/20 backdrop-blur-xl px-4 py-2.5 text-sm font-semibold text-white">
+                    {winPercentage}% Win Rate
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -497,33 +525,33 @@ const TeamDetail = () => {
           MAIN CONTENT
       ===================================================== */}
 
-      <div className="max-w-7xl mx-auto px-4 py-10 md:py-12 space-y-8">
+      <main className="relative max-w-7xl mx-auto px-4 py-8 md:py-12 space-y-6 md:space-y-8">
 
         {/* ===================================================
             STAT CARDS
         =================================================== */}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          <StatCard
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
+          <GlassStatCard
             title="Points For"
             icon={<Trophy />}
             value={team.points_for}
           />
 
-          <StatCard
+          <GlassStatCard
             title="Team +/-"
             icon={<TrendingUp />}
             value={teamplus_minus}
             isplus_minus
           />
 
-          <StatCard
+          <GlassStatCard
             title="Total Games"
             icon={<Users />}
             value={teamGames}
           />
 
-          <StatCard
+          <GlassStatCard
             title="Team Average"
             icon={<Trophy />}
             value={teamAverage.toFixed(1)}
@@ -532,155 +560,139 @@ const TeamDetail = () => {
         </div>
 
         {/* ===================================================
-            QUICK TEAM SUMMARY
+            QUICK SUMMARY
         =================================================== */}
 
-        <Card className="bg-gradient-card shadow-card border-border/50 overflow-hidden">
-          <CardContent className="p-0">
-            <div className="grid grid-cols-2 md:grid-cols-4">
-              <SummaryItem
-                label="Wins"
-                value={team.wins}
-                color="text-green-600"
-              />
+        <GlassPanel>
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-black/5 dark:divide-white/10">
+            <SummaryItem
+              label="Wins"
+              value={team.wins}
+              color="text-emerald-500"
+            />
 
-              <SummaryItem
-                label="Losses"
-                value={team.losses}
-                color="text-red-500"
-              />
+            <SummaryItem
+              label="Losses"
+              value={team.losses}
+              color="text-red-500"
+            />
 
-              <SummaryItem
-                label="Points Against"
-                value={team.points_against}
-              />
+            <SummaryItem
+              label="Points Against"
+              value={team.points_against}
+            />
 
-              <SummaryItem
-                label="Point Differential"
-                value={
-                  pointDifferential > 0
-                    ? `+${pointDifferential}`
-                    : pointDifferential
-                }
-                color={
-                  pointDifferential > 0
-                    ? "text-green-600"
-                    : pointDifferential < 0
-                    ? "text-red-500"
-                    : "text-muted-foreground"
-                }
-              />
-            </div>
-          </CardContent>
-        </Card>
+            <SummaryItem
+              label="Point Differential"
+              value={
+                pointDifferential > 0
+                  ? `+${pointDifferential}`
+                  : pointDifferential
+              }
+              color={
+                pointDifferential > 0
+                  ? "text-emerald-500"
+                  : pointDifferential < 0
+                  ? "text-red-500"
+                  : "text-black/40 dark:text-white/40"
+              }
+            />
+          </div>
+        </GlassPanel>
 
         {/* ===================================================
             ROSTER
         =================================================== */}
 
-        <Card className="bg-gradient-card shadow-card border-border/50">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              Team Roster
-              <Badge
-                variant="secondary"
-                className="ml-1"
-              >
-                {players.length}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
+        <GlassPanel>
+          <SectionHeader
+            icon={<Users />}
+            title="Team Roster"
+            count={players.length}
+          />
 
-          <CardContent>
-            {players.length === 0 ? (
-              <div className="text-muted-foreground text-center py-8">
-                No players currently listed.
-              </div>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {players.map((player) => (
+          <p className="text-sm text-black/45 dark:text-white/45 mb-6">
+            Current players on the team.
+          </p>
+
+          {players.length === 0 ? (
+            <EmptyState text="No players currently listed." />
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {players.map((player) => (
+                <div
+                  key={player.id}
+                  className="rounded-[24px] overflow-hidden border border-black/5 dark:border-white/10 bg-white/35 dark:bg-white/[0.04] backdrop-blur-xl shadow-sm hover:shadow-xl hover:bg-white/50 dark:hover:bg-white/[0.07] transition-all duration-300"
+                >
                   <PlayerCard
-                    key={player.id}
                     player={{
                       ...player,
                       isCaptain:
                         player.name === team.captain,
                     }}
                   />
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                </div>
+              ))}
+            </div>
+          )}
+        </GlassPanel>
 
         {/* ===================================================
             MATCH HISTORY
         =================================================== */}
 
-        <Card className="bg-gradient-card shadow-card border-border/50">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-primary" />
-              Match History
-              {games.length > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="ml-1"
-                >
-                  {games.length}
-                </Badge>
-              )}
-            </CardTitle>
+        <GlassPanel>
+          <SectionHeader
+            icon={<CalendarDays />}
+            title="Match History"
+            count={games.length}
+          />
 
-            <p className="text-sm text-muted-foreground">
-              Set-by-set results and available game VODs.
-            </p>
-          </CardHeader>
+          <p className="text-sm text-black/45 dark:text-white/45 mb-6">
+            Set-by-set results and available game VODs.
+          </p>
 
-          <CardContent>
-            {games.length === 0 ? (
-              <div className="text-muted-foreground text-center py-8">
-                No games played yet.
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-border/50">
+          {games.length === 0 ? (
+            <EmptyState text="No games played yet." />
+          ) : (
+            <div className="overflow-hidden rounded-[24px] border border-black/5 dark:border-white/10 bg-white/25 dark:bg-white/[0.025] backdrop-blur-xl">
+              <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left border-collapse">
                   <thead>
-                    <tr className="bg-muted/50 border-b border-border/50">
-                      <th className="px-4 py-3 font-semibold text-muted-foreground">
+                    <tr className="bg-black/[0.025] dark:bg-white/[0.035] border-b border-black/5 dark:border-white/10">
+                      <th className="px-5 py-4 font-medium text-black/45 dark:text-white/45">
                         Date
                       </th>
 
-                      <th className="px-4 py-3 font-semibold text-muted-foreground">
+                      <th className="px-5 py-4 font-medium text-black/45 dark:text-white/45">
                         Time
                       </th>
 
-                      <th className="px-4 py-3 font-semibold text-muted-foreground">
+                      <th className="px-5 py-4 font-medium text-black/45 dark:text-white/45">
                         Opponent
                       </th>
 
-                      <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
+                      <th className="px-5 py-4 text-center font-medium text-black/45 dark:text-white/45">
                         Set
                       </th>
 
-                      <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
+                      <th className="px-5 py-4 text-center font-medium text-black/45 dark:text-white/45">
                         PF
                       </th>
 
-                      <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
+                      <th className="px-5 py-4 text-center font-medium text-black/45 dark:text-white/45">
                         PA
                       </th>
 
-                      <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
+                      <th className="px-5 py-4 text-center font-medium text-black/45 dark:text-white/45">
                         Diff
                       </th>
 
-                      <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
+                      <th className="px-5 py-4 text-center font-medium text-black/45 dark:text-white/45">
                         Result
                       </th>
 
-                      <th className="px-4 py-3 text-center font-semibold text-muted-foreground">
+                      <th className="px-5 py-4 text-center font-medium text-black/45 dark:text-white/45">
                         VOD
                       </th>
                     </tr>
@@ -706,49 +718,49 @@ const TeamDetail = () => {
                           <tr
                             key={`${game.id}-set-${set.set_no}`}
                             className={`
-                              border-b border-border/30
+                              border-b border-black/5 dark:border-white/5
                               transition-colors
-                              hover:bg-muted/30
+                              hover:bg-black/[0.025] dark:hover:bg-white/[0.035]
                               ${
                                 idx % 2 === 0
-                                  ? "bg-muted/5"
-                                  : "bg-transparent"
+                                  ? "bg-black/[0.01] dark:bg-white/[0.01]"
+                                  : ""
                               }
                             `}
                           >
-                            <td className="px-4 py-3 whitespace-nowrap">
+                            <td className="px-5 py-4 whitespace-nowrap">
                               {formatDate(game.date)}
                             </td>
 
-                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                            <td className="px-5 py-4 whitespace-nowrap text-black/45 dark:text-white/45">
                               {formatTime12H(game.time)}
                             </td>
 
-                            <td className="px-4 py-3 font-semibold">
+                            <td className="px-5 py-4 font-semibold">
                               {game.opponent}
                             </td>
 
-                            <td className="px-4 py-3 text-center">
-                              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-semibold">
+                            <td className="px-5 py-4 text-center">
+                              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-black/5 dark:bg-white/10 text-xs font-semibold">
                                 {set.set_no}
                               </span>
                             </td>
 
-                            <td className="px-4 py-3 text-center text-green-600 font-bold">
+                            <td className="px-5 py-4 text-center text-emerald-500 font-semibold">
                               {set.points_for}
                             </td>
 
-                            <td className="px-4 py-3 text-center text-red-500 font-bold">
+                            <td className="px-5 py-4 text-center text-red-500 font-semibold">
                               {set.points_against}
                             </td>
 
                             <td
-                              className={`px-4 py-3 text-center font-bold ${
+                              className={`px-5 py-4 text-center font-semibold ${
                                 difference > 0
-                                  ? "text-green-600"
+                                  ? "text-emerald-500"
                                   : difference < 0
                                   ? "text-red-500"
-                                  : "text-muted-foreground"
+                                  : "text-black/40 dark:text-white/40"
                               }`}
                             >
                               {difference > 0
@@ -757,30 +769,34 @@ const TeamDetail = () => {
                               {difference}
                             </td>
 
-                            <td className="px-4 py-3 text-center">
-                              <Badge
+                            <td className="px-5 py-4 text-center">
+                              <span
                                 className={`
-                                  px-3 py-1 rounded-full
-                                  text-xs font-bold border-0
+                                  inline-flex items-center justify-center
+                                  min-w-9 px-3 py-1.5
+                                  rounded-full
+                                  text-xs font-semibold
+                                  backdrop-blur-xl
+                                  border
                                   ${
                                     result === "W"
-                                      ? "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400"
+                                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/15"
                                       : result === "L"
-                                      ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400"
-                                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400"
+                                      ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/15"
+                                      : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/15"
                                   }
                                 `}
                               >
                                 {result}
-                              </Badge>
+                              </span>
                             </td>
 
-                            <td className="px-4 py-3 text-center">
+                            <td className="px-5 py-4 text-center">
                               {set.vod_link ? (
                                 <Button
                                   size="sm"
-                                  variant="outline"
-                                  className="inline-flex items-center gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
+                                  variant="ghost"
+                                  className="rounded-full h-9 px-3 bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
                                   onClick={() =>
                                     window.open(
                                       set.vod_link as string,
@@ -790,13 +806,13 @@ const TeamDetail = () => {
                                   }
                                   title="Watch VOD"
                                 >
-                                  <PlayCircle className="h-4 w-4" />
+                                  <PlayCircle className="h-4 w-4 mr-1.5" />
                                   <span className="hidden sm:inline">
                                     Watch
                                   </span>
                                 </Button>
                               ) : (
-                                <span className="text-muted-foreground text-xs">
+                                <span className="text-black/25 dark:text-white/25">
                                   —
                                 </span>
                               )}
@@ -808,213 +824,120 @@ const TeamDetail = () => {
                   </tbody>
                 </table>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          )}
+        </GlassPanel>
 
         {/* ===================================================
             ROSTER HISTORY
         =================================================== */}
 
-        <Card className="bg-gradient-card shadow-card border-border/50">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              Roster History
-            </CardTitle>
+        <GlassPanel>
+          <SectionHeader
+            icon={<Users />}
+            title="Roster History"
+          />
 
-            <p className="text-sm text-muted-foreground">
-              Player movements and trades involving this team.
-            </p>
-          </CardHeader>
+          <p className="text-sm text-black/45 dark:text-white/45 mb-6">
+            Player movements and trades involving this team.
+          </p>
 
-          <CardContent>
-            {trades.length === 0 ? (
-              <div className="text-muted-foreground text-center py-8">
-                No roster changes or trades for this team yet.
-              </div>
-            ) : (
-              <div className="space-y-5">
-                {trades.map((trade) => {
-                  const outgoingPlayers =
-                    trade.playersTraded.filter(
-                      (pt) =>
-                        pt.fromTeam === team.name
-                    );
-
-                  const incomingPlayers =
-                    trade.playersTraded.filter(
-                      (pt) =>
-                        pt.toTeam === team.name
-                    );
-
-                  return (
-                    <div
-                      key={trade.id}
-                      className="rounded-2xl overflow-hidden border border-border/50 bg-background/40 shadow-sm hover:shadow-md transition-all duration-200"
-                    >
-                      {/* Trade Header */}
-
-                      <div
-                        className="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
-                        style={{
-                          background: `linear-gradient(90deg, ${team.color}12 0%, ${team.color2}12 100%)`,
-                        }}
-                      >
-                        <div>
-                          <div className="font-semibold text-foreground">
-                            {trade.description}
-                          </div>
-
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Roster transaction
-                          </div>
-                        </div>
-
-                        <Badge
-                          variant="secondary"
-                          className="w-fit"
-                        >
-                          {formatDate(trade.date)}
-                        </Badge>
-                      </div>
-
-                      {/* Trade Content */}
-
-                      <div className="grid md:grid-cols-2">
-                        {/* OUTGOING */}
-
-                        <div className="p-5 border-t md:border-t-0 md:border-r border-border/40">
-                          <div className="flex items-center gap-2 mb-4">
-                            <div className="h-8 w-8 rounded-lg bg-red-100 dark:bg-red-950/40 flex items-center justify-center">
-                              <ArrowDown className="h-4 w-4 text-red-600" />
-                            </div>
-
-                            <div>
-                              <h4 className="font-semibold text-foreground">
-                                Outgoing
-                              </h4>
-
-                              <p className="text-xs text-muted-foreground">
-                                Players leaving
-                              </p>
-                            </div>
-                          </div>
-
-                          {outgoingPlayers.length ===
-                          0 ? (
-                            <div className="rounded-xl bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-                              No outgoing players
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              {outgoingPlayers.map(
-                                (pt, idx) => (
-                                  <div
-                                    key={`${trade.id}-out-${idx}`}
-                                    className="flex items-center justify-between gap-3 rounded-xl bg-muted/25 hover:bg-muted/40 transition-colors px-4 py-3"
-                                  >
-                                    <div className="flex items-center gap-3 min-w-0">
-                                      <div className="h-8 w-8 shrink-0 rounded-full bg-red-100 dark:bg-red-950/40 flex items-center justify-center">
-                                        <ArrowDown className="h-4 w-4 text-red-600" />
-                                      </div>
-
-                                      <span className="font-semibold truncate">
-                                        {pt.player.name}
-                                      </span>
-                                    </div>
-
-                                    <span
-                                      className="text-sm font-medium text-right shrink-0"
-                                      style={{
-                                        color:
-                                          pt.toColor,
-                                      }}
-                                    >
-                                      {pt.toTeam}
-                                    </span>
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* INCOMING */}
-
-                        <div className="p-5 border-t border-border/40">
-                          <div className="flex items-center gap-2 mb-4">
-                            <div className="h-8 w-8 rounded-lg bg-green-100 dark:bg-green-950/40 flex items-center justify-center">
-                              <ArrowUp className="h-4 w-4 text-green-600" />
-                            </div>
-
-                            <div>
-                              <h4 className="font-semibold text-foreground">
-                                Incoming
-                              </h4>
-
-                              <p className="text-xs text-muted-foreground">
-                                Players joining
-                              </p>
-                            </div>
-                          </div>
-
-                          {incomingPlayers.length ===
-                          0 ? (
-                            <div className="rounded-xl bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-                              No incoming players
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              {incomingPlayers.map(
-                                (pt, idx) => (
-                                  <div
-                                    key={`${trade.id}-in-${idx}`}
-                                    className="flex items-center justify-between gap-3 rounded-xl bg-muted/25 hover:bg-muted/40 transition-colors px-4 py-3"
-                                  >
-                                    <div className="flex items-center gap-3 min-w-0">
-                                      <div className="h-8 w-8 shrink-0 rounded-full bg-green-100 dark:bg-green-950/40 flex items-center justify-center">
-                                        <ArrowUp className="h-4 w-4 text-green-600" />
-                                      </div>
-
-                                      <span className="font-semibold truncate">
-                                        {pt.player.name}
-                                      </span>
-                                    </div>
-
-                                    <span
-                                      className="text-sm font-medium text-right shrink-0"
-                                      style={{
-                                        color:
-                                          pt.fromColor,
-                                      }}
-                                    >
-                                      {pt.fromTeam}
-                                    </span>
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+          {trades.length === 0 ? (
+            <EmptyState text="No roster changes or trades for this team yet." />
+          ) : (
+            <div className="space-y-4">
+              {trades.map((trade) => {
+                const outgoingPlayers =
+                  trade.playersTraded.filter(
+                    (pt) =>
+                      pt.fromTeam === team.name
                   );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+
+                const incomingPlayers =
+                  trade.playersTraded.filter(
+                    (pt) =>
+                      pt.toTeam === team.name
+                  );
+
+                return (
+                  <div
+                    key={trade.id}
+                    className="overflow-hidden rounded-[28px] border border-black/5 dark:border-white/10 bg-white/30 dark:bg-white/[0.035] backdrop-blur-2xl shadow-sm hover:shadow-xl transition-all duration-300"
+                  >
+                    {/* Trade Header */}
+
+                    <div
+                      className="px-5 py-5 md:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-black/5 dark:border-white/10"
+                      style={{
+                        background: `linear-gradient(90deg, ${team.color}10 0%, ${team.color2}10 100%)`,
+                      }}
+                    >
+                      <div>
+                        <div className="font-semibold tracking-tight">
+                          {trade.description}
+                        </div>
+
+                        <div className="text-xs text-black/40 dark:text-white/40 mt-1">
+                          Roster transaction
+                        </div>
+                      </div>
+
+                      <span className="inline-flex w-fit rounded-full bg-black/5 dark:bg-white/10 px-3 py-1.5 text-xs font-medium text-black/55 dark:text-white/55">
+                        {formatDate(trade.date)}
+                      </span>
+                    </div>
+
+                    {/* Trade Content */}
+
+                    <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-black/5 dark:divide-white/10">
+                      {/* OUTGOING */}
+
+                      <TradeColumn
+                        type="outgoing"
+                        players={outgoingPlayers}
+                      />
+
+                      {/* INCOMING */}
+
+                      <TradeColumn
+                        type="incoming"
+                        players={incomingPlayers}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </GlassPanel>
+      </main>
     </div>
   );
 };
 
 /* ============================================================
-   STAT CARD
+   GLASS PANEL
 ============================================================ */
 
-const StatCard = ({
+const GlassPanel = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  return (
+    <section className="rounded-[30px] md:rounded-[34px] border border-black/5 dark:border-white/10 bg-white/55 dark:bg-white/[0.045] backdrop-blur-2xl shadow-[0_10px_50px_rgba(0,0,0,0.06)] overflow-hidden">
+      <div className="p-5 md:p-7">
+        {children}
+      </div>
+    </section>
+  );
+};
+
+/* ============================================================
+   GLASS STAT CARD
+============================================================ */
+
+const GlassStatCard = ({
   title,
   icon,
   value,
@@ -1032,32 +955,68 @@ const StatCard = ({
 
   const color =
     numeric > 0
-      ? "text-green-600"
+      ? "text-emerald-500"
       : numeric < 0
       ? "text-red-500"
-      : "text-muted-foreground";
+      : "text-black/35 dark:text-white/35";
 
   return (
-    <Card className="bg-gradient-stats shadow-card border-border/50 hover:shadow-md transition-shadow">
-      <CardContent className="p-5 md:p-6 text-center">
-        <div className="h-9 w-9 mx-auto mb-3 text-primary">
+    <div className="group relative overflow-hidden rounded-[26px] border border-black/5 dark:border-white/10 bg-white/55 dark:bg-white/[0.045] backdrop-blur-2xl p-5 md:p-6 shadow-[0_8px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_15px_45px_rgba(0,0,0,0.10)] hover:-translate-y-0.5 transition-all duration-300">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent dark:from-white/[0.06] pointer-events-none" />
+
+      <div className="relative">
+        <div className="h-9 w-9 mb-4 text-black/40 dark:text-white/40">
           {icon}
         </div>
 
         <div
-          className={`text-2xl md:text-3xl font-bold text-card-foreground ${
-            isplus_minus ? color : ""
+          className={`text-2xl md:text-3xl font-semibold tracking-tight ${
+            isplus_minus
+              ? color
+              : "text-black dark:text-white"
           }`}
         >
           {isplus_minus && numeric > 0 ? "+" : ""}
           {value}
         </div>
 
-        <div className="text-sm text-muted-foreground mt-1">
+        <div className="text-xs md:text-sm text-black/40 dark:text-white/40 mt-1.5">
           {title}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================
+   SECTION HEADER
+============================================================ */
+
+const SectionHeader = ({
+  icon,
+  title,
+  count,
+}: {
+  icon: JSX.Element;
+  title: string;
+  count?: number;
+}) => {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-10 w-10 rounded-2xl bg-black/[0.04] dark:bg-white/[0.07] flex items-center justify-center text-black/55 dark:text-white/60">
+        {icon}
+      </div>
+
+      <h2 className="text-xl md:text-2xl font-semibold tracking-tight">
+        {title}
+      </h2>
+
+      {count !== undefined && (
+        <span className="rounded-full bg-black/[0.04] dark:bg-white/[0.07] px-2.5 py-1 text-xs font-medium text-black/45 dark:text-white/45">
+          {count}
+        </span>
+      )}
+    </div>
   );
 };
 
@@ -1068,23 +1027,138 @@ const StatCard = ({
 const SummaryItem = ({
   label,
   value,
-  color = "text-foreground",
+  color = "text-black dark:text-white",
 }: {
   label: string;
   value: number | string;
   color?: string;
 }) => {
   return (
-    <div className="p-5 text-center border-b md:border-b-0 md:border-r last:border-r-0 border-border/40">
+    <div className="p-5 md:p-6 text-center">
       <div
-        className={`text-2xl font-bold ${color}`}
+        className={`text-2xl md:text-3xl font-semibold tracking-tight ${color}`}
       >
         {value}
       </div>
 
-      <div className="text-xs text-muted-foreground mt-1 uppercase tracking-wide">
+      <div className="text-[10px] md:text-xs text-black/40 dark:text-white/40 mt-1.5 uppercase tracking-[0.12em]">
         {label}
       </div>
+    </div>
+  );
+};
+
+/* ============================================================
+   EMPTY STATE
+============================================================ */
+
+const EmptyState = ({ text }: { text: string }) => {
+  return (
+    <div className="rounded-[24px] border border-dashed border-black/10 dark:border-white/10 bg-black/[0.015] dark:bg-white/[0.02] py-12 text-center">
+      <p className="text-sm text-black/40 dark:text-white/40">
+        {text}
+      </p>
+    </div>
+  );
+};
+
+/* ============================================================
+   TRADE COLUMN
+============================================================ */
+
+const TradeColumn = ({
+  type,
+  players,
+}: {
+  type: "outgoing" | "incoming";
+  players: TradePlayer[];
+}) => {
+  const outgoing = type === "outgoing";
+
+  return (
+    <div className="p-5 md:p-6">
+      <div className="flex items-center gap-3 mb-5">
+        <div
+          className={`
+            h-9 w-9 rounded-xl flex items-center justify-center
+            ${
+              outgoing
+                ? "bg-red-500/10 text-red-500"
+                : "bg-emerald-500/10 text-emerald-500"
+            }
+          `}
+        >
+          {outgoing ? (
+            <ArrowDown className="h-4 w-4" />
+          ) : (
+            <ArrowUp className="h-4 w-4" />
+          )}
+        </div>
+
+        <div>
+          <h4 className="font-semibold tracking-tight">
+            {outgoing ? "Outgoing" : "Incoming"}
+          </h4>
+
+          <p className="text-xs text-black/40 dark:text-white/40">
+            {outgoing
+              ? "Players leaving"
+              : "Players joining"}
+          </p>
+        </div>
+      </div>
+
+      {players.length === 0 ? (
+        <div className="rounded-2xl bg-black/[0.025] dark:bg-white/[0.035] px-4 py-4 text-sm text-black/35 dark:text-white/35">
+          No {outgoing ? "outgoing" : "incoming"} players
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {players.map((pt, idx) => (
+            <div
+              key={`${type}-${idx}`}
+              className="flex items-center justify-between gap-3 rounded-2xl border border-black/5 dark:border-white/5 bg-white/30 dark:bg-white/[0.025] px-4 py-3.5 hover:bg-white/55 dark:hover:bg-white/[0.05] transition-colors"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`
+                    h-8 w-8 shrink-0 rounded-full
+                    flex items-center justify-center
+                    ${
+                      outgoing
+                        ? "bg-red-500/10 text-red-500"
+                        : "bg-emerald-500/10 text-emerald-500"
+                    }
+                  `}
+                >
+                  {outgoing ? (
+                    <ArrowDown className="h-4 w-4" />
+                  ) : (
+                    <ArrowUp className="h-4 w-4" />
+                  )}
+                </div>
+
+                <span className="font-medium truncate">
+                  {pt.player.name}
+                </span>
+              </div>
+
+              <span
+                className="text-sm font-medium text-right shrink-0"
+                style={{
+                  color: outgoing
+                    ? pt.toColor
+                    : pt.fromColor,
+                }}
+              >
+                {outgoing
+                  ? pt.toTeam
+                  : pt.fromTeam}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
