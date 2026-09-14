@@ -852,8 +852,8 @@ const Home = () => {
                 </h2>
 
                 <p className="mt-3 text-white/60 max-w-xl">
-                  Dive deeper into teams, players, statistics, and
-                  everything happening this season.
+                  Dive deeper into the season, with teams, players, statistics, and
+                  everything in between.
                 </p>
               </div>
 
