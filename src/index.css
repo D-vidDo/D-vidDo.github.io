@@ -5,21 +5,16 @@
 /*
  * Volleyball League — Liquid Glass Design System
  *
- * Philosophy:
- * - Translucent surfaces
- * - Backdrop blur
- * - Soft depth
- * - Subtle luminous borders
- * - Restrained gradients
- * - Orange/blue used primarily as accents
+ * Desktop:
+ *   Full glass / blur / depth
+ *
+ * Mobile:
+ *   Reduced blur / shadows / fixed backgrounds
+ *   to keep scrolling smooth.
  */
 
 @layer base {
   :root {
-    /* ─────────────────────────────────────────────
-       Core colors
-       ───────────────────────────────────────────── */
-
     --background: 220 25% 96%;
     --foreground: 220 20% 10%;
 
@@ -29,13 +24,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 10%;
 
-    /* Volleyball orange */
     --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
-
     --primary-glow: 25 100% 65%;
 
-    /* Cool Apple-like blue */
     --secondary: 215 85% 55%;
     --secondary-foreground: 0 0% 100%;
 
@@ -48,10 +40,7 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* ─────────────────────────────────────────────
-       Glass materials
-       ───────────────────────────────────────────── */
-
+    /* Glass */
     --glass-light: 0 0% 100% / 0.58;
     --glass-medium: 0 0% 100% / 0.68;
     --glass-heavy: 0 0% 100% / 0.78;
@@ -61,19 +50,13 @@
 
     --glass-highlight: 0 0% 100% / 0.72;
 
-    /* ─────────────────────────────────────────────
-       Borders
-       ───────────────────────────────────────────── */
-
+    /* Borders */
     --border: 220 15% 85% / 0.45;
     --input: 220 15% 85% / 0.55;
 
     --ring: 25 95% 53%;
 
-    /* ─────────────────────────────────────────────
-       Background atmosphere
-       ───────────────────────────────────────────── */
-
+    /* Background atmosphere */
     --gradient-hero:
       radial-gradient(
         circle at 15% 20%,
@@ -97,10 +80,7 @@
         hsl(230 80% 76%) 100%
       );
 
-    /* ─────────────────────────────────────────────
-       Glass gradients
-       ───────────────────────────────────────────── */
-
+    /* Glass gradients */
     --gradient-glass:
       linear-gradient(
         135deg,
@@ -122,10 +102,7 @@
         hsl(220 20% 8% / 0.42) 100%
       );
 
-    /* ─────────────────────────────────────────────
-       Shadows
-       ───────────────────────────────────────────── */
-
+    /* Shadows */
     --shadow-glass:
       0 8px 32px hsl(220 25% 15% / 0.08),
       0 2px 8px hsl(220 25% 15% / 0.05);
@@ -137,33 +114,20 @@
     --shadow-primary:
       0 8px 30px hsl(25 95% 53% / 0.22);
 
-    /* ─────────────────────────────────────────────
-       Blur
-       ───────────────────────────────────────────── */
-
+    /* Desktop blur */
     --blur-glass: blur(24px) saturate(180%);
     --blur-glass-heavy: blur(40px) saturate(180%);
 
-    /* ─────────────────────────────────────────────
-       Motion
-       ───────────────────────────────────────────── */
-
+    /* Motion */
     --transition-smooth:
-      all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 
     --transition-glass:
-      all 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-
-    /* ─────────────────────────────────────────────
-       Radius
-       ───────────────────────────────────────────── */
+      all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 
     --radius: 1.25rem;
 
-    /* ─────────────────────────────────────────────
-       Sidebar
-       ───────────────────────────────────────────── */
-
+    /* Sidebar */
     --sidebar-background: 0 0% 100% / 0.5;
     --sidebar-foreground: 220 15% 15%;
 
@@ -177,9 +141,9 @@
     --sidebar-ring: 25 95% 53%;
   }
 
-  /* ─────────────────────────────────────────────
-     Dark Mode
-     ───────────────────────────────────────────── */
+  /* =====================================================
+     DARK MODE
+     ===================================================== */
 
   .dark {
     --background: 222 30% 7%;
@@ -213,7 +177,6 @@
 
     --ring: 25 95% 58%;
 
-    /* Dark glass */
     --glass-light: 0 0% 100% / 0.10;
     --glass-medium: 0 0% 100% / 0.14;
     --glass-heavy: 0 0% 100% / 0.18;
@@ -291,6 +254,10 @@
   }
 }
 
+/* ============================================================
+   BASE
+============================================================ */
+
 @layer base {
   * {
     @apply border-border;
@@ -298,46 +265,79 @@
 
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background text-foreground;
 
+    /*
+     * IMPORTANT:
+     * fixed backgrounds can be expensive on mobile Safari.
+     */
     background-image: var(--gradient-hero);
-    background-attachment: fixed;
+    background-attachment: scroll;
     background-size: cover;
+    background-position: center top;
 
     min-height: 100vh;
+    min-height: 100dvh;
 
     font-feature-settings:
       "kern" 1,
       "liga" 1;
+
+    /*
+     * Prevent accidental horizontal overflow.
+     */
+    overflow-x: hidden;
+
+    /*
+     * Better mobile scrolling.
+     */
+    -webkit-overflow-scrolling: touch;
   }
 
   /*
-   * Don't transition EVERYTHING.
-   *
-   * Applying transitions globally can make inputs,
-   * scrolling and complex components feel sluggish.
+   * Only animate interactive elements.
    */
   button,
   a,
   input,
   textarea,
   select {
-    transition: var(--transition-smooth);
+    transition:
+      color 0.2s ease,
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  /*
+   * Avoid browser tap flash.
+   */
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /*
+   * Improve image rendering.
+   */
+  img {
+    max-width: 100%;
+    height: auto;
   }
 }
 
-/* ─────────────────────────────────────────────────
-   LIQUID GLASS COMPONENTS
-   ───────────────────────────────────────────────── */
+/* ============================================================
+   LIQUID GLASS
+============================================================ */
 
 @layer components {
 
-  /*
-   * Primary glass surface
-   */
   .glass {
     position: relative;
 
@@ -357,14 +357,13 @@
     overflow: hidden;
 
     transition: var(--transition-glass);
+
+    /*
+     * Tell the browser this is an isolated visual layer.
+     */
+    contain: paint;
   }
 
-  /*
-   * Specular highlight.
-   *
-   * This is one of the details that makes the surface
-   * feel more like a material rather than a transparent box.
-   */
   .glass::before {
     content: "";
 
@@ -385,9 +384,6 @@
     z-index: -1;
   }
 
-  /*
-   * Very subtle bottom edge reflection.
-   */
   .glass::after {
     content: "";
 
@@ -412,15 +408,10 @@
 
   .glass:hover {
     box-shadow: var(--shadow-glass-hover);
-
     transform: translateY(-1px);
-
     border-color: hsl(var(--glass-highlight));
   }
 
-  /*
-   * Lighter/floating glass
-   */
   .glass-light {
     background: var(--gradient-glass-subtle);
 
@@ -432,11 +423,10 @@
     box-shadow: var(--shadow-glass);
 
     border-radius: var(--radius);
+
+    contain: paint;
   }
 
-  /*
-   * Navigation glass
-   */
   .nav-glass {
     position: relative;
 
@@ -452,11 +442,10 @@
       inset 0 1px 0 hsl(0 0% 100% / 0.55);
 
     border-radius: 999px;
+
+    contain: paint;
   }
 
-  /*
-   * Glass button
-   */
   .glass-button {
     position: relative;
 
@@ -474,6 +463,8 @@
     border-radius: 999px;
 
     transition: var(--transition-glass);
+
+    contain: paint;
   }
 
   .glass-button:hover {
@@ -490,12 +481,6 @@
     transform: scale(0.97);
   }
 
-  /*
-   * Orange accent button.
-   *
-   * Keep your sports identity here rather than
-   * coloring the entire interface orange.
-   */
   .glass-primary {
     background:
       linear-gradient(
@@ -521,9 +506,6 @@
     transform: translateY(-1px);
   }
 
-  /*
-   * Stats / score cards
-   */
   .glass-stat {
     background:
       linear-gradient(
@@ -542,11 +524,10 @@
       inset 0 1px 0 hsl(0 0% 100% / 0.45);
 
     border-radius: calc(var(--radius) + 0.25rem);
+
+    contain: paint;
   }
 
-  /*
-   * Glass input
-   */
   .glass-input {
     background: hsl(var(--glass-light));
 
@@ -572,19 +553,131 @@
   }
 }
 
-/* ─────────────────────────────────────────────────
-   ACCESSIBILITY / PERFORMANCE
-   ───────────────────────────────────────────────── */
+/* ============================================================
+   MOBILE PERFORMANCE MODE
+============================================================ */
+
+/*
+ * Phones are where backdrop-filter gets expensive.
+ *
+ * Instead of removing the glass effect completely,
+ * reduce the amount of blur and shadow.
+ */
+
+@media (max-width: 767px) {
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  body {
+    /*
+     * Avoid large fixed/cover repainting.
+     */
+    background-attachment: scroll;
+    background-size: auto 100%;
+  }
+
+  /*
+   * Reduce glass blur significantly.
+   */
+  .glass,
+  .glass-light,
+  .glass-stat {
+    backdrop-filter: blur(10px) saturate(130%);
+    -webkit-backdrop-filter: blur(10px) saturate(130%);
+  }
+
+  .nav-glass {
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+  }
+
+  .glass-button {
+    backdrop-filter: blur(8px) saturate(130%);
+    -webkit-backdrop-filter: blur(8px) saturate(130%);
+  }
+
+  .glass-input {
+    backdrop-filter: blur(8px) saturate(130%);
+    -webkit-backdrop-filter: blur(8px) saturate(130%);
+  }
+
+  /*
+   * Reduce shadow complexity.
+   */
+  .glass,
+  .glass-light,
+  .glass-stat {
+    box-shadow:
+      0 4px 18px hsl(220 25% 15% / 0.06);
+  }
+
+  /*
+   * Don't animate large surfaces on mobile.
+   */
+  .glass:hover,
+  .glass-button:hover,
+  .glass-primary:hover {
+    transform: none;
+  }
+
+  /*
+   * Smaller pseudo-element highlight.
+   */
+  .glass::before {
+    opacity: 0.25;
+  }
+
+  /*
+   * Reduce rendering complexity for decorative
+   * backgrounds.
+   */
+  .glass::after {
+    display: none;
+  }
+}
+
+/* ============================================================
+   LARGE SCREEN GLASS
+============================================================ */
+
+@media (min-width: 768px) {
+  body {
+    background-attachment: fixed;
+  }
+}
+
+/* ============================================================
+   VERY LOW POWER / OLDER DEVICES
+============================================================ */
+
+/*
+ * Users who explicitly prefer reduced motion get
+ * an even simpler rendering path.
+ */
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     scroll-behavior: auto !important;
+
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .glass:hover,
+  .glass-button:hover,
+  .glass-primary:hover {
+    transform: none !important;
   }
 }
+
+/* ============================================================
+   BACKDROP FILTER FALLBACK
+============================================================ */
 
 @supports not (backdrop-filter: blur(1px)) {
   .glass,
@@ -594,5 +687,44 @@
   .glass-stat,
   .glass-input {
     background: hsl(var(--card) / 0.95);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* ============================================================
+   MOBILE TABLE
+============================================================ */
+
+/*
+ * Your match-history table is naturally wider than a phone.
+ *
+ * Make the scrolling container behave predictably rather than
+ * forcing the entire page to become horizontally scrollable.
+ */
+
+@media (max-width: 767px) {
+  table {
+    min-width: 760px;
+  }
+
+  /*
+   * Keep the horizontal table scroll isolated.
+   */
+  .overflow-x-auto {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ============================================================
+   SAFE AREA
+============================================================ */
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
