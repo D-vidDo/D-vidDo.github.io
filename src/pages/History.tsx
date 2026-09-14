@@ -860,160 +860,255 @@ export default function History({ seasonId }: { seasonId: number }) {
     DESKTOP / TABLET LAYOUT
 ───────────────────────────────────────────────── */}
 
-                      <div
-                        className="
+{/* ─────────────────────────────────────────────
+    DESKTOP / TABLET LAYOUT
+───────────────────────────────────────────── */}
+
+<div
+  className="
     hidden
-    md:grid
-    grid-cols-[110px_minmax(140px,1fr)_minmax(140px,1fr)_repeat(4,72px)_80px_90px]
-    items-center
-    min-h-[58px]
-    pl-4
-    pr-2
-    gap-2
-    text-sm
+    md:flex
+    items-stretch
+    min-h-[68px]
+    pl-5
+    pr-3
   "
-                      >
-                        {/* Date / Time */}
-                        <div>
-                          <div className="font-semibold">
-                            {formatDate(game.date)}
-                          </div>
+>
+  {/* Matchup */}
+  <div className="flex items-center min-w-0 flex-1">
+    <div className="w-[105px] shrink-0">
+      <div className="font-semibold text-sm">
+        {formatDate(game.date)}
+      </div>
 
-                          <div className="text-xs text-muted-foreground">
-                            {formatTime12H(game.time)}
-                          </div>
-                        </div>
+      <div className="text-xs text-muted-foreground mt-0.5">
+        {formatTime12H(game.time)}
+      </div>
+    </div>
 
-                        {/* Our Team */}
-                        <div className="font-semibold truncate">
-                          {team?.name ?? "N/A"}
-                        </div>
+    <div className="h-9 w-px bg-border/40 mx-4" />
 
-                        {/* Opponent */}
-                        <div className="font-semibold truncate text-muted-foreground">
-                          {game.opponent ?? "N/A"}
-                        </div>
+    <div className="min-w-0">
+      <div
+        className="font-bold text-sm truncate"
+        style={{ color: teamColor }}
+      >
+        {team?.name ?? "N/A"}
+      </div>
 
-                        {/* Set Scores */}
-                        {game.sets.slice(0, 4).map((set) => (
-                          <div
-                            key={set.id}
-                            className="
-        text-center
-        rounded-lg
-        bg-background/40
-        px-2
-        py-1
-      "
-                          >
-                            <div
-                              className={`
-          font-bold
-          whitespace-nowrap
-          ${
-            set.result === "W"
-              ? "text-emerald-500"
-              : set.result === "L"
-                ? "text-red-500"
-                : "text-amber-500"
+      <div className="flex items-center gap-1.5 mt-0.5">
+        <span className="text-[11px] text-muted-foreground">
+          vs
+        </span>
+
+        <span className="font-medium text-sm truncate">
+          {game.opponent ?? "N/A"}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  {/* Scores */}
+  <div className="flex items-center gap-1.5 shrink-0">
+    {game.sets.slice(0, 4).map((set) => (
+      <div
+        key={set.id}
+        className="
+          min-w-[58px]
+          rounded-lg
+          border
+          border-border/30
+          px-2
+          py-1.5
+          text-center
+          backdrop-blur-sm
+        "
+        style={{
+          background: `${teamColor}12`,
+        }}
+      >
+        <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
+          Set {set.set_no}
+        </div>
+
+        <div className="flex items-center justify-center gap-1 mt-0.5">
+          <span
+            className={`
+              text-sm
+              font-black
+              ${
+                set.result === "W"
+                  ? "text-emerald-500"
+                  : set.result === "L"
+                  ? "text-red-500"
+                  : "text-amber-500"
+              }
+            `}
+          >
+            {set.points_for ?? "—"}
+          </span>
+
+          <span className="text-muted-foreground text-xs">
+            -
+          </span>
+
+          <span className="text-sm font-bold">
+            {set.points_against ?? "—"}
+          </span>
+        </div>
+      </div>
+    ))}
+
+    {/* Empty set slots */}
+    {Array.from({
+      length: Math.max(0, 4 - game.sets.length),
+    }).map((_, index) => (
+      <div
+        key={`empty-${index}`}
+        className="
+          min-w-[58px]
+          rounded-lg
+          border
+          border-border/20
+          px-2
+          py-1.5
+          text-center
+          opacity-40
+        "
+      >
+        <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
+          Set
+        </div>
+
+        <div className="text-sm font-bold text-muted-foreground">
+          —
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {/* Overall result */}
+  <div className="flex items-center justify-center w-[72px] shrink-0 ml-3">
+    {(() => {
+      const wins = game.sets.filter(
+        (set) => set.result === "W"
+      ).length;
+
+      const losses = game.sets.filter(
+        (set) => set.result === "L"
+      ).length;
+
+      const isWin = wins > losses;
+      const isLoss = losses > wins;
+
+      return (
+        <div
+          className="
+            flex
+            flex-col
+            items-center
+            justify-center
+            rounded-xl
+            w-[58px]
+            h-[48px]
+            border
+            backdrop-blur-sm
+          "
+          style={{
+            background: isWin
+              ? "rgba(16,185,129,0.12)"
+              : isLoss
+              ? "rgba(239,68,68,0.12)"
+              : "rgba(245,158,11,0.12)",
+
+            borderColor: isWin
+              ? "rgba(16,185,129,0.25)"
+              : isLoss
+              ? "rgba(239,68,68,0.25)"
+              : "rgba(245,158,11,0.25)",
+          }}
+        >
+          <span
+            className={`
+              text-[9px]
+              uppercase
+              tracking-widest
+              font-semibold
+              ${
+                isWin
+                  ? "text-emerald-500"
+                  : isLoss
+                  ? "text-red-500"
+                  : "text-amber-500"
+              }
+            `}
+          >
+            {isWin
+              ? "Win"
+              : isLoss
+              ? "Loss"
+              : "Tie"}
+          </span>
+
+          <span
+            className={`
+              text-lg
+              font-black
+              leading-none
+              mt-0.5
+              ${
+                isWin
+                  ? "text-emerald-500"
+                  : isLoss
+                  ? "text-red-500"
+                  : "text-amber-500"
+              }
+            `}
+          >
+            {wins}-{losses}
+          </span>
+        </div>
+      );
+    })()}
+  </div>
+
+  {/* VOD */}
+  <div className="flex items-center justify-center w-[48px] shrink-0">
+    {game.sets.find((set) => set.vod_link) ? (
+      <Button
+        size="sm"
+        variant="ghost"
+        className="
+          h-9
+          w-9
+          p-0
+          rounded-lg
+          hover:bg-background/50
+        "
+        onClick={() => {
+          const vod = game.sets.find(
+            (set) => set.vod_link
+          )?.vod_link;
+
+          if (vod) {
+            window.open(
+              vod,
+              "_blank",
+              "noopener,noreferrer"
+            );
           }
-        `}
-                            >
-                              {set.points_for ?? "—"}
-                              <span className="text-muted-foreground mx-1">
-                                -
-                              </span>
-                              <span className="text-foreground">
-                                {set.points_against ?? "—"}
-                              </span>
-                            </div>
+        }}
+      >
+        <PlayCircle className="h-4 w-4" />
+      </Button>
+    ) : (
+      <span className="text-muted-foreground text-xs">
+        —
+      </span>
+    )}
+  </div>
+</div>
 
-                            <div className="text-[10px] text-muted-foreground">
-                              S{set.set_no}
-                            </div>
-                          </div>
-                        ))}
-
-                        {/* Empty set slots */}
-                        {Array.from({
-                          length: Math.max(0, 4 - game.sets.length),
-                        }).map((_, index) => (
-                          <div
-                            key={`empty-${index}`}
-                            className="
-        text-center
-        text-muted-foreground
-        rounded-lg
-        bg-background/20
-        px-2
-        py-1
-      "
-                          >
-                            —
-                          </div>
-                        ))}
-
-                        {/* Overall Match Result */}
-                        <div className="text-center">
-                          {(() => {
-                            const wins = game.sets.filter(
-                              (set) => set.result === "W",
-                            ).length;
-
-                            const losses = game.sets.filter(
-                              (set) => set.result === "L",
-                            ).length;
-
-                            return (
-                              <Badge
-                                className={`
-            text-xs
-            px-2
-            py-0.5
-            font-bold
-            ${
-              wins > losses
-                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                : losses > wins
-                  ? "bg-red-500/15 text-red-600 dark:text-red-400"
-                  : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-            }
-          `}
-                              >
-                                {wins}-{losses}
-                              </Badge>
-                            );
-                          })()}
-                        </div>
-
-                        {/* VOD */}
-                        <div className="text-center">
-                          {game.sets.find((set) => set.vod_link) ? (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 px-2"
-                              onClick={() => {
-                                const vod = game.sets.find(
-                                  (set) => set.vod_link,
-                                )?.vod_link;
-
-                                if (vod) {
-                                  window.open(
-                                    vod,
-                                    "_blank",
-                                    "noopener,noreferrer",
-                                  );
-                                }
-                              }}
-                            >
-                              <PlayCircle className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </div>
-                      </div>
 
                       {/* ─────────────────────────────────────────────
                           MOBILE LAYOUT
