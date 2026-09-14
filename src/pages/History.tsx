@@ -908,84 +908,58 @@ export default function History({ seasonId }: { seasonId: number }) {
     </div>
   </div>
 
-  {/* Scores */}
-  <div className="flex items-center gap-1.5 shrink-0">
-    {game.sets.slice(0, 4).map((set) => (
-      <div
-        key={set.id}
-        className="
-          min-w-[58px]
-          rounded-lg
-          border
-          border-border/30
-          px-2
-          py-1.5
-          text-center
-          backdrop-blur-sm
-        "
-        style={{
-          background: `${teamColor}12`,
-        }}
-      >
-        <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
-          Set {set.set_no}
-        </div>
-
-        <div className="flex items-center justify-center gap-1 mt-0.5">
-          <span
-            className={`
-              text-sm
-              font-black
-              ${
-                set.result === "W"
-                  ? "text-emerald-500"
-                  : set.result === "L"
-                  ? "text-red-500"
-                  : "text-amber-500"
-              }
-            `}
-          >
-            {set.points_for ?? "—"}
-          </span>
-
-          <span className="text-muted-foreground text-xs">
-            -
-          </span>
-
-          <span className="text-sm font-bold">
-            {set.points_against ?? "—"}
-          </span>
-        </div>
+{/* Scores */}
+<div className="flex items-center gap-1.5 shrink-0">
+  {game.sets.slice(0, 3).map((set) => (
+    <div
+      key={set.id}
+      className="
+        min-w-[58px]
+        rounded-lg
+        border
+        border-border/30
+        px-2
+        py-1.5
+        text-center
+        backdrop-blur-sm
+      "
+      style={{
+        background: `${teamColor}12`,
+      }}
+    >
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
+        Set {set.set_no}
       </div>
-    ))}
 
-    {/* Empty set slots */}
-    {Array.from({
-      length: Math.max(0, 4 - game.sets.length),
-    }).map((_, index) => (
-      <div
-        key={`empty-${index}`}
-        className="
-          min-w-[58px]
-          rounded-lg
-          border
-          border-border/20
-          px-2
-          py-1.5
-          text-center
-          opacity-40
-        "
-      >
-        <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
-          Set
-        </div>
+      <div className="flex items-center justify-center gap-1 mt-0.5">
+        <span
+          className={`
+            text-sm
+            font-black
+            ${
+              set.result === "W"
+                ? "text-emerald-500"
+                : set.result === "L"
+                ? "text-red-500"
+                : "text-amber-500"
+            }
+          `}
+        >
+          {set.points_for ?? "—"}
+        </span>
 
-        <div className="text-sm font-bold text-muted-foreground">
-          —
-        </div>
+        <span className="text-muted-foreground text-xs">
+          -
+        </span>
+
+        <span className="text-sm font-bold">
+          {set.points_against ?? "—"}
+        </span>
       </div>
-    ))}
-  </div>
+    </div>
+  ))}
+</div>
+
 
   {/* Overall result */}
   <div className="flex items-center justify-center w-[72px] shrink-0 ml-3">
