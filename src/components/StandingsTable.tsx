@@ -8,7 +8,14 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
+  Trophy,
+  CalendarDays,
+  Swords,
+} from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -60,7 +67,7 @@ const AccordionContent = ({
   useEffect(() => {
     if (ref.current) {
       ref.current.style.maxHeight = expanded
-        ? ref.current.scrollHeight + "px"
+        ? `${ref.current.scrollHeight}px`
         : "0px";
     }
   }, [expanded]);
@@ -70,13 +77,61 @@ const AccordionContent = ({
       ref={ref}
       style={{
         overflow: "hidden",
-        transition: "max-height 0.4s ease",
-        maxHeight: expanded ? "500px" : "0px",
+        transition:
+          "max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease",
+        maxHeight: expanded ? "1000px" : "0px",
+        opacity: expanded ? 1 : 0,
       }}
     >
       {children}
     </div>
   );
+};
+
+/* ================= HELPERS ================= */
+
+const getRankStyle = (rank: number) => {
+  if (rank === 1) {
+    return {
+      wrapper:
+        "bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-500 text-white shadow-[0_4px_14px_rgba(245,158,11,0.35)]",
+      icon: "text-yellow-100",
+    };
+  }
+
+  if (rank === 2) {
+    return {
+      wrapper:
+        "bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 text-slate-700 shadow-[0_4px_14px_rgba(148,163,184,0.3)]",
+      icon: "text-slate-500",
+    };
+  }
+
+  if (rank === 3) {
+    return {
+      wrapper:
+        "bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 text-white shadow-[0_4px_14px_rgba(249,115,22,0.3)]",
+      icon: "text-orange-100",
+    };
+  }
+
+  return {
+    wrapper:
+      "bg-white/60 dark:bg-white/10 text-muted-foreground border border-white/40 dark:border-white/10",
+    icon: "text-muted-foreground",
+  };
+};
+
+const getResultStyle = (result: "W" | "L" | "T") => {
+  if (result === "W") {
+    return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
+  }
+
+  if (result === "L") {
+    return "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/20";
+  }
+
+  return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20";
 };
 
 /* ================= MAIN COMPONENT ================= */
@@ -85,10 +140,11 @@ const StandingsTable = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
 
-  // 👇 Season state
   const [seasonId, setSeasonId] = useState<number>(2);
   const [seasonName, setSeasonName] = useState<string>("Season");
   const [seasons, setSeasons] = useState<Season[]>([]);
+
+  const [loading, setLoading] = useState(true);
 
   const handleRowClick = (teamId: string) => {
     setExpandedTeamId((prev) => (prev === teamId ? null : teamId));
@@ -107,9 +163,11 @@ const StandingsTable = () => {
 
       setSeasons(data);
 
-      // Ensure default season exists in options
       const defaultSeason = data.find((s) => s.season_id === 5);
-      setSeasonId(defaultSeason ? defaultSeason.season_id : data[0].season_id);
+
+      setSeasonId(
+        defaultSeason ? defaultSeason.season_id : data[0].season_id
+      );
     }
 
     fetchSeasons();
@@ -119,22 +177,29 @@ const StandingsTable = () => {
 
   useEffect(() => {
     async function fetchData() {
-      // Season name
+      setLoading(true);
+
+      /* ---------- Season ---------- */
+
       const { data: season } = await supabase
         .from("seasons")
         .select("name")
         .eq("season_id", seasonId)
         .single();
 
-      if (season?.name) setSeasonName(season.name);
+      if (season?.name) {
+        setSeasonName(season.name);
+      }
 
-      // Teams
+      /* ---------- Teams ---------- */
+
       const { data: teamData } = await supabase
         .from("teams")
         .select("*")
         .eq("season_id", seasonId);
 
-      // Games
+      /* ---------- Games ---------- */
+
       const { data: gameData } = await supabase
         .from("games")
         .select(
@@ -153,9 +218,14 @@ const StandingsTable = () => {
         )
         .eq("season_id", seasonId);
 
-      if (!teamData || !gameData) return;
+      if (!teamData || !gameData) {
+        setLoading(false);
+        return;
+      }
 
       const teamMap: Record<string, Team> = {};
+
+      /* ---------- Initialize Teams ---------- */
 
       teamData.forEach((team) => {
         teamMap[team.team_id] = {
@@ -171,13 +241,17 @@ const StandingsTable = () => {
         };
       });
 
+      /* ---------- Process Games ---------- */
+
       gameData.forEach((game) => {
         const team = teamMap[game.team_id];
+
         if (!team || !game.sets?.length) return;
 
         let wins = 0;
         let losses = 0;
         let ties = 0;
+
         let pf = 0;
         let pa = 0;
 
@@ -185,19 +259,29 @@ const StandingsTable = () => {
           pf += set.points_for;
           pa += set.points_against;
 
-          if (set.points_for === set.points_against) ties++;
-          else if (set.points_for > set.points_against) wins++;
-          else losses++;
+          if (set.points_for === set.points_against) {
+            ties++;
+          } else if (set.points_for > set.points_against) {
+            wins++;
+          } else {
+            losses++;
+          }
         });
 
         team.points_for += pf;
         team.points_against += pa;
 
-        if (wins > losses) team.wins++;
-        else if (losses > wins) team.losses++;
-        else team.ties++;
+        if (wins > losses) {
+          team.wins++;
+        } else if (losses > wins) {
+          team.losses++;
+        } else {
+          team.ties++;
+        }
 
-        const dateTime = new Date(`${game.date}T${game.time ?? "00:00:00"}`);
+        const dateTime = new Date(
+          `${game.date}T${game.time ?? "00:00:00"}`
+        );
 
         team.games.push({
           id: game.id,
@@ -205,15 +289,23 @@ const StandingsTable = () => {
           time: game.time,
           dateTime,
           opponent: game.opponent,
-          sets: [...game.sets].sort((a, b) => a.set_no - b.set_no),
+          sets: [...game.sets].sort(
+            (a, b) => a.set_no - b.set_no
+          ),
         });
       });
 
+      /* ---------- Sort Match History ---------- */
+
       Object.values(teamMap).forEach((team) => {
-        team.games.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
+        team.games.sort(
+          (a, b) =>
+            a.dateTime.getTime() - b.dateTime.getTime()
+        );
       });
 
       setTeams(Object.values(teamMap));
+      setLoading(false);
     }
 
     fetchData();
@@ -224,16 +316,25 @@ const StandingsTable = () => {
   const sortedTeams = teams
     .map((team) => ({
       ...team,
+
       winPercentage:
         team.wins + team.losses + team.ties > 0
-          ? team.wins / (team.wins + team.losses + team.ties)
+          ? team.wins /
+            (team.wins + team.losses + team.ties)
           : 0,
-      pointDifferential: team.points_for - team.points_against,
+
+      pointDifferential:
+        team.points_for - team.points_against,
     }))
     .sort((a, b) => {
-      if (b.wins !== a.wins) return b.wins - a.wins;
-      if (b.pointDifferential !== a.pointDifferential)
+      if (b.wins !== a.wins) {
+        return b.wins - a.wins;
+      }
+
+      if (b.pointDifferential !== a.pointDifferential) {
         return b.pointDifferential - a.pointDifferential;
+      }
+
       return b.points_for - a.points_for;
     })
     .map((team, index) => ({
@@ -244,191 +345,786 @@ const StandingsTable = () => {
   /* ================= RENDER ================= */
 
   return (
-    <Card className="bg-gradient-card shadow-card">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold flex items-center gap-2">
-          <TrendingUp className="h-6 w-6 text-primary" />
-          {seasonName} Standings
-        </CardTitle>
+    <Card
+      className="
+        relative
+        overflow-hidden
+        border border-white/50
+        dark:border-white/10
+        bg-white/65
+        dark:bg-slate-950/60
+        backdrop-blur-2xl
+        shadow-[0_20px_60px_rgba(15,23,42,0.08)]
+        dark:shadow-[0_20px_60px_rgba(0,0,0,0.35)]
+        rounded-3xl
+      "
+    >
+      {/* Decorative glass glow */}
 
-        {/* Season Selector */}
-        <div className="mt-2 flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">Season:</span>
+      <div
+        className="
+          pointer-events-none
+          absolute
+          -top-32
+          -right-32
+          h-72
+          w-72
+          rounded-full
+          bg-blue-400/15
+          blur-3xl
+        "
+      />
+
+      <div
+        className="
+          pointer-events-none
+          absolute
+          -bottom-40
+          -left-32
+          h-80
+          w-80
+          rounded-full
+          bg-orange-400/10
+          blur-3xl
+        "
+      />
+
+      {/* ================= HEADER ================= */}
+
+      <CardHeader className="relative z-10 pb-5">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-3 text-2xl sm:text-3xl font-bold tracking-tight">
+              <span
+                className="
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-gradient-to-br
+                  from-blue-500
+                  to-indigo-600
+                  text-white
+                  shadow-lg
+                  shadow-blue-500/20
+                "
+              >
+                <TrendingUp className="h-5 w-5" />
+              </span>
+
+              <span>
+                {seasonName}
+                <span className="block text-sm font-medium text-muted-foreground mt-0.5">
+                  League Standings
+                </span>
+              </span>
+            </CardTitle>
+          </div>
+
+          {/* Season Selector */}
+
           {seasons.length > 0 && (
-            <select
-              value={seasonId}
-              onChange={(e) => setSeasonId(Number(e.target.value))}
-              className="border border-border rounded px-3 py-1 bg-background text-sm shadow-sm"
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                rounded-2xl
+                border
+                border-white/50
+                dark:border-white/10
+                bg-white/50
+                dark:bg-white/5
+                backdrop-blur-xl
+                px-3
+                py-2
+                shadow-sm
+              "
             >
-              {seasons.map((season) => (
-                <option key={season.season_id} value={season.season_id}>
-                  {season.name}
-                </option>
-              ))}
-            </select>
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+
+              <span className="text-xs font-medium text-muted-foreground">
+                Season
+              </span>
+
+              <select
+                value={seasonId}
+                onChange={(e) =>
+                  setSeasonId(Number(e.target.value))
+                }
+                className="
+                  bg-transparent
+                  text-sm
+                  font-semibold
+                  text-foreground
+                  outline-none
+                  cursor-pointer
+                  border-none
+                "
+              >
+                {seasons.map((season) => (
+                  <option
+                    key={season.season_id}
+                    value={season.season_id}
+                  >
+                    {season.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
         </div>
+
+        {/* Header divider */}
+
+        <div
+          className="
+            mt-5
+            h-px
+            bg-gradient-to-r
+            from-transparent
+            via-border
+            to-transparent
+          "
+        />
       </CardHeader>
 
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">Rank</TableHead>
-              <TableHead>Team</TableHead>
-              <TableHead className="text-center">W</TableHead>
-              <TableHead className="text-center">L</TableHead>
-              <TableHead className="text-center">T</TableHead>
-              <TableHead className="text-center">Win %</TableHead>
-              <TableHead className="text-center">PF</TableHead>
-              <TableHead className="text-center">PA</TableHead>
-              <TableHead className="text-center">Diff</TableHead>
-            </TableRow>
-          </TableHeader>
+      {/* ================= CONTENT ================= */}
 
-          <TableBody>
-            {sortedTeams.map((team) => (
-              <React.Fragment key={team.team_id}>
-                {/* MAIN ROW */}
-                <TableRow
-                  className="hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => handleRowClick(team.team_id)}
-                >
-                  <TableCell>
-                    <Badge
-                      variant={team.rank <= 3 ? "default" : "secondary"}
-                      className="w-8 h-8 rounded-full flex items-center justify-center"
-                    >
-                      {team.rank}
-                    </Badge>
-                  </TableCell>
-
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-                        style={{ backgroundColor: team.color }}
-                      >
-                        {team.name.slice(0, 2).toUpperCase()}
-                      </div>
-                      <span className="font-semibold">{team.name}</span>
-                      {expandedTeamId === team.team_id ? (
-                        <ChevronUp className="w-4 h-4" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4" />
-                      )}
-                    </div>
-                  </TableCell>
-
-                  <TableCell className="text-center text-green-600 font-semibold">
-                    {team.wins}
-                  </TableCell>
-                  <TableCell className="text-center text-red-500 font-semibold">
-                    {team.losses}
-                  </TableCell>
-                  <TableCell className="text-center">{team.ties}</TableCell>
-                  <TableCell className="text-center">
-                    {(team.winPercentage * 100).toFixed(1)}%
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {team.points_for}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {team.points_against}
-                  </TableCell>
-                  <TableCell
-                    className={`text-center font-semibold ${
-                      team.pointDifferential > 0
-                        ? "text-green-600"
-                        : team.pointDifferential < 0
-                        ? "text-red-500"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {team.pointDifferential > 0 ? "+" : ""}
-                    {team.pointDifferential}
-                  </TableCell>
-                </TableRow>
-
-                {/* EXPANDED MATCH HISTORY ROW */}
-                <TableRow>
-                  <TableCell colSpan={9} className="p-0 bg-background border-t">
-                    <AccordionContent
-                      expanded={expandedTeamId === team.team_id}
-                    >
-                      <div className="p-4">
-                        <div className="font-semibold mb-3 text-lg">
-                          Match History (Set-by-Set)
-                        </div>
-
-                        {team.games.length > 0 ? (
-                          <table className="min-w-full text-xs rounded-lg overflow-hidden shadow">
-                            <thead>
-                              <tr className="bg-primary text-primary-foreground">
-                                <th className="py-2 px-3 text-left">Date</th>
-                                <th className="py-2 px-3 text-left">
-                                  Opponent
-                                </th>
-                                <th className="py-2 px-3 text-center">Set</th>
-                                <th className="py-2 px-3 text-center">PF</th>
-                                <th className="py-2 px-3 text-center">PA</th>
-                                <th className="py-2 px-3 text-center">
-                                  Result
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {team.games.map((game) =>
-                                game.sets.map((set, idx) => {
-                                  const result =
-                                    set.points_for === set.points_against
-                                      ? "T"
-                                      : set.points_for > set.points_against
-                                      ? "W"
-                                      : "L";
-
-                                  return (
-                                    <tr
-                                      key={`${game.id}-${set.set_no}`}
-                                      className={
-                                        idx % 2 === 0 ? "bg-muted/30" : ""
-                                      }
-                                    >
-                                      <td className="py-2 px-3">{game.date}</td>
-                                      <td className="py-2 px-3 font-semibold">
-                                        {game.opponent}
-                                      </td>
-                                      <td className="py-2 px-3 text-center">
-                                        {set.set_no}
-                                      </td>
-                                      <td className="py-2 px-3 text-center text-green-700 font-bold">
-                                        {set.points_for}
-                                      </td>
-                                      <td className="py-2 px-3 text-center text-red-600 font-bold">
-                                        {set.points_against}
-                                      </td>
-                                      <td className="py-2 px-3 text-center font-bold">
-                                        {result}
-                                      </td>
-                                    </tr>
-                                  );
-                                })
-                              )}
-                            </tbody>
-                          </table>
-                        ) : (
-                          <div className="text-muted-foreground">
-                            No games recorded yet.
-                          </div>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </TableCell>
-                </TableRow>
-              </React.Fragment>
+      <CardContent className="relative z-10 px-3 sm:px-6 pb-6">
+        {loading ? (
+          <div className="space-y-3 py-4">
+            {[1, 2, 3, 4].map((item) => (
+              <div
+                key={item}
+                className="
+                  h-16
+                  rounded-2xl
+                  bg-muted/40
+                  animate-pulse
+                "
+              />
             ))}
-          </TableBody>
-        </Table>
+          </div>
+        ) : sortedTeams.length === 0 ? (
+          <div
+            className="
+              flex
+              flex-col
+              items-center
+              justify-center
+              py-16
+              text-center
+              text-muted-foreground
+            "
+          >
+            <Trophy className="h-10 w-10 mb-3 opacity-40" />
+            <p className="font-semibold">
+              No standings available
+            </p>
+            <p className="text-sm mt-1">
+              There are no teams recorded for this season yet.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              {/* ================= TABLE HEADER ================= */}
+
+              <TableHeader>
+                <TableRow className="border-none hover:bg-transparent">
+                  <TableHead className="w-16 text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    Rank
+                  </TableHead>
+
+                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    Team
+                  </TableHead>
+
+                  <TableHead className="text-center text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    W
+                  </TableHead>
+
+                  <TableHead className="text-center text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    L
+                  </TableHead>
+
+                  <TableHead className="text-center text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    T
+                  </TableHead>
+
+                  <TableHead className="text-center text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    Win %
+                  </TableHead>
+
+                  <TableHead className="text-center text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    PF
+                  </TableHead>
+
+                  <TableHead className="text-center text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    PA
+                  </TableHead>
+
+                  <TableHead className="text-center text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    Diff
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+
+              {/* ================= TABLE BODY ================= */}
+
+              <TableBody>
+                {sortedTeams.map((team) => {
+                  const rankStyle = getRankStyle(team.rank);
+
+                  return (
+                    <React.Fragment key={team.team_id}>
+                      {/* ================= MAIN ROW ================= */}
+
+                      <TableRow
+                        className="
+                          group
+                          border-none
+                          cursor-pointer
+                          transition-all
+                          duration-300
+                          hover:bg-white/60
+                          dark:hover:bg-white/5
+                        "
+                        onClick={() =>
+                          handleRowClick(team.team_id)
+                        }
+                      >
+                        {/* Rank */}
+
+                        <TableCell className="py-3">
+                          <div
+                            className={`
+                              flex
+                              h-9
+                              w-9
+                              items-center
+                              justify-center
+                              rounded-xl
+                              text-sm
+                              font-bold
+                              transition-transform
+                              duration-300
+                              group-hover:scale-105
+                              ${rankStyle.wrapper}
+                            `}
+                          >
+                            {team.rank <= 3 ? (
+                              <Trophy
+                                className={`h-4 w-4 ${rankStyle.icon}`}
+                              />
+                            ) : (
+                              team.rank
+                            )}
+                          </div>
+                        </TableCell>
+
+                        {/* Team */}
+
+                        <TableCell className="py-3">
+                          <div className="flex items-center gap-3 min-w-[180px]">
+                            {/* Team color */}
+
+                            <div
+                              className="
+                                relative
+                                h-11
+                                w-11
+                                shrink-0
+                                rounded-2xl
+                                p-[2px]
+                                shadow-sm
+                                transition-transform
+                                duration-300
+                                group-hover:scale-105
+                              "
+                              style={{
+                                background: `linear-gradient(135deg, ${team.color}, ${team.color}88)`,
+                              }}
+                            >
+                              <div
+                                className="
+                                  flex
+                                  h-full
+                                  w-full
+                                  items-center
+                                  justify-center
+                                  rounded-[14px]
+                                  bg-white/80
+                                  dark:bg-slate-900/80
+                                  backdrop-blur-md
+                                  font-bold
+                                  text-xs
+                                "
+                                style={{
+                                  color: team.color,
+                                }}
+                              >
+                                {team.name
+                                  .slice(0, 2)
+                                  .toUpperCase()}
+                              </div>
+                            </div>
+
+                            {/* Team name */}
+
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold truncate">
+                                  {team.name}
+                                </span>
+
+                                {team.rank === 1 && (
+                                  <Badge
+                                    className="
+                                      hidden
+                                      sm:inline-flex
+                                      rounded-full
+                                      bg-yellow-400/15
+                                      text-yellow-600
+                                      dark:text-yellow-400
+                                      border
+                                      border-yellow-400/20
+                                      text-[10px]
+                                      px-2
+                                    "
+                                  >
+                                    #1
+                                  </Badge>
+                                )}
+                              </div>
+
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                {team.games.length}{" "}
+                                {team.games.length === 1
+                                  ? "match"
+                                  : "matches"}
+                              </div>
+                            </div>
+
+                            {/* Expand icon */}
+
+                            <div
+                              className="
+                                ml-auto
+                                flex
+                                h-7
+                                w-7
+                                items-center
+                                justify-center
+                                rounded-full
+                                bg-muted/50
+                                transition-all
+                                duration-300
+                                group-hover:bg-muted
+                              "
+                            >
+                              {expandedTeamId ===
+                              team.team_id ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4" />
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+
+                        {/* Wins */}
+
+                        <TableCell className="text-center py-3">
+                          <span
+                            className="
+                              inline-flex
+                              min-w-8
+                              justify-center
+                              rounded-lg
+                              bg-emerald-500/10
+                              px-2
+                              py-1
+                              font-bold
+                              text-emerald-600
+                              dark:text-emerald-400
+                            "
+                          >
+                            {team.wins}
+                          </span>
+                        </TableCell>
+
+                        {/* Losses */}
+
+                        <TableCell className="text-center py-3">
+                          <span
+                            className="
+                              inline-flex
+                              min-w-8
+                              justify-center
+                              rounded-lg
+                              bg-red-500/10
+                              px-2
+                              py-1
+                              font-bold
+                              text-red-600
+                              dark:text-red-400
+                            "
+                          >
+                            {team.losses}
+                          </span>
+                        </TableCell>
+
+                        {/* Ties */}
+
+                        <TableCell className="text-center py-3">
+                          <span
+                            className="
+                              inline-flex
+                              min-w-8
+                              justify-center
+                              rounded-lg
+                              bg-amber-500/10
+                              px-2
+                              py-1
+                              font-bold
+                              text-amber-600
+                              dark:text-amber-400
+                            "
+                          >
+                            {team.ties}
+                          </span>
+                        </TableCell>
+
+                        {/* Win Percentage */}
+
+                        <TableCell className="text-center py-3">
+                          <span className="font-semibold">
+                            {(team.winPercentage * 100).toFixed(1)}%
+                          </span>
+                        </TableCell>
+
+                        {/* PF */}
+
+                        <TableCell className="text-center py-3 font-medium">
+                          {team.points_for}
+                        </TableCell>
+
+                        {/* PA */}
+
+                        <TableCell className="text-center py-3 font-medium">
+                          {team.points_against}
+                        </TableCell>
+
+                        {/* Differential */}
+
+                        <TableCell className="text-center py-3">
+                          <span
+                            className={`
+                              inline-flex
+                              min-w-14
+                              justify-center
+                              rounded-lg
+                              px-2
+                              py-1
+                              font-bold
+                              ${
+                                team.pointDifferential > 0
+                                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                  : team.pointDifferential < 0
+                                  ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                                  : "bg-muted/50 text-muted-foreground"
+                              }
+                            `}
+                          >
+                            {team.pointDifferential > 0
+                              ? "+"
+                              : ""}
+                            {team.pointDifferential}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+
+                      {/* ================= EXPANDED ROW ================= */}
+
+                      <TableRow className="border-none">
+                        <TableCell
+                          colSpan={9}
+                          className="p-0"
+                        >
+                          <AccordionContent
+                            expanded={
+                              expandedTeamId === team.team_id
+                            }
+                          >
+                            <div className="px-2 sm:px-4 pb-5 pt-2">
+                              {/* Glass match-history panel */}
+
+                              <div
+                                className="
+                                  overflow-hidden
+                                  rounded-2xl
+                                  border
+                                  border-white/50
+                                  dark:border-white/10
+                                  bg-white/45
+                                  dark:bg-white/[0.03]
+                                  backdrop-blur-xl
+                                  shadow-inner
+                                "
+                              >
+                                {/* History header */}
+
+                                <div
+                                  className="
+                                    flex
+                                    flex-col
+                                    gap-2
+                                    sm:flex-row
+                                    sm:items-center
+                                    sm:justify-between
+                                    border-b
+                                    border-white/40
+                                    dark:border-white/10
+                                    px-4
+                                    py-3
+                                  "
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className="
+                                        flex
+                                        h-8
+                                        w-8
+                                        items-center
+                                        justify-center
+                                        rounded-xl
+                                        bg-primary/10
+                                        text-primary
+                                      "
+                                    >
+                                      <Swords className="h-4 w-4" />
+                                    </div>
+
+                                    <div>
+                                      <div className="font-bold text-sm">
+                                        Match History
+                                      </div>
+
+                                      <div className="text-xs text-muted-foreground">
+                                        Set-by-set results
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <Badge
+                                    variant="outline"
+                                    className="
+                                      self-start
+                                      sm:self-auto
+                                      rounded-full
+                                      bg-white/40
+                                      dark:bg-white/5
+                                      border-white/50
+                                      dark:border-white/10
+                                    "
+                                  >
+                                    {team.wins}W · {team.losses}L
+                                    {team.ties > 0
+                                      ? ` · ${team.ties}T`
+                                      : ""}
+                                  </Badge>
+                                </div>
+
+                                {/* Games */}
+
+                                {team.games.length > 0 ? (
+                                  <div className="overflow-x-auto">
+                                    <table className="min-w-full text-xs">
+                                      <thead>
+                                        <tr className="border-b border-white/30 dark:border-white/10">
+                                          <th className="py-3 px-4 text-left font-semibold text-muted-foreground">
+                                            Date
+                                          </th>
+
+                                          <th className="py-3 px-4 text-left font-semibold text-muted-foreground">
+                                            Opponent
+                                          </th>
+
+                                          <th className="py-3 px-4 text-center font-semibold text-muted-foreground">
+                                            Set
+                                          </th>
+
+                                          <th className="py-3 px-4 text-center font-semibold text-muted-foreground">
+                                            PF
+                                          </th>
+
+                                          <th className="py-3 px-4 text-center font-semibold text-muted-foreground">
+                                            PA
+                                          </th>
+
+                                          <th className="py-3 px-4 text-center font-semibold text-muted-foreground">
+                                            Result
+                                          </th>
+                                        </tr>
+                                      </thead>
+
+                                      <tbody>
+                                        {team.games.map(
+                                          (game) =>
+                                            game.sets.map(
+                                              (set, idx) => {
+                                                const result =
+                                                  set.points_for ===
+                                                  set.points_against
+                                                    ? "T"
+                                                    : set.points_for >
+                                                      set.points_against
+                                                    ? "W"
+                                                    : "L";
+
+                                                return (
+                                                  <tr
+                                                    key={`${game.id}-${set.set_no}`}
+                                                    className="
+                                                      border-b
+                                                      border-white/20
+                                                      dark:border-white/5
+                                                      last:border-none
+                                                      transition-colors
+                                                      hover:bg-white/40
+                                                      dark:hover:bg-white/5
+                                                    "
+                                                  >
+                                                    {/* Date */}
+
+                                                    <td className="py-3 px-4 whitespace-nowrap">
+                                                      <span className="text-muted-foreground">
+                                                        {game.date}
+                                                      </span>
+                                                    </td>
+
+                                                    {/* Opponent */}
+
+                                                    <td className="py-3 px-4">
+                                                      <div className="flex items-center gap-2">
+                                                        <span
+                                                          className="
+                                                            flex
+                                                            h-7
+                                                            w-7
+                                                            items-center
+                                                            justify-center
+                                                            rounded-lg
+                                                            bg-muted/60
+                                                            font-bold
+                                                            text-[10px]
+                                                          "
+                                                        >
+                                                          {game.opponent
+                                                            .slice(
+                                                              0,
+                                                              2
+                                                            )
+                                                            .toUpperCase()}
+                                                        </span>
+
+                                                        <span className="font-semibold whitespace-nowrap">
+                                                          {
+                                                            game.opponent
+                                                          }
+                                                        </span>
+                                                      </div>
+                                                    </td>
+
+                                                    {/* Set */}
+
+                                                    <td className="py-3 px-4 text-center">
+                                                      <span className="text-muted-foreground">
+                                                        {
+                                                          set.set_no
+                                                        }
+                                                      </span>
+                                                    </td>
+
+                                                    {/* PF */}
+
+                                                    <td className="py-3 px-4 text-center">
+                                                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                                                        {
+                                                          set.points_for
+                                                        }
+                                                      </span>
+                                                    </td>
+
+                                                    {/* PA */}
+
+                                                    <td className="py-3 px-4 text-center">
+                                                      <span className="font-bold text-red-600 dark:text-red-400">
+                                                        {
+                                                          set.points_against
+                                                        }
+                                                      </span>
+                                                    </td>
+
+                                                    {/* Result */}
+
+                                                    <td className="py-3 px-4 text-center">
+                                                      <span
+                                                        className={`
+                                                          inline-flex
+                                                          min-w-8
+                                                          justify-center
+                                                          rounded-full
+                                                          border
+                                                          px-2.5
+                                                          py-1
+                                                          font-bold
+                                                          ${getResultStyle(
+                                                            result
+                                                          )}
+                                                        `}
+                                                      >
+                                                        {result}
+                                                      </span>
+                                                    </td>
+                                                  </tr>
+                                                );
+                                              }
+                                            )
+                                        )}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center py-10 text-center">
+                                    <CalendarDays className="h-8 w-8 text-muted-foreground/40 mb-2" />
+
+                                    <p className="font-medium text-sm">
+                                      No games recorded yet.
+                                    </p>
+
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      Match results will appear here once
+                                      games are recorded.
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </AccordionContent>
+                        </TableCell>
+                      </TableRow>
+                    </React.Fragment>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
