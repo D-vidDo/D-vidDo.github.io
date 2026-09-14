@@ -29,7 +29,6 @@ import {
   Trophy,
   Users,
   ChevronDown,
-  ArrowLeftRight,
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -118,13 +117,18 @@ const formatDate = (date?: string | null): string => {
   });
 };
 
-const enrichPlayers = (rawPlayers: any[], teams: Team[]): Player[] =>
+const enrichPlayers = (
+  rawPlayers: any[],
+  teams: Team[]
+): Player[] =>
   rawPlayers.map((player) => {
     const team =
       teams.find(
         (team) =>
           Array.isArray(team.player_ids) &&
-          team.player_ids.some((id) => Number(id) === Number(player.id)),
+          team.player_ids.some(
+            (id) => Number(id) === Number(player.id)
+          )
       ) ?? null;
 
     return {
@@ -139,7 +143,11 @@ const enrichPlayers = (rawPlayers: any[], teams: Team[]): Player[] =>
    COMPONENT
 ───────────────────────────────────────────────────────────────────────────── */
 
-export default function History({ seasonId }: { seasonId: number }) {
+export default function History({
+  seasonId,
+}: {
+  seasonId: number;
+}) {
   const navigate = useNavigate();
 
   /* ───────────────────────────────────────────────────────────────────────────
@@ -184,9 +192,11 @@ export default function History({ seasonId }: { seasonId: number }) {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [teamFilter, setTeamFilter] = useState<number | "all">("all");
+  const [teamFilter, setTeamFilter] =
+    useState<number | "all">("all");
 
-  const [playerFilter, setPlayerFilter] = useState<number | "all">("all");
+  const [playerFilter, setPlayerFilter] =
+    useState<number | "all">("all");
 
   /* ───────────────────────────────────────────────────────────────────────────
      FETCH DATA
@@ -275,28 +285,42 @@ export default function History({ seasonId }: { seasonId: number }) {
         setSeasons(seasonsData ?? []);
         setTeams(resolvedTeams);
 
-        setPlayers(enrichPlayers(playersData ?? [], resolvedTeams));
+        setPlayers(
+          enrichPlayers(
+            playersData ?? [],
+            resolvedTeams
+          )
+        );
 
-        const gamesWithSets: Game[] = (gamesData ?? []).map((game: any) => ({
-          ...game,
+        const gamesWithSets: Game[] =
+          (gamesData ?? []).map((game: any) => ({
+            ...game,
 
-          sets: (setsData ?? [])
-            .filter((set: any) => set.game_id === game.id)
-            .map((set: any) => ({
-              ...set,
+            sets: (setsData ?? [])
+              .filter(
+                (set: any) =>
+                  set.game_id === game.id
+              )
+              .map((set: any) => ({
+                ...set,
 
-              result:
-                set.points_for === set.points_against
-                  ? "T"
-                  : set.points_for > set.points_against
-                    ? "W"
-                    : "L",
-            })),
-        }));
+                result:
+                  set.points_for ===
+                  set.points_against
+                    ? "T"
+                    : set.points_for >
+                        set.points_against
+                      ? "W"
+                      : "L",
+              })),
+          }));
 
         setGames(gamesWithSets);
       } catch (error) {
-        console.error("History fetch error:", error);
+        console.error(
+          "History fetch error:",
+          error
+        );
       } finally {
         setLoading(false);
       }
@@ -312,35 +336,99 @@ export default function History({ seasonId }: { seasonId: number }) {
   const selectedTeamName = useMemo(() => {
     if (teamFilter === "all") return null;
 
-    return teams.find((team) => team.team_id === teamFilter)?.name ?? null;
+    return (
+      teams.find(
+        (team) => team.team_id === teamFilter
+      )?.name ?? null
+    );
   }, [teamFilter, teams]);
 
   const filteredPlayers = useMemo(() => {
     return players.filter((player) => {
-      if (playerFilter !== "all" && player.id !== playerFilter) {
+      if (
+        playerFilter !== "all" &&
+        player.id !== playerFilter
+      ) {
         return false;
       }
 
-      if (selectedTeamName && player.team !== selectedTeamName) {
+      if (
+        selectedTeamName &&
+        player.team !== selectedTeamName
+      ) {
         return false;
       }
 
       return true;
     });
-  }, [players, playerFilter, selectedTeamName]);
+  }, [
+    players,
+    playerFilter,
+    selectedTeamName,
+  ]);
 
   const filteredGames = useMemo(() => {
     if (teamFilter === "all") {
       return games;
     }
 
-    return games.filter((game) => game.team_id === teamFilter);
+    return games.filter(
+      (game) => game.team_id === teamFilter
+    );
   }, [games, teamFilter]);
 
-  const getTeam = (teamId?: number | null): Team | null => {
+  const getTeam = (
+    teamId?: number | null
+  ): Team | null => {
     if (!teamId) return null;
 
-    return teams.find((team) => team.team_id === teamId) ?? null;
+    return (
+      teams.find(
+        (team) => team.team_id === teamId
+      ) ?? null
+    );
+  };
+
+  const getGameResult = (game: Game) => {
+    const wins = game.sets.filter(
+      (set) => set.result === "W"
+    ).length;
+
+    const losses = game.sets.filter(
+      (set) => set.result === "L"
+    ).length;
+
+    if (wins > losses) return "W";
+    if (losses > wins) return "L";
+
+    return "T";
+  };
+
+  const getResultClasses = (result: "W" | "L" | "T") => {
+    if (result === "W") {
+      return {
+        badge:
+          "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+        score: "text-emerald-500",
+        glow: "bg-emerald-400",
+      };
+    }
+
+    if (result === "L") {
+      return {
+        badge:
+          "bg-red-500/15 text-red-600 dark:text-red-400",
+        score: "text-red-500",
+        glow: "bg-red-400",
+      };
+    }
+
+    return {
+      badge:
+        "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+      score: "text-amber-500",
+      glow: "bg-amber-400",
+    };
   };
 
   /* ───────────────────────────────────────────────────────────────────────────
@@ -351,7 +439,9 @@ export default function History({ seasonId }: { seasonId: number }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="glass px-8 py-6 text-center">
-          <div className="text-lg font-semibold">Loading season…</div>
+          <div className="text-lg font-semibold">
+            Loading season…
+          </div>
 
           <div className="mt-2 text-sm text-muted-foreground">
             Bringing the history back.
@@ -365,9 +455,14 @@ export default function History({ seasonId }: { seasonId: number }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="glass px-8 py-6 text-center">
-          <div className="text-lg font-semibold">Season not found.</div>
+          <div className="text-lg font-semibold">
+            Season not found.
+          </div>
 
-          <Button className="mt-4" onClick={() => navigate("/history/1")}>
+          <Button
+            className="mt-4"
+            onClick={() => navigate("/history/1")}
+          >
             Back to History
           </Button>
         </div>
@@ -472,8 +567,9 @@ export default function History({ seasonId }: { seasonId: number }) {
                     max-w-xl
                   "
                 >
-                  A complete retrospective of the season — stats, standings,
-                  matches, and memorable moments.
+                  A complete retrospective of the
+                  season — stats, standings, matches,
+                  and memorable moments.
                 </p>
               </div>
 
@@ -499,9 +595,12 @@ export default function History({ seasonId }: { seasonId: number }) {
                     id="season-select"
                     value={seasonId}
                     onChange={(event) => {
-                      const nextSeason = Number(event.target.value);
+                      const nextSeason =
+                        Number(event.target.value);
 
-                      navigate(`/history/${nextSeason}`);
+                      navigate(
+                        `/history/${nextSeason}`
+                      );
                     }}
                     className="
                       glass-input
@@ -517,7 +616,10 @@ export default function History({ seasonId }: { seasonId: number }) {
                     "
                   >
                     {seasons.map((item) => (
-                      <option key={item.season_id} value={item.season_id}>
+                      <option
+                        key={item.season_id}
+                        value={item.season_id}
+                      >
                         {item.name}
                       </option>
                     ))}
@@ -550,7 +652,7 @@ export default function History({ seasonId }: { seasonId: number }) {
                 mt-6
                 pt-5
                 border-t
-                border-border/40
+                border-white/20
               "
             >
               <div className="glass-light px-3 py-3">
@@ -558,7 +660,9 @@ export default function History({ seasonId }: { seasonId: number }) {
                   {teams.length}
                 </div>
 
-                <div className="text-xs text-muted-foreground">Teams</div>
+                <div className="text-xs text-muted-foreground">
+                  Teams
+                </div>
               </div>
 
               <div className="glass-light px-3 py-3">
@@ -566,7 +670,9 @@ export default function History({ seasonId }: { seasonId: number }) {
                   {players.length}
                 </div>
 
-                <div className="text-xs text-muted-foreground">Players</div>
+                <div className="text-xs text-muted-foreground">
+                  Players
+                </div>
               </div>
 
               <div className="glass-light px-3 py-3">
@@ -574,15 +680,23 @@ export default function History({ seasonId }: { seasonId: number }) {
                   {games.length}
                 </div>
 
-                <div className="text-xs text-muted-foreground">Matches</div>
+                <div className="text-xs text-muted-foreground">
+                  Matches
+                </div>
               </div>
 
               <div className="glass-light px-3 py-3">
                 <div className="text-xl md:text-2xl font-bold">
-                  {games.reduce((total, game) => total + game.sets.length, 0)}
+                  {games.reduce(
+                    (total, game) =>
+                      total + game.sets.length,
+                    0
+                  )}
                 </div>
 
-                <div className="text-xs text-muted-foreground">Sets</div>
+                <div className="text-xs text-muted-foreground">
+                  Sets
+                </div>
               </div>
             </div>
           </div>
@@ -637,7 +751,9 @@ export default function History({ seasonId }: { seasonId: number }) {
                     transition-transform
                   "
                 >
-                  <div className="text-3xl md:text-4xl mb-2">{award.icon}</div>
+                  <div className="text-3xl md:text-4xl mb-2">
+                    {award.icon}
+                  </div>
 
                   <div
                     className="
@@ -696,7 +812,9 @@ export default function History({ seasonId }: { seasonId: number }) {
           <div className="flex items-center gap-2 mr-auto">
             <Users className="h-4 w-4 text-primary" />
 
-            <span className="text-sm font-semibold">Filter History</span>
+            <span className="text-sm font-semibold">
+              Filter History
+            </span>
           </div>
 
           <select
@@ -705,7 +823,7 @@ export default function History({ seasonId }: { seasonId: number }) {
               setTeamFilter(
                 event.target.value === "all"
                   ? "all"
-                  : Number(event.target.value),
+                  : Number(event.target.value)
               )
             }
             className="
@@ -718,10 +836,15 @@ export default function History({ seasonId }: { seasonId: number }) {
               sm:w-auto
             "
           >
-            <option value="all">All Teams</option>
+            <option value="all">
+              All Teams
+            </option>
 
             {teams.map((team) => (
-              <option key={team.team_id} value={team.team_id}>
+              <option
+                key={team.team_id}
+                value={team.team_id}
+              >
                 {team.name}
               </option>
             ))}
@@ -733,7 +856,7 @@ export default function History({ seasonId }: { seasonId: number }) {
               setPlayerFilter(
                 event.target.value === "all"
                   ? "all"
-                  : Number(event.target.value),
+                  : Number(event.target.value)
               )
             }
             className="
@@ -746,10 +869,15 @@ export default function History({ seasonId }: { seasonId: number }) {
               sm:w-auto
             "
           >
-            <option value="all">All Players</option>
+            <option value="all">
+              All Players
+            </option>
 
             {players.map((player) => (
-              <option key={player.id} value={player.id}>
+              <option
+                key={player.id}
+                value={player.id}
+              >
                 {player.name}
               </option>
             ))}
@@ -783,7 +911,11 @@ export default function History({ seasonId }: { seasonId: number }) {
                 "
               >
                 {filteredPlayers.map((player) => (
-                  <PlayerCard key={player.id} player={player} forceShowStats />
+                  <PlayerCard
+                    key={player.id}
+                    player={player}
+                    forceShowStats
+                  />
                 ))}
               </div>
             )}
@@ -802,7 +934,10 @@ export default function History({ seasonId }: { seasonId: number }) {
                 Match History
               </CardTitle>
 
-              <Badge variant="secondary" className="shrink-0">
+              <Badge
+                variant="secondary"
+                className="shrink-0"
+              >
                 {filteredGames.length} matches
               </Badge>
             </div>
@@ -818,277 +953,307 @@ export default function History({ seasonId }: { seasonId: number }) {
                 No games played yet.
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {filteredGames.map((game) => {
                   const team = getTeam(game.team_id);
 
-                  const teamColor = team?.color ?? "#6b7280";
+                  const teamColor =
+                    team?.color ?? "#6b7280";
 
-                  const teamColor2 = team?.color2 ?? teamColor;
+                  const teamColor2 =
+                    team?.color2 ?? teamColor;
+
+                  const gameResult =
+                    getGameResult(game);
+
+                  const resultClasses =
+                    getResultClasses(gameResult);
 
                   return (
                     <div
                       key={game.id}
                       className="
-    relative
-    overflow-hidden
-    rounded-xl
-    border
-    border-border/40
-    backdrop-blur-md
-    transition-all
-    duration-200
-    hover:-translate-y-[1px]
-  "
-                      style={{
-                        background: `
-      linear-gradient(
-        90deg,
-        ${teamColor}18 0%,
-        ${teamColor}0a 28%,
-        rgba(255,255,255,0.03) 60%,
-        rgba(255,255,255,0.02) 100%
-      )
-    `,
-                        boxShadow: `
-      inset 3px 0 0 ${teamColor},
-      0 4px 20px ${teamColor}12
-    `,
-                      }}
+                        group
+                        relative
+                        overflow-hidden
+                        rounded-2xl
+                        bg-white/20
+                        dark:bg-white/[0.06]
+                        backdrop-blur-xl
+                        backdrop-saturate-150
+                        shadow-[0_8px_30px_rgba(30,50,80,0.08)]
+                        transition-all
+                        duration-300
+                        hover:-translate-y-0.5
+                        hover:bg-white/25
+                        dark:hover:bg-white/[0.09]
+                        hover:shadow-[0_14px_40px_rgba(30,50,80,0.12)]
+                      "
                     >
+                      {/* Team colour atmosphere */}
+                      <div
+                        className="
+                          absolute
+                          -left-16
+                          top-1/2
+                          -translate-y-1/2
+                          h-40
+                          w-40
+                          rounded-full
+                          blur-3xl
+                          opacity-25
+                          pointer-events-none
+                          transition-opacity
+                          duration-300
+                          group-hover:opacity-35
+                        "
+                        style={{
+                          background: `linear-gradient(
+                            135deg,
+                            ${teamColor},
+                            ${teamColor2}
+                          )`,
+                        }}
+                      />
+
+                      {/* Secondary team colour glow */}
+                      <div
+                        className="
+                          absolute
+                          right-1/4
+                          -top-16
+                          h-32
+                          w-32
+                          rounded-full
+                          blur-3xl
+                          opacity-10
+                          pointer-events-none
+                        "
+                        style={{
+                          background: teamColor2,
+                        }}
+                      />
+
+                      {/* Glass highlight */}
+                      <div
+                        className="
+                          absolute
+                          inset-x-8
+                          top-0
+                          h-px
+                          bg-gradient-to-r
+                          from-transparent
+                          via-white/70
+                          to-transparent
+                          opacity-70
+                          pointer-events-none
+                        "
+                      />
+
+                      {/* Soft inner glow */}
+                      <div
+                        className="
+                          absolute
+                          inset-0
+                          bg-gradient-to-br
+                          from-white/10
+                          via-transparent
+                          to-transparent
+                          pointer-events-none
+                        "
+                      />
+
                       {/* ─────────────────────────────────────────────
-    DESKTOP / TABLET LAYOUT
-───────────────────────────────────────────────── */}
+                          DESKTOP / TABLET LAYOUT
+                      ───────────────────────────────────────────── */}
 
-{/* ─────────────────────────────────────────────
-    DESKTOP / TABLET LAYOUT
-───────────────────────────────────────────── */}
+                      <div
+                        className="
+                          relative
+                          hidden
+                          md:grid
+                          grid-cols-[110px_minmax(150px,1fr)_minmax(150px,1fr)_repeat(3,72px)_80px_70px]
+                          items-center
+                          min-h-[72px]
+                          px-4
+                          py-2
+                          gap-3
+                          text-sm
+                        "
+                      >
+                        {/* Date / time */}
+                        <div>
+                          <div className="font-semibold">
+                            {formatDate(game.date)}
+                          </div>
 
-<div
-  className="
-    hidden
-    md:flex
-    items-stretch
-    min-h-[68px]
-    pl-5
-    pr-3
-  "
->
-  {/* Matchup */}
-  <div className="flex items-center min-w-0 flex-1">
-    <div className="w-[105px] shrink-0">
-      <div className="font-semibold text-sm">
-        {formatDate(game.date)}
-      </div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatTime12H(game.time)}
+                          </div>
+                        </div>
 
-      <div className="text-xs text-muted-foreground mt-0.5">
-        {formatTime12H(game.time)}
-      </div>
-    </div>
+                        {/* Our team */}
+                        <div className="min-w-0">
+                          <div
+                            className="font-bold truncate"
+                            style={{
+                              color: teamColor,
+                            }}
+                          >
+                            {team?.name ?? "N/A"}
+                          </div>
 
-    <div className="h-9 w-px bg-border/40 mx-4" />
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Home
+                          </div>
+                        </div>
 
-    <div className="min-w-0">
-      <div
-        className="font-bold text-sm truncate"
-        style={{ color: teamColor }}
-      >
-        {team?.name ?? "N/A"}
-      </div>
+                        {/* Opponent */}
+                        <div className="min-w-0">
+                          <div className="font-semibold truncate">
+                            {game.opponent ?? "N/A"}
+                          </div>
 
-      <div className="flex items-center gap-1.5 mt-0.5">
-        <span className="text-[11px] text-muted-foreground">
-          vs
-        </span>
+                          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Opponent
+                          </div>
+                        </div>
 
-        <span className="font-medium text-sm truncate">
-          {game.opponent ?? "N/A"}
-        </span>
-      </div>
-    </div>
-  </div>
+                        {/* Set scores */}
+                        {game.sets.map((set) => (
+                          <div
+                            key={set.id}
+                            className="
+                              flex
+                              flex-col
+                              items-center
+                              justify-center
+                              rounded-xl
+                              px-2
+                              py-2
+                              bg-white/20
+                              dark:bg-white/[0.06]
+                              backdrop-blur-md
+                              shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]
+                            "
+                          >
+                            <div className="text-[9px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                              Set {set.set_no}
+                            </div>
 
-{/* Scores */}
-<div className="flex items-center gap-1.5 shrink-0">
-  {game.sets.slice(0, 3).map((set) => (
-    <div
-      key={set.id}
-      className="
-        min-w-[58px]
-        rounded-lg
-        border
-        border-border/30
-        px-2
-        py-1.5
-        text-center
-        backdrop-blur-sm
-      "
-      style={{
-        background: `${teamColor}12`,
-      }}
-    >
-      <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
-        Set {set.set_no}
-      </div>
+                            <div className="flex items-center gap-1.5 leading-none">
+                              <span
+                                className={`
+                                  text-base
+                                  font-black
+                                  ${resultClasses.score}
+                                `}
+                              >
+                                {set.points_for ?? "—"}
+                              </span>
 
-      <div className="flex items-center justify-center gap-1 mt-0.5">
-        <span
-          className={`
-            text-sm
-            font-black
-            ${
-              set.result === "W"
-                ? "text-emerald-500"
-                : set.result === "L"
-                ? "text-red-500"
-                : "text-amber-500"
-            }
-          `}
-        >
-          {set.points_for ?? "—"}
-        </span>
+                              <span className="text-muted-foreground text-xs">
+                                -
+                              </span>
 
-        <span className="text-muted-foreground text-xs">
-          -
-        </span>
+                              <span className="text-base font-bold">
+                                {set.points_against ?? "—"}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
 
-        <span className="text-sm font-bold">
-          {set.points_against ?? "—"}
-        </span>
-      </div>
-    </div>
-  ))}
-</div>
+                        {/* Empty set slots only when there are 2 sets */}
+                        {game.sets.length === 2 && (
+                          <div
+                            className="
+                              flex
+                              items-center
+                              justify-center
+                              rounded-xl
+                              px-2
+                              py-2
+                              bg-white/10
+                              dark:bg-white/[0.03]
+                              text-muted-foreground/40
+                              text-xs
+                            "
+                          >
+                            —
+                          </div>
+                        )}
 
+                        {/* Overall result */}
+                        <div className="text-center">
+                          <Badge
+                            className={`
+                              font-bold
+                              text-xs
+                              px-2.5
+                              py-1
+                              ${resultClasses.badge}
+                              border-0
+                            `}
+                          >
+                            {game.sets.filter(
+                              (set) =>
+                                set.result === "W"
+                            ).length}
+                            -
+                            {game.sets.filter(
+                              (set) =>
+                                set.result === "L"
+                            ).length}
+                          </Badge>
+                        </div>
 
-  {/* Overall result */}
-  <div className="flex items-center justify-center w-[72px] shrink-0 ml-3">
-    {(() => {
-      const wins = game.sets.filter(
-        (set) => set.result === "W"
-      ).length;
+                        {/* VOD */}
+                        <div className="text-center">
+                          {game.sets.find(
+                            (set) => set.vod_link
+                          ) ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="
+                                h-9
+                                w-9
+                                p-0
+                                rounded-full
+                                bg-white/10
+                                hover:bg-white/20
+                              "
+                              onClick={() => {
+                                const vod =
+                                  game.sets.find(
+                                    (set) =>
+                                      set.vod_link
+                                  )?.vod_link;
 
-      const losses = game.sets.filter(
-        (set) => set.result === "L"
-      ).length;
-
-      const isWin = wins > losses;
-      const isLoss = losses > wins;
-
-      return (
-        <div
-          className="
-            flex
-            flex-col
-            items-center
-            justify-center
-            rounded-xl
-            w-[58px]
-            h-[48px]
-            border
-            backdrop-blur-sm
-          "
-          style={{
-            background: isWin
-              ? "rgba(16,185,129,0.12)"
-              : isLoss
-              ? "rgba(239,68,68,0.12)"
-              : "rgba(245,158,11,0.12)",
-
-            borderColor: isWin
-              ? "rgba(16,185,129,0.25)"
-              : isLoss
-              ? "rgba(239,68,68,0.25)"
-              : "rgba(245,158,11,0.25)",
-          }}
-        >
-          <span
-            className={`
-              text-[9px]
-              uppercase
-              tracking-widest
-              font-semibold
-              ${
-                isWin
-                  ? "text-emerald-500"
-                  : isLoss
-                  ? "text-red-500"
-                  : "text-amber-500"
-              }
-            `}
-          >
-            {isWin
-              ? "Win"
-              : isLoss
-              ? "Loss"
-              : "Tie"}
-          </span>
-
-          <span
-            className={`
-              text-lg
-              font-black
-              leading-none
-              mt-0.5
-              ${
-                isWin
-                  ? "text-emerald-500"
-                  : isLoss
-                  ? "text-red-500"
-                  : "text-amber-500"
-              }
-            `}
-          >
-            {wins}-{losses}
-          </span>
-        </div>
-      );
-    })()}
-  </div>
-
-  {/* VOD */}
-  <div className="flex items-center justify-center w-[48px] shrink-0">
-    {game.sets.find((set) => set.vod_link) ? (
-      <Button
-        size="sm"
-        variant="ghost"
-        className="
-          h-9
-          w-9
-          p-0
-          rounded-lg
-          hover:bg-background/50
-        "
-        onClick={() => {
-          const vod = game.sets.find(
-            (set) => set.vod_link
-          )?.vod_link;
-
-          if (vod) {
-            window.open(
-              vod,
-              "_blank",
-              "noopener,noreferrer"
-            );
-          }
-        }}
-      >
-        <PlayCircle className="h-4 w-4" />
-      </Button>
-    ) : (
-      <span className="text-muted-foreground text-xs">
-        —
-      </span>
-    )}
-  </div>
-</div>
-
+                                if (vod) {
+                                  window.open(
+                                    vod,
+                                    "_blank",
+                                    "noopener,noreferrer"
+                                  );
+                                }
+                              }}
+                            >
+                              <PlayCircle className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <span className="text-muted-foreground/50">
+                              —
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
                       {/* ─────────────────────────────────────────────
                           MOBILE LAYOUT
                       ───────────────────────────────────────────── */}
 
-                      <div className="md:hidden px-4 py-3">
+                      <div className="relative md:hidden px-4 py-3">
                         {/* Row 1: matchup */}
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
@@ -1099,19 +1264,28 @@ export default function History({ seasonId }: { seasonId: number }) {
                                   color: teamColor,
                                 }}
                               >
-                                {team?.name ?? "N/A"}
+                                {team?.name ??
+                                  "N/A"}
                               </span>
 
-                              <span className="text-muted-foreground">vs</span>
+                              <span className="text-muted-foreground">
+                                vs
+                              </span>
 
                               <span className="font-semibold truncate">
-                                {game.opponent ?? "N/A"}
+                                {game.opponent ??
+                                  "N/A"}
                               </span>
                             </div>
 
                             <div className="text-xs text-muted-foreground mt-0.5">
-                              {formatDate(game.date)} ·{" "}
-                              {formatTime12H(game.time)}
+                              {formatDate(
+                                game.date
+                              )}{" "}
+                              ·{" "}
+                              {formatTime12H(
+                                game.time
+                              )}
                             </div>
                           </div>
 
@@ -1120,32 +1294,19 @@ export default function History({ seasonId }: { seasonId: number }) {
                             <Badge
                               className={`
                                 font-bold
-                                ${
-                                  game.sets.filter((set) => set.result === "W")
-                                    .length >
-                                  game.sets.filter((set) => set.result === "L")
-                                    .length
-                                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                                    : game.sets.filter(
-                                          (set) => set.result === "L",
-                                        ).length >
-                                        game.sets.filter(
-                                          (set) => set.result === "W",
-                                        ).length
-                                      ? "bg-red-500/15 text-red-600 dark:text-red-400"
-                                      : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                                }
+                                border-0
+                                ${resultClasses.badge}
                               `}
                             >
-                              {
-                                game.sets.filter((set) => set.result === "W")
-                                  .length
-                              }
+                              {game.sets.filter(
+                                (set) =>
+                                  set.result === "W"
+                              ).length}
                               -
-                              {
-                                game.sets.filter((set) => set.result === "L")
-                                  .length
-                              }
+                              {game.sets.filter(
+                                (set) =>
+                                  set.result === "L"
+                              ).length}
                             </Badge>
                           </div>
                         </div>
@@ -1160,60 +1321,59 @@ export default function History({ seasonId }: { seasonId: number }) {
                             mt-3
                             pt-2
                             border-t
-                            border-border/30
+                            border-white/10
                           "
                         >
                           <div className="flex items-center gap-2">
-                            {game.sets.map((set) => (
-                              <div
-                                key={set.id}
-                                className="
-  flex
-  items-center
-  gap-1
-  rounded-lg
-  border
-  border-border/30
-  px-2
-  py-1
-  backdrop-blur-sm
-"
-                                style={{
-                                  background: `${teamColor}12`,
-                                }}
-                              >
-                                <span className="text-[10px] text-muted-foreground">
-                                  S{set.set_no}
-                                </span>
+                            {game.sets.map(
+                              (set) => (
+                                <div
+                                  key={set.id}
+                                  className="
+                                    flex
+                                    items-center
+                                    gap-1
+                                    rounded-lg
+                                    bg-white/15
+                                    dark:bg-white/[0.05]
+                                    backdrop-blur-md
+                                    px-2
+                                    py-1
+                                    shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]
+                                  "
+                                >
+                                  <span className="text-[10px] text-muted-foreground">
+                                    S{set.set_no}
+                                  </span>
 
-                                <span
-                                  className={`
+                                  <span
+                                    className={`
                                       font-bold
                                       text-sm
-                                      ${
-                                        set.result === "W"
-                                          ? "text-emerald-500"
-                                          : set.result === "L"
-                                            ? "text-red-500"
-                                            : "text-amber-500"
-                                      }
+                                      ${resultClasses.score}
                                     `}
-                                >
-                                  {set.points_for}
-                                </span>
+                                  >
+                                    {set.points_for ??
+                                      "—"}
+                                  </span>
 
-                                <span className="text-muted-foreground text-xs">
-                                  -
-                                </span>
+                                  <span className="text-muted-foreground text-xs">
+                                    -
+                                  </span>
 
-                                <span className="font-semibold text-sm">
-                                  {set.points_against}
-                                </span>
-                              </div>
-                            ))}
+                                  <span className="font-semibold text-sm">
+                                    {set.points_against ??
+                                      "—"}
+                                  </span>
+                                </div>
+                              )
+                            )}
                           </div>
 
-                          {game.sets.find((set) => set.vod_link) && (
+                          {game.sets.find(
+                            (set) =>
+                              set.vod_link
+                          ) && (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -1221,23 +1381,31 @@ export default function History({ seasonId }: { seasonId: number }) {
                                 h-8
                                 px-2
                                 shrink-0
+                                rounded-full
+                                bg-white/10
+                                hover:bg-white/20
                               "
                               onClick={() => {
-                                const vod = game.sets.find(
-                                  (set) => set.vod_link,
-                                )?.vod_link;
+                                const vod =
+                                  game.sets.find(
+                                    (set) =>
+                                      set.vod_link
+                                  )?.vod_link;
 
                                 if (vod) {
                                   window.open(
                                     vod,
                                     "_blank",
-                                    "noopener,noreferrer",
+                                    "noopener,noreferrer"
                                   );
                                 }
                               }}
                             >
                               <PlayCircle className="h-4 w-4" />
-                              <span className="ml-1 text-xs">VOD</span>
+
+                              <span className="ml-1 text-xs">
+                                VOD
+                              </span>
                             </Button>
                           )}
                         </div>
