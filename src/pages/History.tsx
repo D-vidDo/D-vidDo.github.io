@@ -956,171 +956,167 @@ export default function History({
                           )`,
                         }}
                       />
+{/* ─────────────────────────────────────────────
+    DESKTOP / TABLET LAYOUT
+───────────────────────────────────────────────── */}
 
-                      {/* ─────────────────────────────────────────────
-                          DESKTOP / TABLET LAYOUT
-                      ───────────────────────────────────────────── */}
+<div
+  className="
+    hidden
+    md:grid
+    grid-cols-[110px_minmax(140px,1fr)_minmax(140px,1fr)_repeat(4,72px)_80px_90px]
+    items-center
+    min-h-[58px]
+    pl-4
+    pr-2
+    gap-2
+    text-sm
+  "
+>
+  {/* Date / Time */}
+  <div>
+    <div className="font-semibold">
+      {formatDate(game.date)}
+    </div>
 
-                      <div
-                        className="
-                          hidden
-                          md:grid
-                          grid-cols-[110px_minmax(150px,1fr)_minmax(150px,1fr)_repeat(4,60px)_80px_90px]
-                          items-center
-                          min-h-[54px]
-                          pl-4
-                          pr-2
-                          gap-2
-                          text-sm
-                        "
-                      >
-                        <div>
-                          <div className="font-semibold">
-                            {formatDate(game.date)}
-                          </div>
+    <div className="text-xs text-muted-foreground">
+      {formatTime12H(game.time)}
+    </div>
+  </div>
 
-                          <div className="text-xs text-muted-foreground">
-                            {formatTime12H(game.time)}
-                          </div>
-                        </div>
+  {/* Our Team */}
+  <div className="font-semibold truncate">
+    {team?.name ?? "N/A"}
+  </div>
 
-                        <div className="font-semibold truncate">
-                          {team?.name ?? "N/A"}
-                        </div>
+  {/* Opponent */}
+  <div className="font-semibold truncate text-muted-foreground">
+    {game.opponent ?? "N/A"}
+  </div>
 
-                        <div className="font-semibold truncate text-muted-foreground">
-                          {game.opponent ?? "N/A"}
-                        </div>
+  {/* Set Scores */}
+  {game.sets.slice(0, 4).map((set) => (
+    <div
+      key={set.id}
+      className="
+        text-center
+        rounded-lg
+        bg-background/40
+        px-2
+        py-1
+      "
+    >
+      <div
+        className={`
+          font-bold
+          whitespace-nowrap
+          ${
+            set.result === "W"
+              ? "text-emerald-500"
+              : set.result === "L"
+              ? "text-red-500"
+              : "text-amber-500"
+          }
+        `}
+      >
+        {set.points_for ?? "—"}
+        <span className="text-muted-foreground mx-1">
+          -
+        </span>
+        <span className="text-foreground">
+          {set.points_against ?? "—"}
+        </span>
+      </div>
 
-                        {game.sets
-                          .slice(0, 4)
-                          .map((set) => (
-                            <div
-                              key={set.id}
-                              className="text-center"
-                            >
-                              <div
-                                className={`
-                                  font-bold
-                                  ${
-                                    set.result === "W"
-                                      ? "text-emerald-500"
-                                      : set.result === "L"
-                                      ? "text-red-500"
-                                      : "text-amber-500"
-                                  }
-                                `}
-                              >
-                                {set.points_for ?? "—"}
-                              </div>
+      <div className="text-[10px] text-muted-foreground">
+        S{set.set_no}
+      </div>
+    </div>
+  ))}
 
-                              <div className="text-[10px] text-muted-foreground">
-                                S{set.set_no}
-                              </div>
-                            </div>
-                          ))}
+  {/* Empty set slots */}
+  {Array.from({
+    length: Math.max(0, 4 - game.sets.length),
+  }).map((_, index) => (
+    <div
+      key={`empty-${index}`}
+      className="
+        text-center
+        text-muted-foreground
+        rounded-lg
+        bg-background/20
+        px-2
+        py-1
+      "
+    >
+      —
+    </div>
+  ))}
 
-                        {Array.from({
-                          length:
-                            Math.max(
-                              0,
-                              4 -
-                                game.sets.length
-                            ),
-                        }).map((_, index) => (
-                          <div
-                            key={`empty-${index}`}
-                            className="text-center text-muted-foreground"
-                          >
-                            —
-                          </div>
-                        ))}
+  {/* Overall Match Result */}
+  <div className="text-center">
+    {(() => {
+      const wins = game.sets.filter(
+        (set) => set.result === "W"
+      ).length;
 
-                        <div className="text-center">
-                          <Badge
-                            className={`
-                              text-xs
-                              px-2
-                              py-0.5
-                              ${
-                                game.sets.filter(
-                                  (set) =>
-                                    set.result ===
-                                    "W"
-                                ).length >
-                                game.sets.filter(
-                                  (set) =>
-                                    set.result ===
-                                    "L"
-                                ).length
-                                  ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                                  : game.sets.filter(
-                                      (set) =>
-                                        set.result ===
-                                        "L"
-                                    ).length >
-                                    game.sets.filter(
-                                      (set) =>
-                                        set.result ===
-                                        "W"
-                                    ).length
-                                  ? "bg-red-500/15 text-red-600 dark:text-red-400"
-                                  : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                              }
-                            `}
-                          >
-                            {
-                              game.sets.filter(
-                                (set) =>
-                                  set.result ===
-                                  "W"
-                              ).length
-                            }
-                            -
-                            {
-                              game.sets.filter(
-                                (set) =>
-                                  set.result ===
-                                  "L"
-                              ).length
-                            }
-                          </Badge>
-                        </div>
+      const losses = game.sets.filter(
+        (set) => set.result === "L"
+      ).length;
 
-                        <div className="text-center">
-                          {game.sets.find(
-                            (set) =>
-                              set.vod_link
-                          ) ? (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 px-2"
-                              onClick={() => {
-                                const vod =
-                                  game.sets.find(
-                                    (set) =>
-                                      set.vod_link
-                                  )?.vod_link;
+      return (
+        <Badge
+          className={`
+            text-xs
+            px-2
+            py-0.5
+            font-bold
+            ${
+              wins > losses
+                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                : losses > wins
+                ? "bg-red-500/15 text-red-600 dark:text-red-400"
+                : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+            }
+          `}
+        >
+          {wins}-{losses}
+        </Badge>
+      );
+    })()}
+  </div>
 
-                                if (vod) {
-                                  window.open(
-                                    vod,
-                                    "_blank",
-                                    "noopener,noreferrer"
-                                  );
-                                }
-                              }}
-                            >
-                              <PlayCircle className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <span className="text-muted-foreground">
-                              —
-                            </span>
-                          )}
-                        </div>
-                      </div>
+  {/* VOD */}
+  <div className="text-center">
+    {game.sets.find((set) => set.vod_link) ? (
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-8 px-2"
+        onClick={() => {
+          const vod = game.sets.find(
+            (set) => set.vod_link
+          )?.vod_link;
+
+          if (vod) {
+            window.open(
+              vod,
+              "_blank",
+              "noopener,noreferrer"
+            );
+          }
+        }}
+      >
+        <PlayCircle className="h-4 w-4" />
+      </Button>
+    ) : (
+      <span className="text-muted-foreground">
+        —
+      </span>
+    )}
+  </div>
+</div>
+
 
                       {/* ─────────────────────────────────────────────
                           MOBILE LAYOUT
