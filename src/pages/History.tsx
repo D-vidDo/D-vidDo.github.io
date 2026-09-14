@@ -1,89 +1,48 @@
 /**
  * History.tsx
  *
- * Displays a full retrospective view of a completed season.
- * Rendered once per season — receives a `seasonId` prop from the router.
- *
- * ── Data Sources (Supabase) ──────────────────────────────────────────────────
- *
- *   seasons      → season name/metadata                     (1 row)
- *   teams        → team standings, colours, captain         (n rows, season_id scoped)
- *   players_old  → archived player stats for that season    (n rows, season_id scoped)
- *   games        → match records for that season            (n rows, season_id scoped)
- *   sets         → individual set scores per game           (n rows, season_id scoped)
- *
- * ── Why players_old and not players? ────────────────────────────────────────
- *
- *   `players` = current live roster (no season_id, always "this season").
- *   `players_old` = historical archive. At season end, current player rows are
- *   manually copied into players_old with the completed season_id stamped on them.
- *   This page always reads from players_old.
- *
- * ── Team Colours on Player Cards ────────────────────────────────────────────
- *
- *   players_old has no team_id FK — team membership is tracked via teams.player_ids
- *   (a JSONB array). After fetching both, enrichPlayers() cross-references
- *   teams.player_ids to attach teamColor/teamColor2 onto each player row so
- *   PlayerCard can render its gradient header.
- *
- * ── Awards ──────────────────────────────────────────────────────────────────
- *
- *   Currently hardcoded in this file per season. When you're ready to manage
- *   them in the DB, create an `awards` table:
- *     (id, season_id FK, title text, winner text, team text, icon text)
- *   Then replace the hardcoded array with a fetch inside the useEffect below.
- *
- * ── Adding a New Season ──────────────────────────────────────────────────────
- *
- *   1. Copy current `players` rows into `players_old` with the new season_id.
- *   2. Add a new row to `seasons`.
- *   3. Update the hardcoded `awards` array below (or move to DB — see above).
- *   4. No component changes needed — PlayerCard auto-adjusts to any stat set.
+ * Retrospective view of a completed season.
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import PlayerCard, { Player } from "@/components/PlayerCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CalendarDays, PlayCircle } from "lucide-react";
+import {
+  CalendarDays,
+  PlayCircle,
+  Trophy,
+  Users,
+  ChevronDown,
+  BarChart3,
+  Medal,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-/* ── Types ────────────────────────────────────────────────────────────────────
- * Local types for data that isn't passed into PlayerCard.
- * Player type is imported from PlayerCard.tsx and covers players_old rows.
- * --------------------------------------------------------------------------- */
+/* ============================================================
+   TYPES
+============================================================ */
 
 interface Season {
   season_id: number;
   name: string;
 }
 
-/**
- * Mirrors the `teams` table.
- * Notable: player_ids is a JSONB array of player IDs on this team.
- * Used by enrichPlayers() to resolve which team each player belongs to.
- */
 interface Team {
   team_id: number;
   name: string | null;
   wins: number | null;
   losses: number | null;
   captain: string | null;
-  color?: string | null;   // primary team colour (hex)
-  color2?: string | null;  // secondary team colour (hex) — used in gradients
+  color?: string | null;
+  color2?: string | null;
   points_for: number | null;
   points_against: number | null;
   split_wins: number | null;
   season_id: number | null;
-  player_ids?: any[] | null; // JSONB array of player IDs on this team
-  games?: any[] | null;      // JSONB array of game references (denormalized)
+  player_ids?: any[] | null;
+  games?: any[] | null;
 }
 
-/**
- * Mirrors the `games` table row, augmented with its child `sets` after fetch.
- * games.team_id references which of our teams played in this game.
- */
 interface Game {
   id: number;
   team_id: number | null;
@@ -91,201 +50,258 @@ interface Game {
   time: string | null;
   opponent: string | null;
   season_id: number | null;
-  sets: SetRow[];           // populated client-side by matching sets.game_id
+  sets: SetRow[];
 }
 
-/**
- * Mirrors the `sets` table row, with `result` computed client-side.
- * result: "W" | "L" | "T" — derived from points_for vs points_against.
- */
 interface SetRow {
   id: number;
   game_id: number;
   set_no: number | null;
   points_for: number | null;
   points_against: number | null;
-  result: string | null;   // computed, not stored in DB
+  result: "W" | "L" | "T" | null;
   vod_link?: string | null;
   season_id: number | null;
 }
 
-/** One entry in the season awards display. */
 interface Award {
-  title: string;   // e.g. "Most Valuable Player"
-  winner: string;  // player name
-  team: string;    // team name or path (e.g. "Brawl > Brawl > Bull")
-  icon: string;    // emoji
+  title: string;
+  winner: string;
+  team: string;
+  icon: string;
 }
 
-/* ── Helpers ──────────────────────────────────────────────────────────────────
- * --------------------------------------------------------------------------- */
+/* ============================================================
+   HELPERS
+============================================================ */
 
-/** Converts a 24h "HH:MM:SS" time string from Supabase to 12h display format. */
 const formatTime12H = (time?: string | null): string => {
   if (!time) return "—";
+
   const [hourStr, minute] = time.split(":");
   const hour = parseInt(hourStr, 10);
+
+  if (Number.isNaN(hour)) return time;
+
   const suffix = hour >= 12 ? "PM" : "AM";
+
   return `${hour % 12 || 12}:${minute} ${suffix}`;
 };
 
-/**
- * Enriches raw players_old rows with team colour data from the teams table.
- *
- * players_old has no team_id FK — team membership lives in teams.player_ids
- * (a JSONB array of player IDs). This function cross-references that array
- * to find each player's team and attach teamColor / teamColor2 / team name
- * so PlayerCard can render its gradient header correctly.
- *
- * Returns a new array — does not mutate the inputs.
- */
-const enrichPlayers = (rawPlayers: any[], teams: Team[]): Player[] =>
+const formatDate = (date?: string | null): string => {
+  if (!date) return "—";
+
+  const parsed = new Date(`${date}T00:00:00`);
+
+  if (Number.isNaN(parsed.getTime())) return date;
+
+  return parsed.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+const getContrastColor = (hex?: string | null) => {
+  if (!hex) return "#ffffff";
+
+  const clean = hex.replace("#", "");
+
+  if (clean.length !== 6) return "#ffffff";
+
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+
+  const brightness =
+    (r * 299 + g * 587 + b * 114) / 1000;
+
+  return brightness > 150 ? "#111827" : "#ffffff";
+};
+
+const enrichPlayers = (
+  rawPlayers: any[],
+  teams: Team[]
+): Player[] =>
   rawPlayers.map((p) => {
-    // Find the team whose player_ids array contains this player's id
-    const team = teams.find((t) =>
-      Array.isArray(t.player_ids) && t.player_ids.includes(p.id)
-    ) ?? null;
+    const team =
+      teams.find(
+        (t) =>
+          Array.isArray(t.player_ids) &&
+          t.player_ids.some(
+            (id) => String(id) === String(p.id)
+          )
+      ) ?? null;
 
     return {
       ...p,
-      team:       team?.name      ?? null,
-      teamColor:  team?.color     ?? null,
-      teamColor2: team?.color2    ?? null,
+      team: team?.name ?? null,
+      teamColor: team?.color ?? null,
+      teamColor2: team?.color2 ?? null,
     } as Player;
   });
 
-/* ── Page Component ───────────────────────────────────────────────────────── */
+/* ============================================================
+   COMPONENT
+============================================================ */
 
-/**
- * History page props.
- * seasonId comes from the router — e.g. in Next.js App Router:
- *   const params = useParams();
- *   <History seasonId={Number(params.seasonId)} />
- */
-export default function History({ seasonId }: { seasonId: number }) {
-
-  /* ── Season Awards ──────────────────────────────────────────────────────────
-   * Update this array at the end of each season.
-   * TODO: move to a Supabase `awards` table when you want DB-driven management.
-   *       Schema: (id, season_id, title, winner, team, icon)
-   * ----------------------------------------------------------------------- */
+export default function History({
+  seasonId,
+}: {
+  seasonId: number;
+}) {
   const awards: Award[] = [
     {
-      title:  "Most Valuable Player",
+      title: "Most Valuable Player",
       winner: "Brandon Sangalang",
-      team:   "Brawl > Brawl > Bull",
-      icon:   "🏆",
+      team: "Brawl > Brawl > Bull",
+      icon: "🏆",
     },
     {
-      title:  "Defensive Player",
+      title: "Defensive Player",
       winner: "Justine Telan",
-      team:   "Brawl > Brawl > Bull",
-      icon:   "🛡️",
+      team: "Brawl > Brawl > Bull",
+      icon: "🛡️",
     },
     {
-      title:  "Ray of Sunshine",
+      title: "Ray of Sunshine",
       winner: "Brandon Sangalang",
-      team:   "Brawl > Brawl > Bull",
-      icon:   "✨",
+      team: "Brawl > Brawl > Bull",
+      icon: "✨",
     },
     {
-      title:  "Most Improved",
+      title: "Most Improved",
       winner: "Justine Telan",
-      team:   "Brawl > Brawl > Bull",
-      icon:   "📈",
+      team: "Brawl > Brawl > Bull",
+      icon: "📈",
     },
   ];
 
-  /* ── State ── */
-  const [season,  setSeason]  = useState<Season | null>(null);
-  const [teams,   setTeams]   = useState<Team[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [games,   setGames]   = useState<Game[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [season, setSeason] =
+    useState<Season | null>(null);
 
-  // Filter state — "all" means no filter applied
-  const [teamFilter,   setTeamFilter]   = useState<number | "all">("all");
-  const [playerFilter, setPlayerFilter] = useState<number | "all">("all");
+  const [teams, setTeams] =
+    useState<Team[]>([]);
 
-  /* ── Data Fetching ──────────────────────────────────────────────────────────
-   * All five queries run in parallel via Promise.all for faster load.
-   * Re-runs whenever seasonId changes (e.g. user navigates between seasons).
-   * ----------------------------------------------------------------------- */
+  const [players, setPlayers] =
+    useState<Player[]>([]);
+
+  const [games, setGames] =
+    useState<Game[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [teamFilter, setTeamFilter] =
+    useState<number | "all">("all");
+
+  const [playerFilter, setPlayerFilter] =
+    useState<number | "all">("all");
+
+  /* ============================================================
+     FETCH
+  ============================================================ */
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+
       try {
         const [
-          { data: seasonData },
-          { data: teamsData },
-          { data: playersData },
-          { data: gamesData },
-          { data: setsData },
+          { data: seasonData, error: seasonError },
+          { data: teamsData, error: teamsError },
+          { data: playersData, error: playersError },
+          { data: gamesData, error: gamesError },
+          { data: setsData, error: setsError },
         ] = await Promise.all([
-          // Single season metadata row
           supabase
             .from("seasons")
             .select("*")
             .eq("season_id", seasonId)
             .single(),
 
-          // All teams for this season, ordered by standings
           supabase
             .from("teams")
             .select("*")
             .eq("season_id", seasonId)
-            .order("wins", { ascending: false }),
+            .order("wins", {
+              ascending: false,
+            }),
 
-          // All archived player rows for this season
-          // sorted by plus_minus descending (leaderboard order)
           supabase
             .from("players_old")
             .select("*")
             .eq("season_id", seasonId)
-            .order("plus_minus", { ascending: false }),
+            .order("plus_minus", {
+              ascending: false,
+            }),
 
-          // All games for this season in chronological order
           supabase
             .from("games")
             .select("*")
             .eq("season_id", seasonId)
-            .order("date", { ascending: true })
-            .order("time", { ascending: true }),
+            .order("date", {
+              ascending: true,
+            })
+            .order("time", {
+              ascending: true,
+            }),
 
-          // All sets for this season — joined to games client-side below
           supabase
             .from("sets")
             .select("*")
             .eq("season_id", seasonId)
-            .order("set_no", { ascending: true }),
+            .order("set_no", {
+              ascending: true,
+            }),
         ]);
 
-        const resolvedTeams: Team[] = teamsData ?? [];
+        if (seasonError) throw seasonError;
+        if (teamsError) throw teamsError;
+        if (playersError) throw playersError;
+        if (gamesError) throw gamesError;
+        if (setsError) throw setsError;
+
+        const resolvedTeams =
+          (teamsData ?? []) as Team[];
 
         setSeason(seasonData ?? null);
         setTeams(resolvedTeams);
 
-        // Attach team colour data onto each player row for PlayerCard gradients
-        setPlayers(enrichPlayers(playersData ?? [], resolvedTeams));
+        setPlayers(
+          enrichPlayers(
+            playersData ?? [],
+            resolvedTeams
+          )
+        );
 
-        // Join sets onto their parent game and compute set result
-        const gamesWithSets: Game[] = (gamesData ?? []).map((g: any) => ({
-          ...g,
-          sets: (setsData ?? [])
-            .filter((s: any) => s.game_id === g.id)
-            .map((s: any) => ({
-              ...s,
-              // Compute W/L/T from points — not stored in DB
-              result:
-                s.points_for === s.points_against ? "T"
-                : s.points_for > s.points_against  ? "W"
-                : "L",
-            })),
-        }));
+        const gamesWithSets: Game[] =
+          (gamesData ?? []).map((game: any) => ({
+            ...game,
+            sets: (setsData ?? [])
+              .filter(
+                (set: any) =>
+                  set.game_id === game.id
+              )
+              .map((set: any) => ({
+                ...set,
+                result:
+                  set.points_for ===
+                  set.points_against
+                    ? "T"
+                    : set.points_for >
+                      set.points_against
+                    ? "W"
+                    : "L",
+              })),
+          }));
 
         setGames(gamesWithSets);
-      } catch (err) {
-        console.error("History fetch error:", err);
+      } catch (error) {
+        console.error(
+          "History fetch error:",
+          error
+        );
       } finally {
         setLoading(false);
       }
@@ -294,219 +310,872 @@ export default function History({ seasonId }: { seasonId: number }) {
     fetchData();
   }, [seasonId]);
 
-  /* ── Loading / Error Guards ── */
-  if (loading) return <div className="p-12 text-center">Loading season…</div>;
-  if (!season) return <div className="p-12 text-center">Season not found.</div>;
+  /* ============================================================
+     DERIVED DATA
+  ============================================================ */
 
-  /* ── Derived / Filtered Data ──────────────────────────────────────────────
-   * Filtering is done client-side since all data is already fetched.
-   * teamFilter  → filters both the games table AND narrows the player list
-   *               to players on that team (via enriched team field).
-   * playerFilter → further narrows the player card grid to one player.
-   * ----------------------------------------------------------------------- */
+  const selectedTeam = useMemo(
+    () =>
+      teamFilter === "all"
+        ? null
+        : teams.find(
+            (team) =>
+              team.team_id === teamFilter
+          ),
+    [teamFilter, teams]
+  );
 
-  /** Returns the primary colour of a team by ID, for table row gradients. */
-  const getTeamBg = (teamId?: number | null): string =>
-    teams.find((t) => t.team_id === teamId)?.color ?? "#f3f4f6";
+  const filteredPlayers = useMemo(() => {
+    return players.filter((player) => {
+      if (
+        playerFilter !== "all" &&
+        Number(player.id) !== Number(playerFilter)
+      ) {
+        return false;
+      }
 
-  const filteredPlayers = players.filter((p) => {
-    if (playerFilter !== "all" && p.id !== playerFilter) return false;
-    if (teamFilter   !== "all" && p.team !== teams.find(t => t.team_id === teamFilter)?.name) return false;
-    return true;
-  });
+      if (
+        selectedTeam &&
+        player.team !== selectedTeam.name
+      ) {
+        return false;
+      }
 
-  const filteredGames =
-    teamFilter === "all"
-      ? games
-      : games.filter((g) => g.team_id === teamFilter);
+      return true;
+    });
+  }, [
+    players,
+    playerFilter,
+    selectedTeam,
+  ]);
 
-  /* ── Render ── */
+  const filteredGames = useMemo(() => {
+    if (teamFilter === "all") return games;
+
+    return games.filter(
+      (game) =>
+        game.team_id === teamFilter
+    );
+  }, [games, teamFilter]);
+
+  const totalGames = games.length;
+
+  const totalSets = games.reduce(
+    (sum, game) =>
+      sum + game.sets.length,
+    0
+  );
+
+  /* ============================================================
+     LOADING
+  ============================================================ */
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#050506] flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative h-12 w-12 mx-auto mb-5">
+            <div className="absolute inset-0 rounded-full border-[3px] border-black/5 dark:border-white/10" />
+
+            <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-black dark:border-t-white animate-spin" />
+          </div>
+
+          <p className="text-sm text-black/50 dark:text-white/50">
+            Loading season history…
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  /* ============================================================
+     ERROR
+  ============================================================ */
+
+  if (!season) {
+    return (
+      <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#050506] flex items-center justify-center">
+        <div className="text-center">
+          <Trophy className="h-10 w-10 mx-auto mb-4 text-black/30 dark:text-white/30" />
+
+          <h1 className="text-2xl font-semibold">
+            Season not found
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
+  /* ============================================================
+     RENDER
+  ============================================================ */
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12 space-y-8">
+    <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#050506] text-black dark:text-white overflow-hidden">
 
-      {/* Page title — season name from DB */}
-      <h1 className="text-3xl font-bold">{season.name}</h1>
+      {/* ======================================================
+          AMBIENT BACKGROUND
+      ====================================================== */}
 
-      {/* ── Season Awards ── */}
-      <Card className="bg-gradient-to-r from-primary/10 via-background to-primary/10 border-primary/20">
-        <CardHeader>
-          <CardTitle className="text-2xl">🏆 Season Awards</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-48 left-1/4 h-[500px] w-[500px] rounded-full bg-orange-400/10 blur-[130px]" />
+
+        <div className="absolute top-1/3 -right-40 h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-[140px]" />
+
+        <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-purple-500/[0.05] blur-[140px]" />
+      </div>
+
+      {/* ======================================================
+          HERO
+      ====================================================== */}
+
+      <section className="relative px-4 pt-5 md:pt-8">
+        <div className="relative max-w-7xl mx-auto overflow-hidden rounded-[32px] md:rounded-[42px] border border-white/30 dark:border-white/10 bg-gradient-to-br from-orange-500 via-orange-400 to-blue-500 shadow-[0_25px_80px_rgba(0,0,0,0.12)]">
+
+          <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-white/5 to-black/10 pointer-events-none" />
+
+          <div className="absolute -top-40 -right-20 h-[500px] w-[500px] rounded-full bg-white/20 blur-[100px]" />
+
+          <div className="absolute -bottom-60 -left-20 h-[500px] w-[500px] rounded-full bg-white/10 blur-[120px]" />
+
+          <div className="relative px-6 py-8 md:px-12 md:py-12">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 border border-white/20 backdrop-blur-xl px-3.5 py-1.5 mb-5">
+              <Trophy className="h-3.5 w-3.5 text-white" />
+
+              <span className="text-[11px] font-semibold tracking-[0.16em] text-white/90">
+                SEASON ARCHIVE
+              </span>
+            </div>
+
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold tracking-[-0.045em] text-white">
+              {season.name}
+            </h1>
+
+            <p className="mt-3 max-w-2xl text-base md:text-lg text-white/75">
+              A complete retrospective of the
+              season — players, matches,
+              standings, and awards.
+            </p>
+
+            <div className="flex flex-wrap gap-2.5 mt-7">
+              <HeroStat
+                icon={<Users />}
+                value={teams.length}
+                label="Teams"
+              />
+
+              <HeroStat
+                icon={<Users />}
+                value={players.length}
+                label="Players"
+              />
+
+              <HeroStat
+                icon={<CalendarDays />}
+                value={totalGames}
+                label="Games"
+              />
+
+              <HeroStat
+                icon={<BarChart3 />}
+                value={totalSets}
+                label="Sets"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ======================================================
+          MAIN
+      ====================================================== */}
+
+      <main className="relative max-w-7xl mx-auto px-4 py-8 md:py-12 space-y-6 md:space-y-8">
+
+        {/* ====================================================
+            AWARDS
+        ==================================================== */}
+
+        <GlassPanel>
+          <SectionHeader
+            icon={<Trophy />}
+            title="Season Awards"
+            count={awards.length}
+          />
+
+          <p className="text-sm text-black/45 dark:text-white/45 mt-2 mb-6">
+            Recognition from the completed season.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {awards.map((award) => (
               <div
                 key={award.title}
-                className="rounded-xl border bg-background/60 p-4 text-center shadow-sm hover:shadow-md transition"
+                className="group relative overflow-hidden rounded-[22px] border border-black/5 dark:border-white/10 bg-white/45 dark:bg-white/[0.04] backdrop-blur-xl p-4 hover:bg-white/65 dark:hover:bg-white/[0.07] hover:-translate-y-0.5 transition-all duration-300"
               >
-                <div className="text-4xl mb-2">{award.icon}</div>
-                <div className="font-bold text-lg">{award.title}</div>
-                <div className="mt-2 text-primary font-semibold">{award.winner}</div>
-                <div className="text-sm text-muted-foreground">{award.team}</div>
+                <div className="flex items-center gap-3">
+                  <div className="h-11 w-11 shrink-0 rounded-2xl bg-black/[0.04] dark:bg-white/[0.07] flex items-center justify-center text-xl">
+                    {award.icon}
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="text-xs font-medium uppercase tracking-[0.08em] text-black/40 dark:text-white/40 truncate">
+                      {award.title}
+                    </div>
+
+                    <div className="font-semibold truncate mt-0.5">
+                      {award.winner}
+                    </div>
+
+                    <div className="text-xs text-black/40 dark:text-white/40 truncate">
+                      {award.team}
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </GlassPanel>
 
-      {/* ── Filters ── */}
-      <div className="flex flex-wrap gap-4 items-center">
-        {/* Team filter — also filters the games table below */}
-        <select
-          value={teamFilter}
-          onChange={(e) =>
-            setTeamFilter(e.target.value === "all" ? "all" : Number(e.target.value))
-          }
-          className="border px-2 py-1 rounded-md"
-        >
-          <option value="all">All Teams</option>
-          {teams.map((t) => (
-            <option key={t.team_id} value={t.team_id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
+        {/* ====================================================
+            FILTERS
+        ==================================================== */}
 
-        {/* Player filter — narrows card grid to a single player */}
-        <select
-          value={playerFilter}
-          onChange={(e) =>
-            setPlayerFilter(e.target.value === "all" ? "all" : Number(e.target.value))
-          }
-          className="border px-2 py-1 rounded-md"
-        >
-          <option value="all">All Players</option>
-          {players.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </div>
+        <GlassPanel>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 
-      {/* ── Player Stats Grid ──
-          forceShowStats=true because this is a retrospective history view —
-          stat_visibility is irrelevant for completed seasons.
-          Remove forceShowStats if you want to honour privacy even in history. */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <CalendarDays className="h-5 w-5 inline mr-2" />
-            Player Stats
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+            <div>
+              <SectionHeader
+                icon={<BarChart3 />}
+                title="Season Statistics"
+              />
+
+              <p className="text-sm text-black/45 dark:text-white/45 mt-2">
+                Explore historical player and
+                match data.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+              <GlassSelect
+                value={teamFilter}
+                onChange={(value) => {
+                  setTeamFilter(
+                    value === "all"
+                      ? "all"
+                      : Number(value)
+                  );
+
+                  setPlayerFilter("all");
+                }}
+              >
+                <option value="all">
+                  All Teams
+                </option>
+
+                {teams.map((team) => (
+                  <option
+                    key={team.team_id}
+                    value={team.team_id}
+                  >
+                    {team.name}
+                  </option>
+                ))}
+              </GlassSelect>
+
+              <GlassSelect
+                value={playerFilter}
+                onChange={(value) =>
+                  setPlayerFilter(
+                    value === "all"
+                      ? "all"
+                      : Number(value)
+                  )
+                }
+              >
+                <option value="all">
+                  All Players
+                </option>
+
+                {players.map((player) => (
+                  <option
+                    key={player.id}
+                    value={player.id}
+                  >
+                    {player.name}
+                  </option>
+                ))}
+              </GlassSelect>
+            </div>
+          </div>
+        </GlassPanel>
+
+        {/* ====================================================
+            PLAYERS
+        ==================================================== */}
+
+        <GlassPanel>
+          <SectionHeader
+            icon={<Users />}
+            title="Player Stats"
+            count={filteredPlayers.length}
+          />
+
+          <p className="text-sm text-black/45 dark:text-white/45 mt-2 mb-6">
+            Historical player performance for
+            {selectedTeam
+              ? ` ${selectedTeam.name}`
+              : " the entire season"}.
+          </p>
+
           {filteredPlayers.length === 0 ? (
-            <div className="text-muted-foreground">No players found.</div>
+            <EmptyState text="No players found." />
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPlayers.map((p) => (
-                <PlayerCard key={p.id} player={p} forceShowStats />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+              {filteredPlayers.map((player) => (
+                <div
+                  key={player.id}
+                  className="rounded-[24px] overflow-hidden border border-black/5 dark:border-white/10 bg-white/35 dark:bg-white/[0.04] backdrop-blur-xl shadow-sm hover:shadow-xl hover:bg-white/50 dark:hover:bg-white/[0.07] transition-all duration-300"
+                >
+                  <PlayerCard
+                    player={player}
+                    forceShowStats
+                  />
+                </div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </GlassPanel>
 
-      {/* ── Match History Table ──
-          Displays every game → set breakdown for the season.
-          Each row is one set (not one game) to show granular scoring.
-          Row background fades to the team's primary colour on the left. */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <CalendarDays className="h-5 w-5 inline mr-2" />
-            Match History (Set-by-Set)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+        {/* ====================================================
+            MATCH HISTORY
+        ==================================================== */}
+
+        <GlassPanel>
+          <SectionHeader
+            icon={<CalendarDays />}
+            title="Match History"
+            count={filteredGames.length}
+          />
+
+          <p className="text-sm text-black/45 dark:text-white/45 mt-2 mb-6">
+            Set-by-set results from the completed
+            season.
+          </p>
+
           {filteredGames.length === 0 ? (
-            <div className="text-muted-foreground text-center py-4">
-              No games played yet.
-            </div>
+            <EmptyState text="No games found." />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-muted">
-                    <th className="px-4 py-2">Date</th>
-                    <th className="px-4 py-2">Time</th>
-                    <th className="px-4 py-2">Team</th>
-                    <th className="px-4 py-2">Opponent</th>
-                    <th className="px-4 py-2 text-center">Set</th>
-                    <th className="px-4 py-2 text-center">PF</th>
-                    <th className="px-4 py-2 text-center">PA</th>
-                    <th className="px-4 py-2 text-center">Diff</th>
-                    <th className="px-4 py-2 text-center">Result</th>
-                    <th className="px-4 py-2 text-center">VOD</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredGames.map((game) =>
-                    game.sets.map((set) => (
-                      <tr
-                        key={`${game.id}-set-${set.set_no}`}
-                        style={{
-                          // Row tints to team colour on the left edge
-                          background: `linear-gradient(270deg, #ffffff 85%, ${getTeamBg(game.team_id)} 100%)`,
-                        }}
-                        className="border-b border-muted"
-                      >
-                        <td className="px-4 py-2">{game.date}</td>
-                        <td className="px-4 py-2">{formatTime12H(game.time)}</td>
-                        <td className="px-4 py-2 font-semibold">
-                          {game.team_id
-                            ? teams.find((t) => t.team_id === game.team_id)?.name
-                            : "N/A"}
-                        </td>
-                        <td className="px-4 py-2 font-semibold">{game.opponent}</td>
-                        <td className="px-4 py-2 text-center">{set.set_no}</td>
-                        <td className="px-4 py-2 text-center text-green-700 font-bold">
-                          {set.points_for}
-                        </td>
-                        <td className="px-4 py-2 text-center text-red-600 font-bold">
-                          {set.points_against}
-                        </td>
-                        <td className="px-4 py-2 text-center font-semibold">
-                          {(set.points_for ?? 0) - (set.points_against ?? 0)}
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          <Badge
-                            className={`px-2 py-1 rounded-full text-xs font-bold ${
-                              set.result === "W" ? "bg-green-100 text-green-700"
-                            : set.result === "L" ? "bg-red-100 text-red-700"
-                            :                      "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {set.result}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          {set.vod_link ? (
-                            <Button
-                              size="sm"
-                              variant="default"
-                              className="inline-flex items-center gap-1"
-                              onClick={() =>
-                                window.open(set.vod_link!, "_blank", "noopener,noreferrer")
-                              }
-                            >
-                              <PlayCircle className="h-4 w-4" />
-                              Watch
-                            </Button>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <MatchHistory
+              games={filteredGames}
+              teams={teams}
+            />
           )}
-        </CardContent>
-      </Card>
+        </GlassPanel>
+      </main>
     </div>
+  );
+}
+
+/* ============================================================
+   HERO STAT
+============================================================ */
+
+const HeroStat = ({
+  icon,
+  value,
+  label,
+}: {
+  icon: JSX.Element;
+  value: number;
+  label: string;
+}) => (
+  <div className="inline-flex items-center gap-2.5 rounded-full bg-white/15 border border-white/20 backdrop-blur-xl px-4 py-2.5 text-white shadow-lg">
+    <span className="text-white/70">
+      {React.cloneElement(icon, {
+        className: "h-4 w-4",
+      })}
+    </span>
+
+    <span className="font-semibold">
+      {value}
+    </span>
+
+    <span className="text-sm text-white/65">
+      {label}
+    </span>
+  </div>
+);
+
+/* ============================================================
+   GLASS PANEL
+============================================================ */
+
+const GlassPanel = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => (
+  <section className="rounded-[30px] md:rounded-[34px] border border-black/5 dark:border-white/10 bg-white/55 dark:bg-white/[0.045] backdrop-blur-2xl shadow-[0_10px_50px_rgba(0,0,0,0.06)] overflow-hidden">
+    <div className="p-5 md:p-7">
+      {children}
+    </div>
+  </section>
+);
+
+/* ============================================================
+   SECTION HEADER
+============================================================ */
+
+const SectionHeader = ({
+  icon,
+  title,
+  count,
+}: {
+  icon: JSX.Element;
+  title: string;
+  count?: number;
+}) => (
+  <div className="flex items-center gap-3">
+    <div className="h-10 w-10 shrink-0 rounded-2xl bg-black/[0.04] dark:bg-white/[0.07] flex items-center justify-center text-black/55 dark:text-white/60">
+      {React.cloneElement(icon, {
+        className: "h-5 w-5",
+      })}
+    </div>
+
+    <h2 className="text-xl md:text-2xl font-semibold tracking-tight">
+      {title}
+    </h2>
+
+    {count !== undefined && (
+      <span className="rounded-full bg-black/[0.04] dark:bg-white/[0.07] px-2.5 py-1 text-xs font-medium text-black/45 dark:text-white/45">
+        {count}
+      </span>
+    )}
+  </div>
+);
+
+/* ============================================================
+   GLASS SELECT
+============================================================ */
+
+const GlassSelect = ({
+  value,
+  onChange,
+  children,
+}: {
+  value: number | "all";
+  onChange: (value: string) => void;
+  children: React.ReactNode;
+}) => (
+  <div className="relative">
+    <select
+      value={value}
+      onChange={(e) =>
+        onChange(e.target.value)
+      }
+      className="appearance-none w-full sm:w-[190px] h-11 rounded-full border border-black/5 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] backdrop-blur-xl pl-4 pr-10 text-sm font-medium text-black dark:text-white outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/30 transition-all"
+    >
+      {children}
+    </select>
+
+    <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-black/40 dark:text-white/40" />
+  </div>
+);
+
+/* ============================================================
+   EMPTY STATE
+============================================================ */
+
+const EmptyState = ({
+  text,
+}: {
+  text: string;
+}) => (
+  <div className="rounded-[24px] border border-dashed border-black/10 dark:border-white/10 bg-black/[0.015] dark:bg-white/[0.02] py-12 text-center">
+    <p className="text-sm text-black/40 dark:text-white/40">
+      {text}
+    </p>
+  </div>
+);
+
+/* ============================================================
+   MATCH HISTORY
+============================================================ */
+
+const MatchHistory = ({
+  games,
+  teams,
+}: {
+  games: Game[];
+  teams: Team[];
+}) => {
+  const getTeam = (
+    teamId?: number | null
+  ) =>
+    teams.find(
+      (team) => team.team_id === teamId
+    );
+
+  return (
+    <div className="overflow-hidden rounded-[24px] border border-black/5 dark:border-white/10 bg-white/25 dark:bg-white/[0.025] backdrop-blur-xl">
+
+      {/* Desktop table */}
+
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full text-sm text-left border-collapse">
+          <thead>
+            <tr className="bg-black/[0.025] dark:bg-white/[0.035] border-b border-black/5 dark:border-white/10">
+              <th className="px-4 py-3.5 font-medium text-black/45 dark:text-white/45">
+                Date
+              </th>
+
+              <th className="px-4 py-3.5 font-medium text-black/45 dark:text-white/45">
+                Team
+              </th>
+
+              <th className="px-4 py-3.5 font-medium text-black/45 dark:text-white/45">
+                Opponent
+              </th>
+
+              <th className="px-4 py-3.5 text-center font-medium text-black/45 dark:text-white/45">
+                Set
+              </th>
+
+              <th className="px-4 py-3.5 text-center font-medium text-black/45 dark:text-white/45">
+                Score
+              </th>
+
+              <th className="px-4 py-3.5 text-center font-medium text-black/45 dark:text-white/45">
+                Diff
+              </th>
+
+              <th className="px-4 py-3.5 text-center font-medium text-black/45 dark:text-white/45">
+                Result
+              </th>
+
+              <th className="px-4 py-3.5 text-center font-medium text-black/45 dark:text-white/45">
+                VOD
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {games.map((game) => {
+              const team = getTeam(
+                game.team_id
+              );
+
+              return game.sets.map((set) => {
+                const difference =
+                  (set.points_for ?? 0) -
+                  (set.points_against ?? 0);
+
+                return (
+                  <tr
+                    key={`${game.id}-${set.set_no}`}
+                    className="border-b border-black/5 dark:border-white/5 last:border-0 hover:bg-black/[0.02] dark:hover:bg-white/[0.025] transition-colors"
+                  >
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      {formatDate(game.date)}
+                    </td>
+
+                    <td className="px-4 py-3.5">
+                      <TeamBadge team={team} />
+                    </td>
+
+                    <td className="px-4 py-3.5 font-semibold">
+                      {game.opponent ?? "—"}
+                    </td>
+
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-black/5 dark:bg-white/10 text-xs font-semibold">
+                        {set.set_no}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="font-semibold text-emerald-500">
+                        {set.points_for}
+                      </span>
+
+                      <span className="mx-1.5 text-black/20 dark:text-white/20">
+                        –
+                      </span>
+
+                      <span className="font-semibold text-red-500">
+                        {set.points_against}
+                      </span>
+                    </td>
+
+                    <td
+                      className={`px-4 py-3.5 text-center font-semibold ${
+                        difference > 0
+                          ? "text-emerald-500"
+                          : difference < 0
+                          ? "text-red-500"
+                          : "text-black/40 dark:text-white/40"
+                      }`}
+                    >
+                      {difference > 0
+                        ? "+"
+                        : ""}
+                      {difference}
+                    </td>
+
+                    <td className="px-4 py-3.5 text-center">
+                      <ResultBadge
+                        result={
+                          set.result
+                        }
+                      />
+                    </td>
+
+                    <td className="px-4 py-3.5 text-center">
+                      <VodButton
+                        link={set.vod_link}
+                      />
+                    </td>
+                  </tr>
+                );
+              });
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile cards */}
+
+      <div className="md:hidden divide-y divide-black/5 dark:divide-white/10">
+        {games.map((game) => {
+          const team = getTeam(
+            game.team_id
+          );
+
+          return game.sets.map((set) => {
+            const difference =
+              (set.points_for ?? 0) -
+              (set.points_against ?? 0);
+
+            return (
+              <div
+                key={`${game.id}-${set.set_no}`}
+                className="px-4 py-4"
+              >
+                <div className="flex items-center justify-between gap-3">
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-xs text-black/40 dark:text-white/40">
+                        {formatDate(
+                          game.date
+                        )}
+                      </span>
+
+                      <span className="text-black/20 dark:text-white/20">
+                        •
+                      </span>
+
+                      <span className="text-xs text-black/40 dark:text-white/40">
+                        {formatTime12H(
+                          game.time
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold truncate">
+                        {team?.name ??
+                          "Unknown Team"}
+                      </span>
+
+                      <span className="text-black/30 dark:text-white/30">
+                        vs
+                      </span>
+
+                      <span className="font-semibold truncate">
+                        {game.opponent ??
+                          "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <ResultBadge
+                    result={set.result}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between mt-3">
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-black/35 dark:text-white/35">
+                        Set
+                      </div>
+
+                      <div className="font-semibold">
+                        {set.set_no}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-black/35 dark:text-white/35">
+                        Score
+                      </div>
+
+                      <div className="font-semibold">
+                        <span className="text-emerald-500">
+                          {set.points_for}
+                        </span>
+
+                        <span className="mx-1 text-black/20 dark:text-white/20">
+                          –
+                        </span>
+
+                        <span className="text-red-500">
+                          {set.points_against}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[10px] uppercase tracking-wider text-black/35 dark:text-white/35">
+                        Diff
+                      </div>
+
+                      <div
+                        className={`font-semibold ${
+                          difference > 0
+                            ? "text-emerald-500"
+                            : difference < 0
+                            ? "text-red-500"
+                            : ""
+                        }`}
+                      >
+                        {difference > 0
+                          ? "+"
+                          : ""}
+                        {difference}
+                      </div>
+                    </div>
+                  </div>
+
+                  {set.vod_link && (
+                    <VodButton
+                      link={set.vod_link}
+                    />
+                  )}
+                </div>
+              </div>
+            );
+          });
+        })}
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================
+   TEAM BADGE
+============================================================ */
+
+const TeamBadge = ({
+  team,
+}: {
+  team?: Team;
+}) => {
+  if (!team) {
+    return (
+      <span className="text-black/35 dark:text-white/35">
+        —
+      </span>
+    );
+  }
+
+  const color =
+    team.color ?? "#64748b";
+
+  return (
+    <span
+      className="inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold max-w-[160px]"
+      style={{
+        backgroundColor: `${color}18`,
+        color,
+      }}
+    >
+      <span
+        className="h-2 w-2 rounded-full shrink-0"
+        style={{
+          backgroundColor: color,
+        }}
+      />
+
+      <span className="truncate">
+        {team.name}
+      </span>
+    </span>
+  );
+};
+
+/* ============================================================
+   RESULT BADGE
+============================================================ */
+
+const ResultBadge = ({
+  result,
+}: {
+  result: "W" | "L" | "T" | null;
+}) => {
+  const styles =
+    result === "W"
+      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/15"
+      : result === "L"
+      ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/15"
+      : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/15";
+
+  return (
+    <span
+      className={`inline-flex items-center justify-center min-w-9 rounded-full border px-2.5 py-1 text-xs font-bold ${styles}`}
+    >
+      {result ?? "—"}
+    </span>
+  );
+};
+
+/* ============================================================
+   VOD BUTTON
+============================================================ */
+
+const VodButton = ({
+  link,
+}: {
+  link?: string | null;
+}) => {
+  if (!link) {
+    return (
+      <span className="text-xs text-black/25 dark:text-white/25">
+        —
+      </span>
+    );
+  }
+
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      className="h-8 rounded-full px-3 bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
+      onClick={() =>
+        window.open(
+          link,
+          "_blank",
+          "noopener,noreferrer"
+        )
+      }
+    >
+      <PlayCircle className="h-3.5 w-3.5 mr-1.5" />
+
+      <span className="hidden sm:inline">
+        Watch
+      </span>
+    </Button>
   );
 }
