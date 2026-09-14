@@ -376,9 +376,9 @@ const Home = () => {
 
                 {/* Main heading */}
                 <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-[-0.04em] leading-[0.95] text-slate-900 dark:text-white">
-                  Where the league
+                  The NCL
                   <span className="block bg-gradient-to-r from-orange-500 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    comes together.
+                    Fall 2026
                   </span>
                 </h1>
 
