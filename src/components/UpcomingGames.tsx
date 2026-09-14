@@ -141,11 +141,12 @@ function formatGameTime(time24: string | null | undefined) {
 
               return (
                 <li key={game.id}>
-                  {showDateHeader && (
-                    <div className="text-xs font-semibold text-muted-foreground mt-4 mb-2">
-                      {game.time ? formatGameTime(game.time) : "TBD"}
-                    </div>
-                  )}
+{showDateHeader && (
+  <div className="text-xs font-semibold text-muted-foreground mt-4 mb-2">
+    {formatGameDate(game.date)}
+  </div>
+)}
+
 
                   <div className="flex items-center justify-between p-3 rounded-md hover:bg-muted transition-colors">
                     {/* Team Info */}
