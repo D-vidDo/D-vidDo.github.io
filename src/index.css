@@ -2,129 +2,292 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Volleyball League Design System - Sports Website Inspired
-All colors MUST be HSL for consistency and theming support.
-*/
+/*
+ * Volleyball League — Liquid Glass Design System
+ *
+ * Philosophy:
+ * - Translucent surfaces
+ * - Backdrop blur
+ * - Soft depth
+ * - Subtle luminous borders
+ * - Restrained gradients
+ * - Orange/blue used primarily as accents
+ */
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 220 15% 8%;
+    /* ─────────────────────────────────────────────
+       Core colors
+       ───────────────────────────────────────────── */
+
+    --background: 220 25% 96%;
+    --foreground: 220 20% 10%;
+
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 8%;
+    --card-foreground: 220 20% 10%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 8%; /* Volleyball-inspired orange primary */
+    --popover-foreground: 220 20% 10%;
+
+    /* Volleyball orange */
     --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 25 100% 65%; /* Cool blue secondary */
+
+    --primary-glow: 25 100% 65%;
+
+    /* Cool Apple-like blue */
     --secondary: 215 85% 55%;
     --secondary-foreground: 0 0% 100%;
+
     --muted: 220 15% 95%;
-    --muted-foreground: 220 10% 45%;
+    --muted-foreground: 220 10% 42%;
+
     --accent: 215 85% 55%;
     --accent-foreground: 0 0% 100%;
+
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
+
+    /* ─────────────────────────────────────────────
+       Glass materials
+       ───────────────────────────────────────────── */
+
+    --glass-light: 0 0% 100% / 0.58;
+    --glass-medium: 0 0% 100% / 0.68;
+    --glass-heavy: 0 0% 100% / 0.78;
+
+    --glass-border: 0 0% 100% / 0.55;
+    --glass-border-subtle: 0 0% 100% / 0.32;
+
+    --glass-highlight: 0 0% 100% / 0.72;
+
+    /* ─────────────────────────────────────────────
+       Borders
+       ───────────────────────────────────────────── */
+
+    --border: 220 15% 85% / 0.45;
+    --input: 220 15% 85% / 0.55;
+
     --ring: 25 95% 53%;
 
-    /* Sports website gradients */
-    /* --gradient-hero: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(215 85% 55%) 100%); */
-    --gradient-hero: linear-gradient(
-      135deg,
-      hsl(195 100% 85%) 0%,
-      hsl(210 90% 70%) 50%,
-      hsl(230 80% 60%) 100%
-    );
-    .nav-gradient {
-      background: linear-gradient(
-        225deg,
-        /* 135 + 180 flipped */ hsl(195 100% 85%) 0%,
-        hsl(210 90% 70%) 50%,
-        hsl(230 80% 60%) 100%
+    /* ─────────────────────────────────────────────
+       Background atmosphere
+       ───────────────────────────────────────────── */
+
+    --gradient-hero:
+      radial-gradient(
+        circle at 15% 20%,
+        hsl(195 100% 85% / 0.9) 0%,
+        transparent 38%
+      ),
+      radial-gradient(
+        circle at 85% 15%,
+        hsl(215 90% 75% / 0.75) 0%,
+        transparent 35%
+      ),
+      radial-gradient(
+        circle at 70% 85%,
+        hsl(230 80% 70% / 0.65) 0%,
+        transparent 40%
+      ),
+      linear-gradient(
+        135deg,
+        hsl(195 100% 92%) 0%,
+        hsl(215 90% 82%) 50%,
+        hsl(230 80% 76%) 100%
       );
-    }
 
-    --gradient-card: linear-gradient(
-      145deg,
-      hsl(0 0% 100%) 0%,
-      hsl(220 15% 98%) 100%
-    );
-    --gradient-stats: linear-gradient(
-      90deg,
-      hsl(25 95% 53% / 0.1) 0%,
-      hsl(215 85% 55% / 0.1) 100%
-    );
+    /* ─────────────────────────────────────────────
+       Glass gradients
+       ───────────────────────────────────────────── */
 
-    /* Elegant shadows */
-    --shadow-card: 0 4px 20px hsl(220 15% 8% / 0.08);
-    --shadow-hover: 0 8px 30px hsl(220 15% 8% / 0.12);
-    --shadow-primary: 0 4px 20px hsl(25 95% 53% / 0.3);
+    --gradient-glass:
+      linear-gradient(
+        135deg,
+        hsl(0 0% 100% / 0.72) 0%,
+        hsl(0 0% 100% / 0.42) 100%
+      );
 
-    /* Smooth transitions */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    * {
-      transition: background-color 0.3s ease, color 0.3s ease,
-        border-color 0.3s ease;
-    }
+    --gradient-glass-subtle:
+      linear-gradient(
+        135deg,
+        hsl(0 0% 100% / 0.52) 0%,
+        hsl(0 0% 100% / 0.25) 100%
+      );
 
-    --radius: 0.5rem;
+    --gradient-glass-dark:
+      linear-gradient(
+        135deg,
+        hsl(220 20% 12% / 0.68) 0%,
+        hsl(220 20% 8% / 0.42) 100%
+      );
 
-    --sidebar-background: 0 0% 98%;
+    /* ─────────────────────────────────────────────
+       Shadows
+       ───────────────────────────────────────────── */
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --shadow-glass:
+      0 8px 32px hsl(220 25% 15% / 0.08),
+      0 2px 8px hsl(220 25% 15% / 0.05);
 
-    --sidebar-primary: 240 5.9% 10%;
+    --shadow-glass-hover:
+      0 18px 50px hsl(220 25% 15% / 0.12),
+      0 4px 12px hsl(220 25% 15% / 0.06);
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    --shadow-primary:
+      0 8px 30px hsl(25 95% 53% / 0.22);
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    /* ─────────────────────────────────────────────
+       Blur
+       ───────────────────────────────────────────── */
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
+    --blur-glass: blur(24px) saturate(180%);
+    --blur-glass-heavy: blur(40px) saturate(180%);
 
-    --sidebar-border: 220 13% 91%;
+    /* ─────────────────────────────────────────────
+       Motion
+       ───────────────────────────────────────────── */
 
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --transition-smooth:
+      all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+
+    --transition-glass:
+      all 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* ─────────────────────────────────────────────
+       Radius
+       ───────────────────────────────────────────── */
+
+    --radius: 1.25rem;
+
+    /* ─────────────────────────────────────────────
+       Sidebar
+       ───────────────────────────────────────────── */
+
+    --sidebar-background: 0 0% 100% / 0.5;
+    --sidebar-foreground: 220 15% 15%;
+
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+
+    --sidebar-accent: 0 0% 100% / 0.45;
+    --sidebar-accent-foreground: 220 15% 10%;
+
+    --sidebar-border: 0 0% 100% / 0.4;
+    --sidebar-ring: 25 95% 53%;
   }
 
+  /* ─────────────────────────────────────────────
+     Dark Mode
+     ───────────────────────────────────────────── */
+
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 222 30% 7%;
+    --foreground: 210 30% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 222 30% 10%;
+    --card-foreground: 210 30% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 222 30% 10%;
+    --popover-foreground: 210 30% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 25 95% 58%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --primary-glow: 25 100% 68%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --secondary: 215 85% 60%;
+    --secondary-foreground: 0 0% 100%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --muted: 220 20% 16%;
+    --muted-foreground: 215 15% 68%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --accent: 215 85% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 210 30% 98%;
+
+    --border: 0 0% 100% / 0.10;
+    --input: 0 0% 100% / 0.12;
+
+    --ring: 25 95% 58%;
+
+    /* Dark glass */
+    --glass-light: 0 0% 100% / 0.10;
+    --glass-medium: 0 0% 100% / 0.14;
+    --glass-heavy: 0 0% 100% / 0.18;
+
+    --glass-border: 0 0% 100% / 0.18;
+    --glass-border-subtle: 0 0% 100% / 0.08;
+
+    --glass-highlight: 0 0% 100% / 0.24;
+
+    --gradient-hero:
+      radial-gradient(
+        circle at 15% 15%,
+        hsl(195 90% 40% / 0.35) 0%,
+        transparent 35%
+      ),
+      radial-gradient(
+        circle at 85% 20%,
+        hsl(230 80% 55% / 0.30) 0%,
+        transparent 35%
+      ),
+      radial-gradient(
+        circle at 70% 85%,
+        hsl(25 95% 53% / 0.18) 0%,
+        transparent 35%
+      ),
+      linear-gradient(
+        135deg,
+        hsl(220 35% 12%) 0%,
+        hsl(225 35% 8%) 100%
+      );
+
+    --gradient-glass:
+      linear-gradient(
+        135deg,
+        hsl(0 0% 100% / 0.14) 0%,
+        hsl(0 0% 100% / 0.05) 100%
+      );
+
+    --gradient-glass-subtle:
+      linear-gradient(
+        135deg,
+        hsl(0 0% 100% / 0.09) 0%,
+        hsl(0 0% 100% / 0.03) 100%
+      );
+
+    --gradient-glass-dark:
+      linear-gradient(
+        135deg,
+        hsl(0 0% 0% / 0.45) 0%,
+        hsl(0 0% 0% / 0.25) 100%
+      );
+
+    --shadow-glass:
+      0 12px 40px hsl(0 0% 0% / 0.30),
+      0 2px 8px hsl(0 0% 0% / 0.20);
+
+    --shadow-glass-hover:
+      0 20px 60px hsl(0 0% 0% / 0.40),
+      0 4px 12px hsl(0 0% 0% / 0.25);
+
+    --shadow-primary:
+      0 8px 30px hsl(25 95% 53% / 0.25);
+
+    --sidebar-background: 0 0% 100% / 0.06;
+    --sidebar-foreground: 210 30% 95%;
+
+    --sidebar-primary: 25 95% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --sidebar-accent: 0 0% 100% / 0.08;
+    --sidebar-accent-foreground: 210 30% 98%;
+
+    --sidebar-border: 0 0% 100% / 0.08;
+    --sidebar-ring: 25 95% 58%;
   }
 }
 
@@ -133,7 +296,303 @@ All colors MUST be HSL for consistency and theming support.
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
+
+    background-image: var(--gradient-hero);
+    background-attachment: fixed;
+    background-size: cover;
+
+    min-height: 100vh;
+
+    font-feature-settings:
+      "kern" 1,
+      "liga" 1;
+  }
+
+  /*
+   * Don't transition EVERYTHING.
+   *
+   * Applying transitions globally can make inputs,
+   * scrolling and complex components feel sluggish.
+   */
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    transition: var(--transition-smooth);
+  }
+}
+
+/* ─────────────────────────────────────────────────
+   LIQUID GLASS COMPONENTS
+   ───────────────────────────────────────────────── */
+
+@layer components {
+
+  /*
+   * Primary glass surface
+   */
+  .glass {
+    position: relative;
+
+    background: var(--gradient-glass);
+
+    backdrop-filter: var(--blur-glass);
+    -webkit-backdrop-filter: var(--blur-glass);
+
+    border: 1px solid hsl(var(--glass-border));
+
+    box-shadow: var(--shadow-glass);
+
+    border-radius: calc(var(--radius) + 0.25rem);
+
+    isolation: isolate;
+
+    overflow: hidden;
+
+    transition: var(--transition-glass);
+  }
+
+  /*
+   * Specular highlight.
+   *
+   * This is one of the details that makes the surface
+   * feel more like a material rather than a transparent box.
+   */
+  .glass::before {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+      linear-gradient(
+        135deg,
+        hsl(var(--glass-highlight)) 0%,
+        transparent 35%
+      );
+
+    opacity: 0.45;
+
+    z-index: -1;
+  }
+
+  /*
+   * Very subtle bottom edge reflection.
+   */
+  .glass::after {
+    content: "";
+
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    bottom: 0;
+
+    height: 1px;
+
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(0 0% 100% / 0.6),
+      transparent
+    );
+
+    opacity: 0.5;
+
+    pointer-events: none;
+  }
+
+  .glass:hover {
+    box-shadow: var(--shadow-glass-hover);
+
+    transform: translateY(-1px);
+
+    border-color: hsl(var(--glass-highlight));
+  }
+
+  /*
+   * Lighter/floating glass
+   */
+  .glass-light {
+    background: var(--gradient-glass-subtle);
+
+    backdrop-filter: var(--blur-glass);
+    -webkit-backdrop-filter: var(--blur-glass);
+
+    border: 1px solid hsl(var(--glass-border-subtle));
+
+    box-shadow: var(--shadow-glass);
+
+    border-radius: var(--radius);
+  }
+
+  /*
+   * Navigation glass
+   */
+  .nav-glass {
+    position: relative;
+
+    background: hsl(var(--glass-heavy));
+
+    backdrop-filter: var(--blur-glass-heavy);
+    -webkit-backdrop-filter: var(--blur-glass-heavy);
+
+    border: 1px solid hsl(var(--glass-border));
+
+    box-shadow:
+      0 8px 30px hsl(220 25% 15% / 0.08),
+      inset 0 1px 0 hsl(0 0% 100% / 0.55);
+
+    border-radius: 999px;
+  }
+
+  /*
+   * Glass button
+   */
+  .glass-button {
+    position: relative;
+
+    background: hsl(var(--glass-light));
+
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+
+    border: 1px solid hsl(var(--glass-border));
+
+    box-shadow:
+      0 4px 15px hsl(220 25% 15% / 0.08),
+      inset 0 1px 0 hsl(0 0% 100% / 0.5);
+
+    border-radius: 999px;
+
+    transition: var(--transition-glass);
+  }
+
+  .glass-button:hover {
+    background: hsl(var(--glass-medium));
+
+    transform: translateY(-1px);
+
+    box-shadow:
+      0 8px 25px hsl(220 25% 15% / 0.12),
+      inset 0 1px 0 hsl(0 0% 100% / 0.65);
+  }
+
+  .glass-button:active {
+    transform: scale(0.97);
+  }
+
+  /*
+   * Orange accent button.
+   *
+   * Keep your sports identity here rather than
+   * coloring the entire interface orange.
+   */
+  .glass-primary {
+    background:
+      linear-gradient(
+        135deg,
+        hsl(var(--primary) / 0.95),
+        hsl(var(--primary-glow) / 0.85)
+      );
+
+    color: hsl(var(--primary-foreground));
+
+    border: 1px solid hsl(0 0% 100% / 0.35);
+
+    box-shadow:
+      0 8px 25px hsl(var(--primary) / 0.22),
+      inset 0 1px 0 hsl(0 0% 100% / 0.35);
+  }
+
+  .glass-primary:hover {
+    box-shadow:
+      0 12px 35px hsl(var(--primary) / 0.30),
+      inset 0 1px 0 hsl(0 0% 100% / 0.45);
+
+    transform: translateY(-1px);
+  }
+
+  /*
+   * Stats / score cards
+   */
+  .glass-stat {
+    background:
+      linear-gradient(
+        135deg,
+        hsl(var(--primary) / 0.10),
+        hsl(var(--secondary) / 0.08)
+      );
+
+    backdrop-filter: var(--blur-glass);
+    -webkit-backdrop-filter: var(--blur-glass);
+
+    border: 1px solid hsl(var(--glass-border));
+
+    box-shadow:
+      var(--shadow-glass),
+      inset 0 1px 0 hsl(0 0% 100% / 0.45);
+
+    border-radius: calc(var(--radius) + 0.25rem);
+  }
+
+  /*
+   * Glass input
+   */
+  .glass-input {
+    background: hsl(var(--glass-light));
+
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+
+    border: 1px solid hsl(var(--glass-border));
+
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.35);
+
+    border-radius: 0.9rem;
+
+    outline: none;
+  }
+
+  .glass-input:focus {
+    border-color: hsl(var(--primary) / 0.55);
+
+    box-shadow:
+      0 0 0 3px hsl(var(--primary) / 0.12),
+      inset 0 1px 0 hsl(0 0% 100% / 0.4);
+  }
+}
+
+/* ─────────────────────────────────────────────────
+   ACCESSIBILITY / PERFORMANCE
+   ───────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .glass-light,
+  .nav-glass,
+  .glass-button,
+  .glass-stat,
+  .glass-input {
+    background: hsl(var(--card) / 0.95);
   }
 }
