@@ -118,18 +118,13 @@ const formatDate = (date?: string | null): string => {
   });
 };
 
-const enrichPlayers = (
-  rawPlayers: any[],
-  teams: Team[]
-): Player[] =>
+const enrichPlayers = (rawPlayers: any[], teams: Team[]): Player[] =>
   rawPlayers.map((player) => {
     const team =
       teams.find(
         (team) =>
           Array.isArray(team.player_ids) &&
-          team.player_ids.some(
-            (id) => Number(id) === Number(player.id)
-          )
+          team.player_ids.some((id) => Number(id) === Number(player.id)),
       ) ?? null;
 
     return {
@@ -144,11 +139,7 @@ const enrichPlayers = (
    COMPONENT
 ───────────────────────────────────────────────────────────────────────────── */
 
-export default function History({
-  seasonId,
-}: {
-  seasonId: number;
-}) {
+export default function History({ seasonId }: { seasonId: number }) {
   const navigate = useNavigate();
 
   /* ───────────────────────────────────────────────────────────────────────────
@@ -193,11 +184,9 @@ export default function History({
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [teamFilter, setTeamFilter] =
-    useState<number | "all">("all");
+  const [teamFilter, setTeamFilter] = useState<number | "all">("all");
 
-  const [playerFilter, setPlayerFilter] =
-    useState<number | "all">("all");
+  const [playerFilter, setPlayerFilter] = useState<number | "all">("all");
 
   /* ───────────────────────────────────────────────────────────────────────────
      FETCH DATA
@@ -286,42 +275,28 @@ export default function History({
         setSeasons(seasonsData ?? []);
         setTeams(resolvedTeams);
 
-        setPlayers(
-          enrichPlayers(
-            playersData ?? [],
-            resolvedTeams
-          )
-        );
+        setPlayers(enrichPlayers(playersData ?? [], resolvedTeams));
 
-        const gamesWithSets: Game[] =
-          (gamesData ?? []).map((game: any) => ({
-            ...game,
+        const gamesWithSets: Game[] = (gamesData ?? []).map((game: any) => ({
+          ...game,
 
-            sets: (setsData ?? [])
-              .filter(
-                (set: any) =>
-                  set.game_id === game.id
-              )
-              .map((set: any) => ({
-                ...set,
+          sets: (setsData ?? [])
+            .filter((set: any) => set.game_id === game.id)
+            .map((set: any) => ({
+              ...set,
 
-                result:
-                  set.points_for ===
-                  set.points_against
-                    ? "T"
-                    : set.points_for >
-                        set.points_against
-                      ? "W"
-                      : "L",
-              })),
-          }));
+              result:
+                set.points_for === set.points_against
+                  ? "T"
+                  : set.points_for > set.points_against
+                    ? "W"
+                    : "L",
+            })),
+        }));
 
         setGames(gamesWithSets);
       } catch (error) {
-        console.error(
-          "History fetch error:",
-          error
-        );
+        console.error("History fetch error:", error);
       } finally {
         setLoading(false);
       }
@@ -337,57 +312,35 @@ export default function History({
   const selectedTeamName = useMemo(() => {
     if (teamFilter === "all") return null;
 
-    return (
-      teams.find(
-        (team) => team.team_id === teamFilter
-      )?.name ?? null
-    );
+    return teams.find((team) => team.team_id === teamFilter)?.name ?? null;
   }, [teamFilter, teams]);
 
   const filteredPlayers = useMemo(() => {
     return players.filter((player) => {
-      if (
-        playerFilter !== "all" &&
-        player.id !== playerFilter
-      ) {
+      if (playerFilter !== "all" && player.id !== playerFilter) {
         return false;
       }
 
-      if (
-        selectedTeamName &&
-        player.team !== selectedTeamName
-      ) {
+      if (selectedTeamName && player.team !== selectedTeamName) {
         return false;
       }
 
       return true;
     });
-  }, [
-    players,
-    playerFilter,
-    selectedTeamName,
-  ]);
+  }, [players, playerFilter, selectedTeamName]);
 
   const filteredGames = useMemo(() => {
     if (teamFilter === "all") {
       return games;
     }
 
-    return games.filter(
-      (game) => game.team_id === teamFilter
-    );
+    return games.filter((game) => game.team_id === teamFilter);
   }, [games, teamFilter]);
 
-  const getTeam = (
-    teamId?: number | null
-  ): Team | null => {
+  const getTeam = (teamId?: number | null): Team | null => {
     if (!teamId) return null;
 
-    return (
-      teams.find(
-        (team) => team.team_id === teamId
-      ) ?? null
-    );
+    return teams.find((team) => team.team_id === teamId) ?? null;
   };
 
   /* ───────────────────────────────────────────────────────────────────────────
@@ -398,9 +351,7 @@ export default function History({
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="glass px-8 py-6 text-center">
-          <div className="text-lg font-semibold">
-            Loading season…
-          </div>
+          <div className="text-lg font-semibold">Loading season…</div>
 
           <div className="mt-2 text-sm text-muted-foreground">
             Bringing the history back.
@@ -414,14 +365,9 @@ export default function History({
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="glass px-8 py-6 text-center">
-          <div className="text-lg font-semibold">
-            Season not found.
-          </div>
+          <div className="text-lg font-semibold">Season not found.</div>
 
-          <Button
-            className="mt-4"
-            onClick={() => navigate("/history/1")}
-          >
+          <Button className="mt-4" onClick={() => navigate("/history/1")}>
             Back to History
           </Button>
         </div>
@@ -526,9 +472,8 @@ export default function History({
                     max-w-xl
                   "
                 >
-                  A complete retrospective of the
-                  season — stats, standings, matches,
-                  and memorable moments.
+                  A complete retrospective of the season — stats, standings,
+                  matches, and memorable moments.
                 </p>
               </div>
 
@@ -554,12 +499,9 @@ export default function History({
                     id="season-select"
                     value={seasonId}
                     onChange={(event) => {
-                      const nextSeason =
-                        Number(event.target.value);
+                      const nextSeason = Number(event.target.value);
 
-                      navigate(
-                        `/history/${nextSeason}`
-                      );
+                      navigate(`/history/${nextSeason}`);
                     }}
                     className="
                       glass-input
@@ -575,10 +517,7 @@ export default function History({
                     "
                   >
                     {seasons.map((item) => (
-                      <option
-                        key={item.season_id}
-                        value={item.season_id}
-                      >
+                      <option key={item.season_id} value={item.season_id}>
                         {item.name}
                       </option>
                     ))}
@@ -619,9 +558,7 @@ export default function History({
                   {teams.length}
                 </div>
 
-                <div className="text-xs text-muted-foreground">
-                  Teams
-                </div>
+                <div className="text-xs text-muted-foreground">Teams</div>
               </div>
 
               <div className="glass-light px-3 py-3">
@@ -629,9 +566,7 @@ export default function History({
                   {players.length}
                 </div>
 
-                <div className="text-xs text-muted-foreground">
-                  Players
-                </div>
+                <div className="text-xs text-muted-foreground">Players</div>
               </div>
 
               <div className="glass-light px-3 py-3">
@@ -639,23 +574,15 @@ export default function History({
                   {games.length}
                 </div>
 
-                <div className="text-xs text-muted-foreground">
-                  Matches
-                </div>
+                <div className="text-xs text-muted-foreground">Matches</div>
               </div>
 
               <div className="glass-light px-3 py-3">
                 <div className="text-xl md:text-2xl font-bold">
-                  {games.reduce(
-                    (total, game) =>
-                      total + game.sets.length,
-                    0
-                  )}
+                  {games.reduce((total, game) => total + game.sets.length, 0)}
                 </div>
 
-                <div className="text-xs text-muted-foreground">
-                  Sets
-                </div>
+                <div className="text-xs text-muted-foreground">Sets</div>
               </div>
             </div>
           </div>
@@ -710,9 +637,7 @@ export default function History({
                     transition-transform
                   "
                 >
-                  <div className="text-3xl md:text-4xl mb-2">
-                    {award.icon}
-                  </div>
+                  <div className="text-3xl md:text-4xl mb-2">{award.icon}</div>
 
                   <div
                     className="
@@ -771,9 +696,7 @@ export default function History({
           <div className="flex items-center gap-2 mr-auto">
             <Users className="h-4 w-4 text-primary" />
 
-            <span className="text-sm font-semibold">
-              Filter History
-            </span>
+            <span className="text-sm font-semibold">Filter History</span>
           </div>
 
           <select
@@ -782,7 +705,7 @@ export default function History({
               setTeamFilter(
                 event.target.value === "all"
                   ? "all"
-                  : Number(event.target.value)
+                  : Number(event.target.value),
               )
             }
             className="
@@ -795,15 +718,10 @@ export default function History({
               sm:w-auto
             "
           >
-            <option value="all">
-              All Teams
-            </option>
+            <option value="all">All Teams</option>
 
             {teams.map((team) => (
-              <option
-                key={team.team_id}
-                value={team.team_id}
-              >
+              <option key={team.team_id} value={team.team_id}>
                 {team.name}
               </option>
             ))}
@@ -815,7 +733,7 @@ export default function History({
               setPlayerFilter(
                 event.target.value === "all"
                   ? "all"
-                  : Number(event.target.value)
+                  : Number(event.target.value),
               )
             }
             className="
@@ -828,15 +746,10 @@ export default function History({
               sm:w-auto
             "
           >
-            <option value="all">
-              All Players
-            </option>
+            <option value="all">All Players</option>
 
             {players.map((player) => (
-              <option
-                key={player.id}
-                value={player.id}
-              >
+              <option key={player.id} value={player.id}>
                 {player.name}
               </option>
             ))}
@@ -870,11 +783,7 @@ export default function History({
                 "
               >
                 {filteredPlayers.map((player) => (
-                  <PlayerCard
-                    key={player.id}
-                    player={player}
-                    forceShowStats
-                  />
+                  <PlayerCard key={player.id} player={player} forceShowStats />
                 ))}
               </div>
             )}
@@ -893,10 +802,7 @@ export default function History({
                 Match History
               </CardTitle>
 
-              <Badge
-                variant="secondary"
-                className="shrink-0"
-              >
+              <Badge variant="secondary" className="shrink-0">
                 {filteredGames.length} matches
               </Badge>
             </div>
@@ -914,54 +820,48 @@ export default function History({
             ) : (
               <div className="space-y-2">
                 {filteredGames.map((game) => {
-                  const team = getTeam(
-                    game.team_id
-                  );
+                  const team = getTeam(game.team_id);
 
-                  const teamColor =
-                    team?.color ?? "#6b7280";
+                  const teamColor = team?.color ?? "#6b7280";
 
-                  const teamColor2 =
-                    team?.color2 ?? teamColor;
+                  const teamColor2 = team?.color2 ?? teamColor;
 
                   return (
                     <div
                       key={game.id}
                       className="
-                        relative
-                        overflow-hidden
-                        rounded-xl
-                        border
-                        border-border/40
-                        bg-background/30
-                        backdrop-blur-sm
-                        transition-colors
-                        hover:bg-background/45
-                      "
+    relative
+    overflow-hidden
+    rounded-xl
+    border
+    border-border/40
+    backdrop-blur-md
+    transition-all
+    duration-200
+    hover:-translate-y-[1px]
+  "
+                      style={{
+                        background: `
+      linear-gradient(
+        90deg,
+        ${teamColor}18 0%,
+        ${teamColor}0a 28%,
+        rgba(255,255,255,0.03) 60%,
+        rgba(255,255,255,0.02) 100%
+      )
+    `,
+                        boxShadow: `
+      inset 3px 0 0 ${teamColor},
+      0 4px 20px ${teamColor}12
+    `,
+                      }}
                     >
-                      {/* Team colour accent */}
-                      <div
-                        className="
-                          absolute
-                          left-0
-                          top-0
-                          bottom-0
-                          w-1
-                        "
-                        style={{
-                          background: `linear-gradient(
-                            to bottom,
-                            ${teamColor},
-                            ${teamColor2}
-                          )`,
-                        }}
-                      />
-{/* ─────────────────────────────────────────────
+                      {/* ─────────────────────────────────────────────
     DESKTOP / TABLET LAYOUT
 ───────────────────────────────────────────────── */}
 
-<div
-  className="
+                      <div
+                        className="
     hidden
     md:grid
     grid-cols-[110px_minmax(140px,1fr)_minmax(140px,1fr)_repeat(4,72px)_80px_90px]
@@ -972,75 +872,75 @@ export default function History({
     gap-2
     text-sm
   "
->
-  {/* Date / Time */}
-  <div>
-    <div className="font-semibold">
-      {formatDate(game.date)}
-    </div>
+                      >
+                        {/* Date / Time */}
+                        <div>
+                          <div className="font-semibold">
+                            {formatDate(game.date)}
+                          </div>
 
-    <div className="text-xs text-muted-foreground">
-      {formatTime12H(game.time)}
-    </div>
-  </div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatTime12H(game.time)}
+                          </div>
+                        </div>
 
-  {/* Our Team */}
-  <div className="font-semibold truncate">
-    {team?.name ?? "N/A"}
-  </div>
+                        {/* Our Team */}
+                        <div className="font-semibold truncate">
+                          {team?.name ?? "N/A"}
+                        </div>
 
-  {/* Opponent */}
-  <div className="font-semibold truncate text-muted-foreground">
-    {game.opponent ?? "N/A"}
-  </div>
+                        {/* Opponent */}
+                        <div className="font-semibold truncate text-muted-foreground">
+                          {game.opponent ?? "N/A"}
+                        </div>
 
-  {/* Set Scores */}
-  {game.sets.slice(0, 4).map((set) => (
-    <div
-      key={set.id}
-      className="
+                        {/* Set Scores */}
+                        {game.sets.slice(0, 4).map((set) => (
+                          <div
+                            key={set.id}
+                            className="
         text-center
         rounded-lg
         bg-background/40
         px-2
         py-1
       "
-    >
-      <div
-        className={`
+                          >
+                            <div
+                              className={`
           font-bold
           whitespace-nowrap
           ${
             set.result === "W"
               ? "text-emerald-500"
               : set.result === "L"
-              ? "text-red-500"
-              : "text-amber-500"
+                ? "text-red-500"
+                : "text-amber-500"
           }
         `}
-      >
-        {set.points_for ?? "—"}
-        <span className="text-muted-foreground mx-1">
-          -
-        </span>
-        <span className="text-foreground">
-          {set.points_against ?? "—"}
-        </span>
-      </div>
+                            >
+                              {set.points_for ?? "—"}
+                              <span className="text-muted-foreground mx-1">
+                                -
+                              </span>
+                              <span className="text-foreground">
+                                {set.points_against ?? "—"}
+                              </span>
+                            </div>
 
-      <div className="text-[10px] text-muted-foreground">
-        S{set.set_no}
-      </div>
-    </div>
-  ))}
+                            <div className="text-[10px] text-muted-foreground">
+                              S{set.set_no}
+                            </div>
+                          </div>
+                        ))}
 
-  {/* Empty set slots */}
-  {Array.from({
-    length: Math.max(0, 4 - game.sets.length),
-  }).map((_, index) => (
-    <div
-      key={`empty-${index}`}
-      className="
+                        {/* Empty set slots */}
+                        {Array.from({
+                          length: Math.max(0, 4 - game.sets.length),
+                        }).map((_, index) => (
+                          <div
+                            key={`empty-${index}`}
+                            className="
         text-center
         text-muted-foreground
         rounded-lg
@@ -1048,25 +948,25 @@ export default function History({
         px-2
         py-1
       "
-    >
-      —
-    </div>
-  ))}
+                          >
+                            —
+                          </div>
+                        ))}
 
-  {/* Overall Match Result */}
-  <div className="text-center">
-    {(() => {
-      const wins = game.sets.filter(
-        (set) => set.result === "W"
-      ).length;
+                        {/* Overall Match Result */}
+                        <div className="text-center">
+                          {(() => {
+                            const wins = game.sets.filter(
+                              (set) => set.result === "W",
+                            ).length;
 
-      const losses = game.sets.filter(
-        (set) => set.result === "L"
-      ).length;
+                            const losses = game.sets.filter(
+                              (set) => set.result === "L",
+                            ).length;
 
-      return (
-        <Badge
-          className={`
+                            return (
+                              <Badge
+                                className={`
             text-xs
             px-2
             py-0.5
@@ -1075,48 +975,45 @@ export default function History({
               wins > losses
                 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                 : losses > wins
-                ? "bg-red-500/15 text-red-600 dark:text-red-400"
-                : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                  ? "bg-red-500/15 text-red-600 dark:text-red-400"
+                  : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
             }
           `}
-        >
-          {wins}-{losses}
-        </Badge>
-      );
-    })()}
-  </div>
+                              >
+                                {wins}-{losses}
+                              </Badge>
+                            );
+                          })()}
+                        </div>
 
-  {/* VOD */}
-  <div className="text-center">
-    {game.sets.find((set) => set.vod_link) ? (
-      <Button
-        size="sm"
-        variant="ghost"
-        className="h-8 px-2"
-        onClick={() => {
-          const vod = game.sets.find(
-            (set) => set.vod_link
-          )?.vod_link;
+                        {/* VOD */}
+                        <div className="text-center">
+                          {game.sets.find((set) => set.vod_link) ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 px-2"
+                              onClick={() => {
+                                const vod = game.sets.find(
+                                  (set) => set.vod_link,
+                                )?.vod_link;
 
-          if (vod) {
-            window.open(
-              vod,
-              "_blank",
-              "noopener,noreferrer"
-            );
-          }
-        }}
-      >
-        <PlayCircle className="h-4 w-4" />
-      </Button>
-    ) : (
-      <span className="text-muted-foreground">
-        —
-      </span>
-    )}
-  </div>
-</div>
-
+                                if (vod) {
+                                  window.open(
+                                    vod,
+                                    "_blank",
+                                    "noopener,noreferrer",
+                                  );
+                                }
+                              }}
+                            >
+                              <PlayCircle className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </div>
+                      </div>
 
                       {/* ─────────────────────────────────────────────
                           MOBILE LAYOUT
@@ -1130,32 +1027,22 @@ export default function History({
                               <span
                                 className="font-bold truncate"
                                 style={{
-                                  color:
-                                    teamColor,
+                                  color: teamColor,
                                 }}
                               >
-                                {team?.name ??
-                                  "N/A"}
+                                {team?.name ?? "N/A"}
                               </span>
 
-                              <span className="text-muted-foreground">
-                                vs
-                              </span>
+                              <span className="text-muted-foreground">vs</span>
 
                               <span className="font-semibold truncate">
-                                {game.opponent ??
-                                  "N/A"}
+                                {game.opponent ?? "N/A"}
                               </span>
                             </div>
 
                             <div className="text-xs text-muted-foreground mt-0.5">
-                              {formatDate(
-                                game.date
-                              )}{" "}
-                              ·{" "}
-                              {formatTime12H(
-                                game.time
-                              )}
+                              {formatDate(game.date)} ·{" "}
+                              {formatTime12H(game.time)}
                             </div>
                           </div>
 
@@ -1165,46 +1052,30 @@ export default function History({
                               className={`
                                 font-bold
                                 ${
-                                  game.sets.filter(
-                                    (set) =>
-                                      set.result ===
-                                      "W"
-                                  ).length >
-                                  game.sets.filter(
-                                    (set) =>
-                                      set.result ===
-                                      "L"
-                                  ).length
+                                  game.sets.filter((set) => set.result === "W")
+                                    .length >
+                                  game.sets.filter((set) => set.result === "L")
+                                    .length
                                     ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                                     : game.sets.filter(
-                                        (set) =>
-                                          set.result ===
-                                          "L"
-                                      ).length >
-                                      game.sets.filter(
-                                        (set) =>
-                                          set.result ===
-                                          "W"
-                                      ).length
-                                    ? "bg-red-500/15 text-red-600 dark:text-red-400"
-                                    : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                                          (set) => set.result === "L",
+                                        ).length >
+                                        game.sets.filter(
+                                          (set) => set.result === "W",
+                                        ).length
+                                      ? "bg-red-500/15 text-red-600 dark:text-red-400"
+                                      : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                                 }
                               `}
                             >
                               {
-                                game.sets.filter(
-                                  (set) =>
-                                    set.result ===
-                                    "W"
-                                ).length
+                                game.sets.filter((set) => set.result === "W")
+                                  .length
                               }
                               -
                               {
-                                game.sets.filter(
-                                  (set) =>
-                                    set.result ===
-                                    "L"
-                                ).length
+                                game.sets.filter((set) => set.result === "L")
+                                  .length
                               }
                             </Badge>
                           </div>
@@ -1224,65 +1095,56 @@ export default function History({
                           "
                         >
                           <div className="flex items-center gap-2">
-                            {game.sets.map(
-                              (set) => (
-                                <div
-                                  key={set.id}
-                                  className="
-                                    flex
-                                    items-center
-                                    gap-1
-                                    rounded-lg
-                                    bg-background/40
-                                    px-2
-                                    py-1
-                                  "
-                                >
-                                  <span className="text-[10px] text-muted-foreground">
-                                    S
-                                    {
-                                      set.set_no
-                                    }
-                                  </span>
+                            {game.sets.map((set) => (
+                              <div
+                                key={set.id}
+                                className="
+  flex
+  items-center
+  gap-1
+  rounded-lg
+  border
+  border-border/30
+  px-2
+  py-1
+  backdrop-blur-sm
+"
+                                style={{
+                                  background: `${teamColor}12`,
+                                }}
+                              >
+                                <span className="text-[10px] text-muted-foreground">
+                                  S{set.set_no}
+                                </span>
 
-                                  <span
-                                    className={`
+                                <span
+                                  className={`
                                       font-bold
                                       text-sm
                                       ${
-                                        set.result ===
-                                        "W"
+                                        set.result === "W"
                                           ? "text-emerald-500"
-                                          : set.result ===
-                                            "L"
-                                          ? "text-red-500"
-                                          : "text-amber-500"
+                                          : set.result === "L"
+                                            ? "text-red-500"
+                                            : "text-amber-500"
                                       }
                                     `}
-                                  >
-                                    {
-                                      set.points_for
-                                    }
-                                  </span>
+                                >
+                                  {set.points_for}
+                                </span>
 
-                                  <span className="text-muted-foreground text-xs">
-                                    -
-                                  </span>
+                                <span className="text-muted-foreground text-xs">
+                                  -
+                                </span>
 
-                                  <span className="font-semibold text-sm">
-                                    {
-                                      set.points_against
-                                    }
-                                  </span>
-                                </div>
-                              )
-                            )}
+                                <span className="font-semibold text-sm">
+                                  {set.points_against}
+                                </span>
+                              </div>
+                            ))}
                           </div>
 
-                          {game.sets.find(
-                            (set) =>
-                              set.vod_link
-                          ) && (
+                          {game.sets.find((set) => set.vod_link) && (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -1292,25 +1154,21 @@ export default function History({
                                 shrink-0
                               "
                               onClick={() => {
-                                const vod =
-                                  game.sets.find(
-                                    (set) =>
-                                      set.vod_link
-                                  )?.vod_link;
+                                const vod = game.sets.find(
+                                  (set) => set.vod_link,
+                                )?.vod_link;
 
                                 if (vod) {
                                   window.open(
                                     vod,
                                     "_blank",
-                                    "noopener,noreferrer"
+                                    "noopener,noreferrer",
                                   );
                                 }
                               }}
                             >
                               <PlayCircle className="h-4 w-4" />
-                              <span className="ml-1 text-xs">
-                                VOD
-                              </span>
+                              <span className="ml-1 text-xs">VOD</span>
                             </Button>
                           )}
                         </div>
