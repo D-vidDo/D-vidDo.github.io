@@ -1,10 +1,8 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
 
 interface TeamCardProps {
   team: {
@@ -15,68 +13,23 @@ interface TeamCardProps {
     player_ids?: string[];
     wins: number;
     losses: number;
+    points_for?: number;
+    points_against?: number;
     season_id?: number;
   };
 }
 
 const TeamCard = ({ team }: TeamCardProps) => {
-  const [playerCount, setPlayerCount] = useState<number>(0);
-  const [pointsFor, setPointsFor] = useState<number>(0);
-  const [pointsAgainst, setPointsAgainst] = useState<number>(0);
-
-  useEffect(() => {
-    async function fetchStats() {
-      // Fetch player count
-      if (team.player_ids?.length) {
-        const { data } = await supabase
-          .from("players")
-          .select("id")
-          .in("id", team.player_ids);
-        setPlayerCount(data?.length || 0);
-      } else {
-        setPlayerCount(0);
-      }
-
-      // Fetch sets for this team
-      const { data: setsData, error: setsError } = await supabase
-        .from("sets")
-        .select("points_for, points_against, game_id")
-        .in(
-          "game_id",
-          (
-            await supabase
-              .from("games")
-              .select("id")
-              .eq("team_id", team.team_id)
-          ).data?.map((g) => g.id) ?? [],
-        );
-
-      if (setsError) {
-        console.error("Error fetching sets:", setsError.message);
-        return;
-      }
-
-      let pf = 0;
-      let pa = 0;
-
-      (setsData ?? []).forEach((set) => {
-        pf += set.points_for;
-        pa += set.points_against;
-      });
-
-      setPointsFor(pf);
-      setPointsAgainst(pa);
-    }
-
-    fetchStats();
-  }, [team.team_id, team.player_ids]);
+  // Derived entirely from props the caller already fetched — no extra
+  // round-trips needed per card (this used to fire 3 sequential queries
+  // per team, which was a serious N+1 on any page listing multiple teams).
+  const playerCount = team.player_ids?.length ?? 0;
+  const plusMinus = (team.points_for ?? 0) - (team.points_against ?? 0);
 
   const winPercentage =
     team.wins + team.losses > 0
       ? ((team.wins / (team.wins + team.losses)) * 100).toFixed(1)
       : "0.0";
-
-  const plusMinus = pointsFor - pointsAgainst;
 
   return (
     <Card className="bg-gradient-card shadow-card hover:shadow-hover transition-all duration-300 hover:scale-105 group">
@@ -86,6 +39,9 @@ const TeamCard = ({ team }: TeamCardProps) => {
             <img
               src={`/logos/${team.team_id}.png`}
               alt={`${team.name} logo`}
+              loading="lazy"
+              width={48}
+              height={48}
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
               }}

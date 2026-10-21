@@ -114,9 +114,10 @@
     --shadow-primary:
       0 8px 30px hsl(25 95% 53% / 0.22);
 
-    /* Desktop blur */
-    --blur-glass: blur(24px) saturate(180%);
-    --blur-glass-heavy: blur(40px) saturate(180%);
+    /* Desktop blur — kept moderate; backdrop-filter blur cost scales
+       with radius, and 24-40px was heavier than the visual payoff. */
+    --blur-glass: blur(16px) saturate(160%);
+    --blur-glass-heavy: blur(26px) saturate(160%);
 
     /* Motion */
     --transition-smooth:
@@ -635,6 +636,33 @@
    */
   .glass::after {
     display: none;
+  }
+
+  /*
+   * The rules above only cover the .glass component classes, but most
+   * of the actual pages (Home, TeamDetail, Trades, History) build their
+   * panels with raw Tailwind `backdrop-blur-*` utilities directly in
+   * JSX instead, so they were never getting this mobile reduction at
+   * all. A page like Home stacks a dozen-plus backdrop-blur layers;
+   * catch all of them here regardless of which utility class was used,
+   * since every backdrop-filter layer forces the browser to re-sample
+   * whatever's behind it on every scroll frame.
+   */
+  [class*="backdrop-blur"] {
+    backdrop-filter: blur(8px) saturate(130%) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(130%) !important;
+  }
+
+  /*
+   * Same story for the large decorative `blur-*` glow/orb elements
+   * (filter: blur, not backdrop-filter) scattered across page hero
+   * sections. They're purely cosmetic background decoration, so on
+   * mobile it's cheaper — and unnoticed — to just not render them
+   * instead of paying for a large-radius filter blur.
+   */
+  [class^="blur-"],
+  [class*=" blur-"] {
+    display: none !important;
   }
 }
 
