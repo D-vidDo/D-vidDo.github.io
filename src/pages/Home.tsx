@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
 import {
   Card,
@@ -23,12 +23,23 @@ import { Link } from "react-router-dom";
 import TeamCard from "@/components/TeamCard";
 import UpcomingGames from "@/components/UpcomingGames";
 import BillOfTheDay from "@/components/BillOfTheDay";
+import MatchupCard from "@/components/MatchupCard";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ACTIVE SEASON
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ACTIVE_SEASON_ID = 5;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUPABASE
+// ─────────────────────────────────────────────────────────────────────────────
+
+const supabaseUrl = "https://bqqotvjpvaznkjfldcgm.supabase.co";
+
+const supabaseAnonKey =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcW90dmpwdmF6bmtqZmxkY2dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0NDE4NjEsImV4cCI6MjA3MDAxNzg2MX0.VPClABOucYEo-bVPg_brc6WvSx17zR4LADC2FEWdI5Q";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -116,37 +127,29 @@ const Home = () => {
       setLoading(true);
       setError(null);
 
-      // Run all three queries concurrently instead of one after another —
-      // they don't depend on each other, so there's no reason to wait.
-      const [
-        { data: teamData, error: teamError },
-        { data: playerData, error: playerError },
-        { data: gamesData, error: gamesError },
-      ] = await Promise.all([
-        supabase
-          .from("teams")
-          .select(
-            "team_id, name, wins, losses, points_for, points_against, captain, color, player_ids, season_id"
-          )
-          .eq("season_id", ACTIVE_SEASON_ID),
-        supabase
-          .from("players")
-          .select("id, name, primary_position, plus_minus, games_played"),
-        supabase
-          .from("games")
-          .select(
-            `
-              id,
-              team_id,
-              sets (
-                set_no,
-                points_for,
-                points_against
-              )
-            `
-          )
-          .eq("season_id", ACTIVE_SEASON_ID),
-      ]);
+      const { data: teamData, error: teamError } = await supabase
+        .from("teams")
+        .select("*")
+        .eq("season_id", ACTIVE_SEASON_ID);
+
+      const { data: playerData, error: playerError } = await supabase
+        .from("players")
+        .select("*");
+
+      const { data: gamesData, error: gamesError } = await supabase
+        .from("games")
+        .select(
+          `
+            id,
+            team_id,
+            sets (
+              set_no,
+              points_for,
+              points_against
+            )
+          `
+        )
+        .eq("season_id", ACTIVE_SEASON_ID);
 
       if (teamError) {
         setError(`Error loading teams: ${teamError.message}`);
